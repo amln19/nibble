@@ -64,23 +64,6 @@ export function useSessionStorageState<T>(
   return [state, setState];
 }
 
-export function useRecipeBox() {
-  const [savedIds, setSavedIds] = useLocalStorageState<string[]>(
-    "recipe-box-ids",
-    [],
-  );
-
-  const add = useCallback((id: string) => {
-    setSavedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-  }, [setSavedIds]);
-
-  const remove = useCallback((id: string) => {
-    setSavedIds((prev) => prev.filter((x) => x !== id));
-  }, [setSavedIds]);
-
-  return { savedIds, add, remove, setSavedIds };
-}
-
 export function useSkippedRecipes() {
   const [skippedIds, setSkippedIds] = useSessionStorageState<string[]>(
     "recipe-swipe-skipped",

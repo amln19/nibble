@@ -7,7 +7,7 @@ export const metadata = {
 
 function LoginFormFallback() {
   return (
-    <div className="mx-auto w-full max-w-sm rounded-2xl border border-rose-100 bg-white/95 p-8 shadow-lg">
+    <div className="mx-auto w-full max-w-sm rounded-2xl border border-pink-100 bg-white p-8 shadow-sm">
       <div className="h-8 w-40 animate-pulse rounded bg-zinc-100" />
       <div className="mt-4 h-24 w-full animate-pulse rounded bg-zinc-50" />
     </div>

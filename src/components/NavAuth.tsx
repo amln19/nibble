@@ -50,7 +50,7 @@ export function NavAuth() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="text-sm font-medium text-zinc-600 transition hover:text-rose-700"
+          className="text-sm font-medium text-zinc-600 transition hover:text-green-700"
         >
           Sign out
         </button>
@@ -61,7 +61,7 @@ export function NavAuth() {
   return (
     <Link
       href="/login"
-      className="text-sm font-medium text-rose-600 transition hover:text-rose-700"
+      className="text-sm font-medium text-green-600 transition hover:text-green-700"
     >
       Sign in
     </Link>

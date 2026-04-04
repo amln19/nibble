@@ -67,19 +67,19 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
     >
       <div
         data-recipe-sheet
-        className="flex max-h-[min(85vh,720px)] w-full max-w-lg flex-col rounded-t-3xl border border-rose-100/80 bg-white shadow-2xl shadow-rose-200/30 sm:max-h-[min(90vh,800px)] sm:rounded-3xl"
+        className="flex max-h-[min(85vh,720px)] w-full max-w-lg flex-col rounded-t-3xl border-2 border-zinc-200 bg-white shadow-xl sm:max-h-[min(90vh,800px)] sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 border-b border-rose-100 bg-gradient-to-r from-white to-pink-50/50 px-5 py-4">
+        <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 border-b-2 border-zinc-100 bg-pink-50 px-5 py-4">
           <h2
             id="recipe-info-title"
-            className="min-w-0 flex-1 break-words font-serif text-lg font-semibold text-zinc-900"
+            className="min-w-0 flex-1 break-words text-base font-extrabold text-zinc-900"
           >
             {recipe.title}
           </h2>
           <button
             type="button"
-            className="relative z-10 shrink-0 touch-manipulation rounded-full p-2 text-xl leading-none text-rose-500 transition hover:bg-pink-100/80 hover:text-rose-700 active:bg-pink-200/60"
+            className="relative z-10 shrink-0 touch-manipulation flex h-8 w-8 items-center justify-center rounded-xl border-2 border-zinc-200 bg-white text-lg font-bold text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-900"
             aria-label="Close"
             onClick={(e) => {
               e.stopPropagation();
@@ -101,29 +101,29 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
 
           <div className="mt-3 flex flex-wrap gap-2">
             {recipe.tags.vegan && (
-              <span className="rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-rose-900">
-                Vegan
+              <span className="rounded-full border-2 border-pink-300 bg-pink-50 px-2.5 py-0.5 text-xs font-bold text-pink-800">
+                🌱 Vegan
               </span>
             )}
             {recipe.tags.highProtein && (
-              <span className="rounded-full bg-rose-100/90 px-2.5 py-0.5 text-xs font-medium text-rose-950">
-                High protein
+              <span className="rounded-full border-2 border-green-300 bg-green-50 px-2.5 py-0.5 text-xs font-bold text-green-800">
+                💪 High protein
               </span>
             )}
             {recipe.tags.beginnerFriendly && (
-              <span className="rounded-full bg-pink-50 px-2.5 py-0.5 text-xs font-medium text-rose-800 ring-1 ring-rose-100">
-                Beginner friendly
+              <span className="rounded-full border-2 border-zinc-200 bg-white px-2.5 py-0.5 text-xs font-bold text-zinc-700">
+                ⭐ Beginner friendly
               </span>
             )}
           </div>
 
-          <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-rose-400">
+          <h3 className="mt-6 text-xs font-extrabold uppercase tracking-widest text-zinc-400">
             Ingredients
           </h3>
           {recipe.ingredients.length > 0 ? (
             <ul className="mt-2 list-inside list-disc space-y-1.5 text-sm text-zinc-800">
               {recipe.ingredients.map((ing, i) => (
-                <li key={`${ing}-${i}`} className="marker:text-rose-400">
+                <li key={`${ing}-${i}`} className="marker:text-zinc-400">
                   {formatIngredientLine(ing)}
                 </li>
               ))}
@@ -136,7 +136,7 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
 
           {recipe.instructions ? (
             <>
-              <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-rose-400">
+              <h3 className="mt-6 text-xs font-extrabold uppercase tracking-widest text-zinc-400">
                 Instructions
               </h3>
               <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-700">

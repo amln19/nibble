@@ -1,13 +1,13 @@
 "use client";
 
-import { useRecipeBox } from "@/hooks/useLocalStorageState";
+import { useRecipeBox } from "@/hooks/useRecipeBox";
 import type { Recipe } from "@/lib/recipes";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 export function RecipeBoxClient() {
-  const { savedIds, remove } = useRecipeBox();
+  const { savedIds, remove, ready: recipeBoxReady } = useRecipeBox();
   const [byId, setById] = useState<Map<string, Recipe>>(new Map());
   const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -66,13 +66,19 @@ export function RecipeBoxClient() {
         </p>
       </header>
 
-      {loading && savedIds.length > 0 ? (
+      {!recipeBoxReady ? (
+        <p className="mb-6 text-center text-sm text-zinc-500">
+          Loading your recipe box…
+        </p>
+      ) : null}
+
+      {recipeBoxReady && loading && savedIds.length > 0 ? (
         <p className="mb-6 text-center text-sm text-zinc-500">
           Loading saved recipes…
         </p>
       ) : null}
 
-      {loadError && savedIds.length > 0 ? (
+      {recipeBoxReady && loadError && savedIds.length > 0 ? (
         <p className="mb-4 rounded-xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
           Some recipes could not be loaded from the API (for example old saved
           IDs). You can still remove any card below — that clears it from this
@@ -80,27 +86,27 @@ export function RecipeBoxClient() {
         </p>
       ) : null}
 
-      {savedIds.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-rose-200/90 bg-white/80 p-10 text-center shadow-inner shadow-rose-100/40">
+      {recipeBoxReady && savedIds.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-green-200 bg-white p-10 text-center shadow-inner">
           <p className="text-zinc-700">Nothing saved yet.</p>
           <Link
             href="/"
-            className="mt-4 inline-block rounded-full bg-rose-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-rose-200/60 transition hover:bg-rose-600"
+            className="mt-4 inline-block rounded-full bg-green-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700"
           >
             Start swiping
           </Link>
         </div>
-      ) : (
+      ) : recipeBoxReady ? (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {savedIds.map((id) => {
             const r = byId.get(id);
             return (
               <li
                 key={id}
-                className="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm shadow-rose-100/50"
+                className="overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm"
               >
                 {r?.imageUrl ? (
-                  <div className="relative aspect-[4/3] bg-rose-50">
+                  <div className="relative aspect-[4/3] bg-pink-50">
                     <Image
                       src={r.imageUrl}
                       alt=""
@@ -110,7 +116,7 @@ export function RecipeBoxClient() {
                     />
                   </div>
                 ) : (
-                  <div className="flex aspect-[4/3] items-center justify-center bg-rose-50 text-sm text-zinc-500">
+                  <div className="flex aspect-[4/3] items-center justify-center bg-pink-50 text-sm text-zinc-500">
                     Couldn’t load preview
                   </div>
                 )}
@@ -127,7 +133,7 @@ export function RecipeBoxClient() {
                   <button
                     type="button"
                     onClick={() => remove(id)}
-                    className="mt-3 text-sm font-medium text-rose-600 hover:text-rose-800"
+                    className="mt-3 text-sm font-medium text-green-600 hover:text-zinc-900"
                   >
                     Remove
                   </button>
@@ -136,7 +142,7 @@ export function RecipeBoxClient() {
             );
           })}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 }

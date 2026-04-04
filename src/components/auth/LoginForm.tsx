@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandMascot } from "@/components/BrandMascot";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -75,8 +76,11 @@ export function LoginForm() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-sm">
-      <div className="rounded-2xl border border-rose-100 bg-white/95 p-6 shadow-lg shadow-rose-100/50 sm:p-8">
+    <div className="mx-auto flex w-full max-w-sm flex-col items-center">
+      <div className="mb-6">
+        <BrandMascot variant="welcome" priority />
+      </div>
+      <div className="w-full rounded-2xl border border-pink-100 bg-white p-6 shadow-sm sm:p-8">
         <h1 className="font-serif text-2xl font-semibold text-zinc-900">
           {mode === "signin" ? "Sign in" : "Create account"}
         </h1>
@@ -95,7 +99,7 @@ export function LoginForm() {
           </p>
         )}
         {message && (
-          <p className="mt-4 rounded-lg border border-rose-200 bg-pink-50 px-3 py-2 text-sm text-rose-900">
+          <p className="mt-4 rounded-lg border border-pink-200 bg-pink-50 px-3 py-2 text-sm text-zinc-900">
             {message}
           </p>
         )}
@@ -116,7 +120,7 @@ export function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-rose-100 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-200/60"
+              className="mt-1.5 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/25"
               placeholder="you@example.com"
             />
           </div>
@@ -138,14 +142,14 @@ export function LoginForm() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-rose-100 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-200/60"
+              className="mt-1.5 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/25"
               placeholder="••••••••"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-rose-500 py-2.5 text-sm font-medium text-white shadow-sm shadow-rose-200/60 transition hover:bg-rose-600 disabled:opacity-60"
+            className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
           >
             {loading
               ? "Please wait…"
@@ -161,7 +165,7 @@ export function LoginForm() {
               No account?{" "}
               <button
                 type="button"
-                className="font-medium text-rose-600 hover:text-rose-700"
+                className="font-medium text-green-600 hover:text-green-700"
                 onClick={() => {
                   setMode("signup");
                   setError(null);
@@ -176,7 +180,7 @@ export function LoginForm() {
               Already have an account?{" "}
               <button
                 type="button"
-                className="font-medium text-rose-600 hover:text-rose-700"
+                className="font-medium text-green-600 hover:text-green-700"
                 onClick={() => {
                   setMode("signin");
                   setError(null);
@@ -192,7 +196,7 @@ export function LoginForm() {
         <p className="mt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-zinc-500 underline-offset-2 hover:text-rose-600 hover:underline"
+            className="text-sm text-zinc-500 underline-offset-2 hover:text-green-600 hover:underline"
           >
             ← Back to Discover
           </Link>

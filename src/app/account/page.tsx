@@ -47,13 +47,13 @@ export default function AccountPage() {
         </p>
         <Link
           href="/login"
-          className="mt-6 inline-flex rounded-xl bg-rose-500 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-rose-600"
+          className="mt-6 inline-flex rounded-xl bg-green-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-green-700"
         >
           Sign in
         </Link>
         <Link
           href="/"
-          className="mt-4 text-sm text-zinc-500 underline-offset-2 hover:text-rose-600 hover:underline"
+          className="mt-4 text-sm text-zinc-500 underline-offset-2 hover:text-green-600 hover:underline"
         >
           ← Back to Discover
         </Link>
@@ -71,13 +71,13 @@ export default function AccountPage() {
       <button
         type="button"
         onClick={() => void signOut()}
-        className="mt-8 w-full rounded-xl border border-rose-200 bg-white py-2.5 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-pink-50 sm:w-auto sm:px-8"
+        className="mt-8 w-full rounded-xl border border-green-200 bg-white py-2.5 text-sm font-medium text-green-800 shadow-sm transition hover:bg-pink-50 sm:w-auto sm:px-8"
       >
         Sign out
       </button>
       <Link
         href="/"
-        className="mt-6 text-sm text-zinc-500 underline-offset-2 hover:text-rose-600 hover:underline"
+        className="mt-6 text-sm text-zinc-500 underline-offset-2 hover:text-green-600 hover:underline"
       >
         ← Back to Discover
       </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRecipeBox } from "@/hooks/useLocalStorageState";
+import { useRecipeBox } from "@/hooks/useRecipeBox";
 import { useRecipeCache } from "@/hooks/useRecipeCache";
 import type { Recipe } from "@/lib/recipes";
 import type { ScoredRecipe } from "@/lib/recommend";
@@ -107,7 +107,8 @@ function ScrollRow({
 }
 
 export function RecipeBoxClient() {
-  const { savedIds, remove, add: saveRecipe } = useRecipeBox();
+  const { savedIds, remove, add: saveRecipe, ready: recipeBoxReady } =
+    useRecipeBox();
   const { getOverallRecommendations, cacheRecipes, recordLike } = useRecipeCache();
   const [byId, setById] = useState<Map<string, Recipe>>(new Map());
   const [loadError, setLoadError] = useState(false);
@@ -196,25 +197,31 @@ export function RecipeBoxClient() {
         </p>
       </header>
 
-      {loading && savedIds.length > 0 ? (
+      {!recipeBoxReady ? (
+        <p className="mb-6 text-center text-sm text-zinc-500">
+          Loading your recipe box…
+        </p>
+      ) : null}
+
+      {recipeBoxReady && loading && savedIds.length > 0 ? (
         <p className="mb-6 text-center text-sm text-zinc-500">
           Loading saved recipes…
         </p>
       ) : null}
 
-      {loadError && savedIds.length > 0 ? (
+      {recipeBoxReady && loadError && savedIds.length > 0 ? (
         <p className="mb-4 rounded-xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
           Some recipes could not be loaded from the API. You can still remove
           any card below.
         </p>
       ) : null}
 
-      {savedIds.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-rose-200/90 bg-white/80 p-10 text-center shadow-inner shadow-rose-100/40">
+      {recipeBoxReady && savedIds.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-green-200 bg-white p-10 text-center shadow-inner">
           <p className="text-zinc-700">Nothing saved yet.</p>
           <Link
             href="/"
-            className="mt-4 inline-block rounded-full bg-rose-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-rose-200/60 transition hover:bg-rose-600"
+            className="mt-4 inline-block rounded-full bg-green-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700"
           >
             Start swiping
           </Link>

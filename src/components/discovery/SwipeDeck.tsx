@@ -7,7 +7,6 @@ type Props = {
   recipes: Recipe[];
   onPass: (recipe: Recipe) => void;
   onSave: (recipe: Recipe) => void;
-  /** When the feed is empty but we still have meals in the category (filters hid everything) */
   emptyDetail?: string;
 };
 
@@ -17,29 +16,34 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
 
   if (!current) {
     return (
-      <div className="flex min-h-[min(70vh,520px)] w-full max-w-md flex-col items-center justify-center rounded-3xl border border-dashed border-rose-200/90 bg-white/80 p-8 text-center shadow-inner shadow-rose-100/50 xl:max-w-lg">
-        <p className="font-serif text-xl font-medium text-zinc-800">
-          {emptyDetail ? "No matches right now" : "You’re all caught up"}
+      <div className="flex min-h-[min(64vh,520px)] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 px-6 py-12 text-center">
+        <div
+          className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-pink-200 bg-pink-50 text-3xl shadow-[0_4px_0_#fce7f3]"
+          aria-hidden
+        >
+          {emptyDetail ? "◇" : "✓"}
+        </div>
+        <p className="text-lg font-extrabold text-zinc-800">
+          {emptyDetail ? "No matches right now" : "You're all caught up!"}
         </p>
-        <p className="mt-2 max-w-sm text-sm text-zinc-600">
+        <p className="mt-2 max-w-sm text-sm text-zinc-500 leading-relaxed">
           {emptyDetail ??
-            "Try another category, add pantry items, clear smart filters, or pass more cards in this list."}
+            "Try another category, add pantry items, or clear filters."}
         </p>
       </div>
     );
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-md pb-28 md:pb-8 xl:max-w-lg">
-      <div className="relative min-h-[min(72vh,560px)] xl:min-h-[min(70vh,600px)]">
+    <div className="relative w-full pb-24 md:pb-10">
+      <div className="relative min-h-[min(68vh,540px)]">
         {next ? (
           <div
-            className="pointer-events-none absolute inset-0 flex justify-center opacity-60"
+            className="pointer-events-none absolute inset-0 flex justify-center opacity-50"
             aria-hidden
           >
-            <div className="w-full max-w-md scale-95">
-              <div className="overflow-hidden rounded-3xl shadow-lg ring-1 ring-rose-200/60">
-                {/* eslint-disable-next-line @next/next/no-img-element -- stacked preview */}
+            <div className="w-full scale-[0.94]">
+              <div className="overflow-hidden rounded-3xl border-2 border-zinc-200 shadow-[0_4px_0_#e4e4e7]">
                 <img
                   src={next.imageUrl}
                   alt=""
@@ -57,23 +61,31 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
           />
         </div>
       </div>
-      <div className="mt-6 flex justify-center gap-6">
-        <button
-          type="button"
-          onClick={() => onPass(current)}
-          className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-zinc-200 bg-white text-2xl text-zinc-500 shadow-md shadow-rose-100/50 transition hover:border-rose-200 hover:bg-pink-50/80 active:scale-95"
-          aria-label="Pass"
-        >
-          ✕
-        </button>
-        <button
-          type="button"
-          onClick={() => onSave(current)}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-500 text-2xl text-white shadow-md shadow-rose-200/60 transition hover:bg-rose-600 active:scale-95"
-          aria-label="Save to recipe box"
-        >
-          ♥
-        </button>
+
+      {/* Duolingo-style action buttons */}
+      <div className="mt-8 flex items-start justify-center gap-12 sm:gap-16">
+        <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onPass(current)}
+            className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-zinc-300 bg-white text-2xl text-zinc-500 shadow-[0_4px_0_#d4d4d8] transition-all hover:border-zinc-400 hover:text-zinc-700 active:translate-y-1 active:shadow-none"
+            aria-label="Pass"
+          >
+            ✕
+          </button>
+          <span className="text-xs font-bold text-zinc-400">Pass</span>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onSave(current)}
+            className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-pink-600 bg-pink-500 text-2xl text-white shadow-[0_4px_0_#be185d] transition-all hover:bg-pink-400 active:translate-y-1 active:shadow-none"
+            aria-label="Save to recipe box"
+          >
+            ♥
+          </button>
+          <span className="text-xs font-bold text-pink-600">Save</span>
+        </div>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ type Props = {
   onClear: () => void;
   activeQuery: string | null;
   disabled?: boolean;
+  showSectionLabel?: boolean;
 };
 
 export function RecipeSearchBar({
@@ -18,6 +19,7 @@ export function RecipeSearchBar({
   onClear,
   activeQuery,
   disabled,
+  showSectionLabel = false,
 }: Props) {
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -28,11 +30,12 @@ export function RecipeSearchBar({
   );
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full lg:max-w-md lg:shrink-0"
-      role="search"
-    >
+    <form onSubmit={handleSubmit} className="w-full" role="search">
+      {showSectionLabel ? (
+        <p className="mb-2 text-xs font-extrabold uppercase tracking-widest text-zinc-400">
+          Search by name
+        </p>
+      ) : null}
       <label htmlFor="recipe-search" className="sr-only">
         Search recipes by name
       </label>
@@ -48,13 +51,13 @@ export function RecipeSearchBar({
             autoComplete="off"
             autoCapitalize="off"
             enterKeyHint="search"
-            className="w-full rounded-xl border border-rose-100 bg-white py-2.5 pr-9 pl-3 text-sm text-zinc-900 shadow-sm shadow-rose-50/30 placeholder:text-zinc-400 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-200/60 disabled:opacity-60"
+            className="w-full rounded-2xl border-2 border-zinc-300 bg-white py-3 pr-9 pl-4 text-sm font-medium text-zinc-900 placeholder:font-normal placeholder:text-zinc-400 focus:border-pink-400 focus:outline-none disabled:opacity-60"
           />
           {value ? (
             <button
               type="button"
               onClick={onClear}
-              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-0.5 text-zinc-400 transition hover:bg-pink-50 hover:text-rose-700"
+              className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-0.5 text-zinc-400 transition hover:text-zinc-700"
               aria-label="Clear search"
             >
               ×
@@ -64,21 +67,16 @@ export function RecipeSearchBar({
         <button
           type="submit"
           disabled={disabled || value.trim().length < 2}
-          className="shrink-0 rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-rose-200/80 transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="shrink-0 rounded-2xl border-2 border-green-600 bg-green-500 px-4 py-3 text-sm font-bold text-white shadow-[0_4px_0_#15803d] transition-all hover:bg-green-400 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
         >
           Search
         </button>
       </div>
-      {activeQuery ? (
-        <p className="mt-1.5 text-xs text-zinc-500">
-          Showing results for &quot;{activeQuery}&quot; · choose a category in
-          Explore to browse instead
-        </p>
-      ) : (
-        <p className="mt-1.5 text-xs text-zinc-500">
-          At least 2 characters. Matches meal names from TheMealDB.
-        </p>
-      )}
+      <p className="mt-2 text-xs text-zinc-500">
+        {activeQuery
+          ? `Showing results for "${activeQuery}" — pick a category to browse instead`
+          : "At least 2 characters to search."}
+      </p>
     </form>
   );
 }

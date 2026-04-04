@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Leaderboard } from "./Leaderboard";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -68,7 +68,10 @@ export function FriendsClient() {
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<{ id: string; username: string }[]>([]);
+  const [searchFocused, setSearchFocused] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -150,30 +153,54 @@ export function FriendsClient() {
     void loadPosts();
   }, [loggedIn, tab, loadPosts]);
 
+  // ── Debounced user search ─────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    const q = searchQuery.trim();
+    if (q.length < 1) {
+      setSearchResults([]);
+      return;
+    }
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/friends/search?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.users ?? []);
+        }
+      } catch { /* ignore */ }
+    }, 250);
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, [searchQuery]);
+
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  const sendRequest = useCallback(async () => {
-    if (!searchQuery.trim()) return;
+  const sendRequest = useCallback(async (username: string) => {
+    if (!username.trim()) return;
     setSearchStatus(null);
     const res = await fetch("/api/friends", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: searchQuery.trim() }),
+      body: JSON.stringify({ username: username.trim() }),
     });
     const data = await res.json();
     if (res.ok) {
       if (data.status === "accepted") {
-        setSearchStatus(`Now friends with ${data.friend?.username ?? searchQuery}!`);
+        setSearchStatus(`Now friends with ${data.friend?.username ?? username}!`);
         void loadFriends();
         void loadLeaderboard();
       } else {
         setSearchStatus("Friend request sent!");
       }
       setSearchQuery("");
+      setSearchResults([]);
     } else {
       setSearchStatus(data.error ?? "Something went wrong");
     }
-  }, [searchQuery, loadFriends, loadLeaderboard]);
+  }, [loadFriends, loadLeaderboard]);
 
   const handleAccept = useCallback(
     async (requestId: string) => {
@@ -316,36 +343,78 @@ export function FriendsClient() {
             <h3 className="mb-3 flex items-center gap-2 text-sm font-extrabold text-foreground">
               <UserPlus size={15} /> Add Friend
             </h3>
-            <div className="flex gap-2">
-              <div className="relative min-w-0 flex-1">
-                <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted">
-                  <Search size={14} />
+            <div className="relative">
+              <div className="flex gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted">
+                    <Search size={14} />
+                  </div>
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setSearchStatus(null);
+                    }}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        void sendRequest(searchQuery);
+                      }
+                    }}
+                    placeholder="Search by username…"
+                    className="w-full rounded-2xl border-2 border-edge bg-card py-2.5 pr-3 pl-9 text-sm font-bold text-foreground placeholder:font-normal placeholder:text-muted shadow-[0_2px_0_var(--edge)] transition-all focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
+                    autoComplete="off"
+                  />
                 </div>
-                <input
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setSearchStatus(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      void sendRequest();
-                    }
-                  }}
-                  placeholder="Search by username…"
-                  className="w-full rounded-2xl border-2 border-edge bg-card py-2.5 pr-3 pl-9 text-sm font-bold text-foreground placeholder:font-normal placeholder:text-muted shadow-[0_2px_0_var(--edge)] transition-all focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
-                  autoComplete="off"
-                />
+                <button
+                  type="button"
+                  onClick={() => void sendRequest(searchQuery)}
+                  disabled={!searchQuery.trim()}
+                  className="shrink-0 rounded-2xl border-2 border-primary-dark bg-primary px-4 py-2.5 text-sm font-extrabold text-white shadow-[0_3px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-0.5 active:shadow-none disabled:opacity-40 disabled:shadow-none"
+                >
+                  Send
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => void sendRequest()}
-                disabled={!searchQuery.trim()}
-                className="shrink-0 rounded-2xl border-2 border-primary-dark bg-primary px-4 py-2.5 text-sm font-extrabold text-white shadow-[0_3px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-0.5 active:shadow-none disabled:opacity-40 disabled:shadow-none"
-              >
-                Send
-              </button>
+
+              {/* Search results dropdown */}
+              {searchFocused && searchResults.length > 0 && (
+                <div className="absolute top-full right-0 left-0 z-20 mt-1 max-h-56 overflow-y-auto rounded-2xl border-2 border-edge bg-card p-1 shadow-xl">
+                  {searchResults.map((u) => {
+                    const alreadyFriend = friends.some((f) => f.id === u.id);
+                    return (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          if (alreadyFriend) return;
+                          void sendRequest(u.username);
+                        }}
+                        disabled={alreadyFriend}
+                        className="dropdown-item flex w-full items-center gap-3 px-3 py-2 text-left transition-colors mx-1 my-0.5"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-edge bg-surface text-xs font-extrabold text-muted">
+                          {u.username.slice(0, 2).toUpperCase()}
+                        </div>
+                        <span className="flex-1 truncate text-sm font-bold text-foreground">
+                          {u.username}
+                        </span>
+                        {alreadyFriend ? (
+                          <span className="shrink-0 rounded-full border border-edge bg-surface px-2 py-0.5 text-[10px] font-extrabold text-muted">
+                            Already friends
+                          </span>
+                        ) : (
+                          <span className="shrink-0 rounded-full border border-primary bg-primary-light px-2 py-0.5 text-[10px] font-extrabold text-primary-dark">
+                            + Add
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             {searchStatus && (
               <p className="mt-2 text-xs font-bold text-muted">

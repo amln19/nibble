@@ -16,7 +16,7 @@ const links = [
 export function Nav() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/cook")) return null;
+  if (pathname?.startsWith("/cook") || pathname?.startsWith("/prep")) return null;
 
   return (
     <>

@@ -100,6 +100,35 @@ function minMatchesForTotal(total: number): number {
  * Pantry mode: recipe qualifies if enough significant ingredients are covered
  * (not every single line from the API — TheMealDB lists salt, water, etc.).
  */
+/**
+ * Returns which recipe ingredients the pantry covers and which are missing.
+ */
+export function getShoppingList(
+  recipeIngredients: readonly string[],
+  pantry: ReadonlySet<string>,
+): { have: string[]; need: string[] } {
+  const pantryList = [...pantry].map((p) => normalizeIngredient(p)).filter(Boolean);
+  const have: string[] = [];
+  const need: string[] = [];
+
+  for (const raw of recipeIngredients) {
+    const n = normalizeIngredient(raw);
+    if (!n || n.length < 2) continue;
+    if (STAPLE_IGNORE.has(n)) {
+      have.push(raw);
+      continue;
+    }
+    const covered = pantryList.some((p) => pantryCoversIngredient(p, n));
+    if (covered) {
+      have.push(raw);
+    } else {
+      need.push(raw);
+    }
+  }
+
+  return { have, need };
+}
+
 export function canMakeWithPantry(
   recipeIngredients: readonly string[],
   pantry: ReadonlySet<string>,

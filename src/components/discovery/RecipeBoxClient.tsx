@@ -216,6 +216,14 @@ export function RecipeBoxClient() {
                   <div className="mt-3 flex items-center gap-2">
                     {r?.instructions ? (
                       <Link
+                        href={`/prep?id=${encodeURIComponent(id)}`}
+                        className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-accent/60 bg-accent/10 py-2 px-3 text-xs font-extrabold text-accent shadow-[0_3px_0_rgba(124,92,252,0.3)] transition-all hover:bg-accent hover:text-white hover:shadow-[0_3px_0_rgba(124,92,252,0.5)] active:translate-y-0.5 active:shadow-none"
+                      >
+                        🧪 Prep
+                      </Link>
+                    ) : null}
+                    {r?.instructions ? (
+                      <Link
                         href={`/cook?id=${encodeURIComponent(id)}`}
                         className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-primary bg-primary-light py-2 text-xs font-extrabold text-primary-dark shadow-[0_3px_0_var(--primary)] transition-all hover:bg-primary hover:text-white hover:shadow-[0_3px_0_var(--primary-dark)] active:translate-y-0.5 active:shadow-none"
                       >

@@ -5,12 +5,14 @@ import {
   useSkippedRecipes,
   useLocalStorageState,
 } from "@/hooks/useLocalStorageState";
+import { useRecipeCache } from "@/hooks/useRecipeCache";
 import { normalizeIngredient } from "@/lib/ingredients";
 import {
   type Recipe,
   type SmartFilters,
   filterRecipes,
 } from "@/lib/recipes";
+import type { ScoredRecipe } from "@/lib/recommend";
 import { shuffle } from "@/lib/shuffle";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExploreSection, type ExploreCategory } from "./ExploreSection";
@@ -18,6 +20,8 @@ import { FilterChips } from "./FilterChips";
 import { PantryPanel } from "./PantryPanel";
 import { RecipeSearchBar } from "./RecipeSearchBar";
 import { SwipeDeck } from "./SwipeDeck";
+import { RecommendationBar } from "./RecommendationBar";
+import { SavedRecipesStrip } from "./SavedRecipesStrip";
 
 const defaultFilters: SmartFilters = {
   under30: false,
@@ -43,8 +47,10 @@ export function DiscoveryClient() {
     "recipe-pantry-items",
     [],
   );
-  const { savedIds, add: saveRecipe } = useRecipeBox();
+  const { savedIds, add: saveRecipe, remove: removeFromBox } = useRecipeBox();
   const { skippedIds, skip } = useSkippedRecipes();
+  const { cacheRecipes, recordLike, recordPass, getRecommendations } =
+    useRecipeCache();
 
   const [categories, setCategories] = useState<ExploreCategory[]>([]);
   const [category, setCategory] = useState<string | null>(null);
@@ -54,6 +60,68 @@ export function DiscoveryClient() {
   const [loadingCats, setLoadingCats] = useState(true);
   const [loadingMeals, setLoadingMeals] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showRecs, setShowRecs] = useState(false);
+  const [likedCount, setLikedCount] = useState(0);
+  const [savedDetails, setSavedDetails] = useState<Map<string, Recipe>>(
+    () => new Map(),
+  );
+
+  const savedIdsKey = useMemo(() => savedIds.join(","), [savedIds]);
+
+  const upsertSavedRecipe = useCallback((r: Recipe) => {
+    setSavedDetails((prev) => new Map(prev).set(r.id, r));
+  }, []);
+
+  useEffect(() => {
+    if (savedIds.length === 0) {
+      setSavedDetails(new Map());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const recipes = await fetchRecipeDetails(savedIds);
+        if (cancelled) return;
+        setSavedDetails((prev) => {
+          const next = new Map<string, Recipe>();
+          for (const id of savedIds) {
+            const fromApi = recipes.find((x) => x.id === id);
+            if (fromApi) next.set(id, fromApi);
+            else {
+              const keep = prev.get(id);
+              if (keep) next.set(id, keep);
+            }
+          }
+          return next;
+        });
+      } catch {
+        /* keep cached / optimistic rows */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedIdsKey]);
+
+  const handleRemoveSaved = useCallback(
+    (id: string) => {
+      removeFromBox(id);
+      setSavedDetails((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
+    },
+    [removeFromBox],
+  );
+
+  const savedRecipesOrdered = useMemo(
+    () =>
+      savedIds
+        .map((id) => savedDetails.get(id))
+        .filter((r): r is Recipe => r != null),
+    [savedIds, savedDetails],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -90,6 +158,7 @@ export function DiscoveryClient() {
     setLoadingMeals(true);
     setLoadError(null);
     setApiRecipes([]);
+    setShowRecs(false);
     try {
       const r = await fetch(`/api/recipes/filter?c=${encodeURIComponent(c)}`);
       if (!r.ok) throw new Error("filter");
@@ -103,19 +172,22 @@ export function DiscoveryClient() {
       }
       const ids = meals.map((m) => m.idMeal).slice(0, 40);
       const recipes = await fetchRecipeDetails(ids);
-      setApiRecipes(shuffle(recipes));
+      const shuffled = shuffle(recipes);
+      cacheRecipes(shuffled);
+      setApiRecipes(shuffled);
     } catch {
       setLoadError("Could not load recipes. Try another category.");
       setApiRecipes([]);
     } finally {
       setLoadingMeals(false);
     }
-  }, []);
+  }, [cacheRecipes]);
 
   const loadSearch = useCallback(async (q: string) => {
     setLoadingMeals(true);
     setLoadError(null);
     setApiRecipes([]);
+    setShowRecs(false);
     try {
       const r = await fetch(
         `/api/recipes/search?s=${encodeURIComponent(q.trim())}`,
@@ -131,14 +203,16 @@ export function DiscoveryClient() {
       }
       const ids = meals.map((m) => m.idMeal).slice(0, 40);
       const recipes = await fetchRecipeDetails(ids);
-      setApiRecipes(shuffle(recipes));
+      const shuffled = shuffle(recipes);
+      cacheRecipes(shuffled);
+      setApiRecipes(shuffled);
     } catch {
       setLoadError("Search failed. Try again.");
       setApiRecipes([]);
     } finally {
       setLoadingMeals(false);
     }
-  }, []);
+  }, [cacheRecipes]);
 
   useEffect(() => {
     if (!category || activeQuery) return;
@@ -189,6 +263,38 @@ export function DiscoveryClient() {
     [apiRecipes, smart, pantryMode, pantrySet, excludeIds],
   );
 
+  // Auto-show recommendations when deck empties with enough likes
+  const deckIsEmpty = !loadingMeals && deck.length === 0 && apiRecipes.length > 0;
+  useEffect(() => {
+    if (deckIsEmpty && likedCount >= 2) {
+      setShowRecs(true);
+    }
+  }, [deckIsEmpty, likedCount]);
+
+  const [recsPage, setRecsPage] = useState(0);
+  const recommendations: ScoredRecipe[] = useMemo(() => {
+    if (!showRecs) return [];
+    return getRecommendations(excludeIds, 10, category, recsPage * 10);
+  }, [showRecs, getRecommendations, excludeIds, category, recsPage]);
+
+  const handleSave = useCallback(
+    (r: Recipe) => {
+      saveRecipe(r.id);
+      upsertSavedRecipe(r);
+      recordLike(r);
+      setLikedCount((c) => c + 1);
+    },
+    [saveRecipe, upsertSavedRecipe, recordLike],
+  );
+
+  const handlePass = useCallback(
+    (r: Recipe) => {
+      skip(r.id);
+      recordPass(r);
+    },
+    [skip, recordPass],
+  );
+
   const anySmart =
     smart.under30 ||
     smart.highProtein ||
@@ -203,10 +309,10 @@ export function DiscoveryClient() {
   const emptyDetailText = useMemo(() => {
     if (loadingMeals || deck.length > 0) return undefined;
     if (activeQuery?.trim() && apiRecipes.length === 0) {
-      return `No recipes found for “${activeQuery}”. Try another word or browse a category in Explore.`;
+      return `No recipes found for "${activeQuery}". Try another word or browse a category in Explore.`;
     }
     if (someRecipesFilteredOut && (pantryMode || anySmart)) {
-      return "Pantry mode scores main ingredients (not every line from the API). Smart filters stack. Try another Explore category, add staples like onion, rice, or olive oil, or turn off filters you’re not using.";
+      return "Pantry mode scores main ingredients (not every line from the API). Smart filters stack. Try another Explore category, add staples like onion, rice, or olive oil, or turn off filters you're not using.";
     }
     return undefined;
   }, [
@@ -273,6 +379,11 @@ export function DiscoveryClient() {
             />
           </header>
 
+          <SavedRecipesStrip
+            recipes={savedRecipesOrdered}
+            onRemove={handleRemoveSaved}
+          />
+
           {loadingMeals ? (
             <div className="flex min-h-[min(60vh,420px)] items-center justify-center rounded-3xl border border-dashed border-rose-200/80 bg-white/70 shadow-inner shadow-rose-100/40">
               <p className="text-sm font-medium text-zinc-600">
@@ -282,9 +393,32 @@ export function DiscoveryClient() {
           ) : (
             <SwipeDeck
               recipes={deck}
-              onPass={(r) => skip(r.id)}
-              onSave={(r) => saveRecipe(r.id)}
+              onPass={handlePass}
+              onSave={handleSave}
               emptyDetail={emptyDetailText}
+            />
+          )}
+
+          {!showRecs && likedCount >= 2 && deck.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowRecs(true)}
+              className="mt-4 w-full rounded-2xl border border-rose-200 bg-white/90 py-3 text-sm font-medium text-rose-600 shadow-sm transition hover:bg-rose-50 active:scale-[0.98]"
+            >
+              Show my recommendations ({likedCount} liked)
+            </button>
+          )}
+
+          {showRecs && recommendations.length > 0 && (
+            <RecommendationBar
+              recommendations={recommendations}
+              onSave={(r: Recipe) => {
+                saveRecipe(r.id);
+                upsertSavedRecipe(r);
+                recordLike(r);
+                setLikedCount((c) => c + 1);
+              }}
+              onRefresh={() => setRecsPage((p) => p + 1)}
             />
           )}
         </main>
@@ -300,7 +434,7 @@ export function DiscoveryClient() {
           <FilterChips value={smart} onChange={setSmart} />
           {pantryMode && pantrySet.size === 0 ? (
             <p className="rounded-2xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
-              Add what’s in your fridge to see recipes you can make with those
+              Add what's in your fridge to see recipes you can make with those
               ingredients.
             </p>
           ) : null}
@@ -317,7 +451,7 @@ export function DiscoveryClient() {
         >
           TheMealDB
         </a>
-        . Times and tags are estimated from each meal’s text.
+        . Times and tags are estimated from each meal's text.
       </p>
     </div>
   );

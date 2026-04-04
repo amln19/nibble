@@ -3,11 +3,16 @@ import { NextResponse } from "next/server";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const c = searchParams.get("c");
-  if (!c?.trim()) {
-    return NextResponse.json({ error: "Missing category c" }, { status: 400 });
+  const a = searchParams.get("a");
+
+  if (!c?.trim() && !a?.trim()) {
+    return NextResponse.json({ error: "Missing category (c) or area (a)" }, { status: 400 });
   }
 
-  const url = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(c.trim())}`;
+  const param = c?.trim()
+    ? `c=${encodeURIComponent(c.trim())}`
+    : `a=${encodeURIComponent(a!.trim())}`;
+  const url = `https://www.themealdb.com/api/json/v1/1/filter.php?${param}`;
 
   try {
     const res = await fetch(url, { next: { revalidate: 3600 } });

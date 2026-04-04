@@ -1,7 +1,8 @@
 "use client";
 
 import { normalizeIngredient } from "@/lib/ingredients";
-import { useCallback, useState } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 
 type Props = {
   pantryMode: boolean;
@@ -21,6 +22,17 @@ export function PantryPanel({
   embedded = false,
 }: Props) {
   const [draft, setDraft] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const [allIngredients, setAllIngredients] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/recipes/ingredients")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.ingredients) setAllIngredients(d.ingredients);
+      })
+      .catch(() => {});
+  }, []);
 
   const submit = useCallback(() => {
     const n = normalizeIngredient(draft);
@@ -28,6 +40,15 @@ export function PantryPanel({
     onAdd(n);
     setDraft("");
   }, [draft, onAdd]);
+
+  const suggestions =
+    draft.trim().length > 0
+      ? allIngredients
+          .filter((i) => i.toLowerCase().includes(draft.trim().toLowerCase()))
+          .slice(0, 5)
+      : [];
+
+  const showDropdown = isFocused && suggestions.length > 0;
 
   return (
     <div className={embedded ? "" : "rounded-2xl border-2 border-edge bg-card p-4 shadow-[0_3px_0_var(--edge)]"}>
@@ -64,21 +85,63 @@ export function PantryPanel({
           Add ingredient
         </label>
         <div className="flex gap-2">
-          <input
-            id="pantry-input"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                submit();
-              }
-            }}
-            placeholder="e.g. eggs, tomato, rice\u2026"
-            className="min-w-0 flex-1 rounded-2xl border-2 border-edge bg-card px-3 py-2 text-sm font-bold text-foreground placeholder:font-normal placeholder:text-muted shadow-[0_2px_0_var(--edge)] transition-all focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
-            autoComplete="off"
-            autoCapitalize="off"
-          />
+          <div className="relative min-w-0 flex-1">
+            <input
+              id="pantry-input"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submit();
+                }
+              }}
+              placeholder="e.g. eggs, tomato, rice\u2026"
+              className="w-full rounded-2xl border-2 border-edge bg-card px-3 py-2 text-sm font-bold text-foreground placeholder:font-normal placeholder:text-muted shadow-[0_2px_0_var(--edge)] transition-all focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
+              autoComplete="off"
+              autoCapitalize="off"
+            />
+            
+            {showDropdown && (
+              <div className="absolute left-0 top-full z-[100] mt-2 w-full overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-xl">
+                <ul className="max-h-60 overflow-y-auto overscroll-contain">
+                  {suggestions.map((item, i) => (
+                    <li key={item}>
+                      <button
+                        type="button"
+                        onPointerDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          const n = normalizeIngredient(item);
+                          if (n) onAdd(n);
+                          setDraft("");
+                          setIsFocused(false);
+                        }}
+                        className={`flex w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-surface ${
+                          i !== suggestions.length - 1 ? "border-b-2 border-edge" : ""
+                        }`}
+                      >
+                        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-surface flex items-center justify-center border-2 border-edge">
+                          <Image
+                            src={`https://www.themealdb.com/images/ingredients/${encodeURIComponent(item)}-Small.png`}
+                            alt={item}
+                            fill
+                            sizes="32px"
+                            className="object-cover"
+                          />
+                        </div>
+                        <span className="truncate text-sm font-bold text-foreground">
+                          {item}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+          
           <button
             type="button"
             onClick={submit}
@@ -87,6 +150,7 @@ export function PantryPanel({
             Add
           </button>
         </div>
+        
         {pantryItems.length > 0 ? (
           <ul className="mt-3 flex flex-wrap gap-2">
             {pantryItems.map((item) => (

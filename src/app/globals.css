@@ -530,7 +530,159 @@ dialog.kitchen-match-dialog::backdrop {
   .act-mix,
   .act-boil-bubble,
   .act-peel-strip,
-  .act-plate-glow {
+  .act-plate-glow,
+  .prep-pour-stream,
+  .prep-drag-pulse,
+  .prep-wrong-shake,
+  .prep-crack-split,
+  .prep-crack-shake,
+  .prep-mix-wobble,
+  .prep-success-pop,
+  .prep-challenge-enter,
+  .prep-score-pop,
+  .prep-heat-glow,
+  .prep-smoke {
     animation: none !important;
   }
+}
+
+/* ══════════════════════════════════════════════
+   Prep Mode — Phase 2 Virtual Kitchen
+   ══════════════════════════════════════════════ */
+
+.prep-mode-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-nunito), system-ui, sans-serif;
+}
+
+/* Pour stream pulse */
+@keyframes prep-pour-anim {
+  0%, 100% { opacity: 0.3; transform: scaleY(0.85) translateX(-50%); }
+  50% { opacity: 0.7; transform: scaleY(1.1) translateX(-50%); }
+}
+
+.prep-pour-stream {
+  animation: prep-pour-anim 0.4s ease-in-out infinite;
+}
+
+/* Liquid wave */
+@keyframes prep-wave {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-2px) scaleY(1.5); }
+}
+
+/* Drag target pulse */
+@keyframes prep-drag-pulse-anim {
+  0%, 100% { border-color: var(--edge); }
+  50% { border-color: var(--accent); }
+}
+
+.prep-drag-pulse {
+  animation: prep-drag-pulse-anim 1.8s ease-in-out infinite;
+}
+
+/* Wrong pick shake */
+@keyframes prep-wrong-shake-anim {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(6px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(2px); }
+}
+
+.prep-wrong-shake {
+  animation: prep-wrong-shake-anim 0.5s ease-out;
+}
+
+/* Crack egg split */
+@keyframes prep-crack-split-anim {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.3); }
+  100% { transform: scale(0.5); opacity: 0; }
+}
+
+.prep-crack-split {
+  animation: prep-crack-split-anim 0.4s ease-out both;
+}
+
+/* Crack egg shake */
+@keyframes prep-crack-shake-anim {
+  0%, 100% { transform: scale(1.1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-3deg); }
+  75% { transform: scale(1.1) rotate(3deg); }
+}
+
+.prep-crack-shake {
+  animation: prep-crack-shake-anim 0.15s ease-in-out 2;
+}
+
+/* Mix bowl wobble */
+@keyframes prep-mix-wobble-anim {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.prep-mix-wobble {
+  animation: prep-mix-wobble-anim 0.15s ease-in-out;
+}
+
+/* Success pop */
+@keyframes prep-success-pop-anim {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.prep-success-pop {
+  animation: prep-success-pop-anim 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Challenge enter */
+@keyframes prep-challenge-enter-anim {
+  0% { opacity: 0; transform: translateY(20px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.prep-challenge-enter {
+  animation: prep-challenge-enter-anim 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Score pop in */
+@keyframes prep-score-pop-anim {
+  0% { opacity: 0; transform: scale(0) rotate(-10deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.prep-score-pop {
+  animation: prep-score-pop-anim 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Heat indicator glow */
+@keyframes prep-heat-glow-anim {
+  0%, 100% { box-shadow: 0 0 8px rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
+}
+
+.prep-heat-glow {
+  animation: prep-heat-glow-anim 1s ease-in-out infinite;
+}
+
+/* Smoke wisps */
+@keyframes prep-smoke-anim {
+  0% { opacity: 0.5; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-20px) scale(1.5); }
+}
+
+.prep-smoke {
+  animation: prep-smoke-anim 1.5s ease-out infinite;
 }

@@ -1,12 +1,21 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+
+type SlimRecipe = {
+  id: string;
+  title: string;
+  imageUrl?: string;
+  category: string;
+};
 
 type Props = {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
   onClear: () => void;
+  onRecipeSelect?: (recipeId: string) => void;
   activeQuery: string | null;
   disabled?: boolean;
   showSectionLabel?: boolean;
@@ -17,16 +26,54 @@ export function RecipeSearchBar({
   onChange,
   onSubmit,
   onClear,
+  onRecipeSelect,
   activeQuery,
   disabled,
 }: Props) {
+  const [results, setResults] = useState<SlimRecipe[]>([]);
+  const [isFocused, setIsFocused] = useState(false);
+
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
       onSubmit();
+      setIsFocused(false);
     },
     [onSubmit],
   );
+
+  useEffect(() => {
+    if (value.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    let valid = true;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/recipes/search?s=${encodeURIComponent(value.trim())}`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!valid) return;
+        const meals = (data.meals || []).slice(0, 5).map((m: any) => ({
+          id: m.idMeal,
+          title: m.strMeal,
+          imageUrl: m.strMealThumb,
+          category: m.strCategory,
+        }));
+        setResults(meals);
+      } catch (err) {
+        // ignore
+      }
+    }, 300);
+    return () => {
+      valid = false;
+      clearTimeout(timer);
+    };
+  }, [value]);
+
+  const showDropdown = isFocused && results.length > 0;
 
   return (
     <form onSubmit={handleSubmit} className="w-full" role="search">
@@ -45,6 +92,8 @@ export function RecipeSearchBar({
             type="search"
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             placeholder="Search recipes"
             disabled={disabled}
             autoComplete="off"
@@ -55,13 +104,61 @@ export function RecipeSearchBar({
           {value ? (
             <button
               type="button"
-              onClick={onClear}
+              onClick={() => {
+                onClear();
+                setResults([]);
+              }}
               className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-0.5 text-muted transition hover:text-foreground"
               aria-label="Clear search"
             >
               ✕
             </button>
           ) : null}
+
+          {/* Autocomplete Dropdown */}
+          {showDropdown && (
+            <div className="absolute left-0 top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-xl">
+              <ul className="max-h-64 overflow-y-auto overscroll-contain">
+                {results.map((r, i) => (
+                  <li key={r.id}>
+                    <button
+                      type="button"
+                      onPointerDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        onRecipeSelect?.(r.id);
+                        setIsFocused(false);
+                      }}
+                      className={`flex w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-surface ${
+                        i !== results.length - 1 ? "border-b-2 border-edge" : ""
+                      }`}
+                    >
+                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-surface flex items-center justify-center border-2 border-edge">
+                        {r.imageUrl ? (
+                          <Image
+                            src={r.imageUrl}
+                            alt={r.title}
+                            fill
+                            sizes="40px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <span className="text-[10px] text-muted">No img</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-foreground">
+                          {r.title}
+                        </p>
+                        <p className="truncate text-xs font-medium text-muted">
+                          {r.category}
+                        </p>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
         <button
           type="submit"

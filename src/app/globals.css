@@ -125,7 +125,8 @@ dialog.kitchen-match-dialog::backdrop {
 }
 
 .animate-goose-idle   { animation: goose-idle   3.2s ease-in-out infinite; }
-.animate-goose-bounce { animation: goose-bounce 0.6s cubic-bezier(.36,.07,.19,.97) forwards; }
+/* bounce uses "both" fill so it holds its start-frame before playing, preventing the flash-to-zero on class swap */
+.animate-goose-bounce { animation: goose-bounce 0.62s cubic-bezier(.36,.07,.19,.97) both; }
 
 /* ── Motion keyframes ── */
 @keyframes mascot-bob {

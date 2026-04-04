@@ -34,14 +34,14 @@ export function BrandMascot({
 
   return (
     <div
-      className={`relative shrink-0 overflow-hidden rounded-full bg-primary shadow-[0_6px_24px_rgba(255,75,140,0.3)] ring-[3px] ring-primary/30 ${dim} ${className}`.trim()}
+      className={`relative shrink-0 ${dim} ${className}`.trim()}
     >
       <Image
-        src="/nibble-logo.png"
+        src="/goose-happy.png"
         alt={alt}
         fill
         priority={priority}
-        className="object-cover object-[50%_31%] scale-[1.78]"
+        className="object-contain drop-shadow-xl"
         sizes={sizesAttr}
       />
     </div>

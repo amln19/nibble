@@ -1,6 +1,5 @@
 "use client";
 
-import { BrandMascot } from "@/components/BrandMascot";
 import { NavAuth } from "@/components/NavAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BookmarkCheck, Compass, LayoutGrid, Trophy, User } from "lucide-react";
@@ -28,7 +27,8 @@ export function Nav() {
             href="/"
             className="flex items-center gap-2.5 font-extrabold tracking-tight text-foreground transition-transform hover:scale-[1.02]"
           >
-            <BrandMascot variant="header" priority />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/goose-happy.png" alt="" width={36} height={36} className="h-9 w-9 object-contain drop-shadow-sm" draggable={false} />
             <span className="text-lg">Nibble</span>
           </Link>
 

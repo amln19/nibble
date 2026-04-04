@@ -86,7 +86,7 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
           <div className="flex flex-col items-center gap-2">
             <Link
               href={`/cook?id=${encodeURIComponent(current.id)}`}
-              className="tap-3d flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-amber-400 bg-linear-to-b from-amber-400 to-orange-500 shadow-[0_4px_0_rgba(180,83,9,0.5)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
+              className="tap-3d flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-orange-300 bg-orange-300 shadow-[0_4px_0_rgba(180,120,60,0.35)] transition-all hover:bg-orange-400 hover:border-orange-400 active:translate-y-1 active:shadow-none"
               aria-label="Cook this recipe with Gordon"
             >
               <ChefHat className="h-7 w-7 text-stone-900" />

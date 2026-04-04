@@ -1,6 +1,6 @@
 "use client";
 
-import { BrandMascot } from "@/components/BrandMascot";
+import { GooseLoginMascot } from "@/components/GooseMascot";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -80,7 +80,7 @@ export function LoginForm() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center sm:max-w-lg">
       <div className="mb-6">
-        <BrandMascot variant="welcome" priority />
+        <GooseLoginMascot />
       </div>
       <div className="w-full rounded-2xl border border-pink-100 bg-white p-6 shadow-sm sm:p-8">
         <h1 className="font-serif text-2xl font-semibold text-zinc-900">
@@ -122,7 +122,7 @@ export function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/25"
+              className="mt-1.5 w-full rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400/25"
               placeholder="you@example.com"
             />
           </div>
@@ -144,14 +144,14 @@ export function LoginForm() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/25"
+              className="mt-1.5 w-full rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400/25"
               placeholder="••••••••"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
+            className="w-full rounded-xl bg-orange-400 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-orange-500 disabled:opacity-60"
           >
             {loading
               ? "Please wait…"
@@ -167,7 +167,7 @@ export function LoginForm() {
               No account?{" "}
               <button
                 type="button"
-                className="font-medium text-green-600 hover:text-green-700"
+                className="font-medium text-pink-500 hover:text-pink-600"
                 onClick={() => {
                   setMode("signup");
                   setError(null);
@@ -182,7 +182,7 @@ export function LoginForm() {
               Already have an account?{" "}
               <button
                 type="button"
-                className="font-medium text-green-600 hover:text-green-700"
+                className="font-medium text-pink-500 hover:text-pink-600"
                 onClick={() => {
                   setMode("signin");
                   setError(null);
@@ -198,7 +198,7 @@ export function LoginForm() {
         <p className="mt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-zinc-500 underline-offset-2 hover:text-green-600 hover:underline"
+            className="text-sm text-zinc-500 underline-offset-2 hover:text-pink-500 hover:underline"
           >
             ← Back to Discover
           </Link>

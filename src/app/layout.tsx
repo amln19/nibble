@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Nunito, Geist_Mono } from "next/font/google";
 import { Nav } from "@/components/Nav";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { GooseMascot } from "@/components/GooseMascot";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -62,6 +63,7 @@ export default function RootLayout({
         <ThemeProvider>
           <Nav />
           <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+          <GooseMascot />
         </ThemeProvider>
       </body>
     </html>

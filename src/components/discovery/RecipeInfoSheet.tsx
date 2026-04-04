@@ -165,7 +165,7 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
                   requestClose();
                   router.push(`/cook?id=${encodeURIComponent(recipe.id)}`);
                 }}
-                className="tap-3d flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-amber-400 bg-linear-to-r from-amber-500 to-orange-500 px-6 py-4 text-sm font-black text-stone-900 shadow-[0_4px_16px_rgba(251,191,36,0.35)] transition-all hover:shadow-[0_6px_24px_rgba(251,191,36,0.45)]"
+                className="tap-3d flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-orange-300 bg-orange-300 px-6 py-4 text-sm font-black text-stone-900 shadow-[0_4px_0_rgba(180,120,60,0.3)] transition-all hover:bg-orange-400 hover:border-orange-400 hover:shadow-[0_6px_20px_rgba(251,146,60,0.35)] active:translate-y-[2px] active:shadow-none"
               >
                 <ChefHat className="h-5 w-5" />
                 Cook with Gordon

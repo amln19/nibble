@@ -19,8 +19,6 @@ import { SavedRecipesStrip } from "./SavedRecipesStrip";
 import { RecipeSearchBar } from "./RecipeSearchBar";
 import { SwipeDeck } from "./SwipeDeck";
 import { RecipeInfoPanel } from "./RecipeInfoPanel";
-import Lottie from "lottie-react";
-import gooseAnimation from "../../../public/animations/goose.json";
 
 const defaultFilters: SmartFilters = {
   under30: false,
@@ -350,21 +348,12 @@ export function DiscoveryClient() {
         showPantryHint={pantryMode && pantrySet.size === 0}
       />
 
-      <div className="mx-auto w-full max-w-8xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
-        {/* ── Page Title with Walking Goose ── */}
+      <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+        {/* ── Page Title ── */}
         <div className="mb-6">
-          <div className="relative">
-            <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl inline">
-              Explore Gordon's Recipes
-            </h1>
-            <div className="absolute top-0 left-0 right-0 overflow-visible pointer-events-none">
-              <div className="absolute top-0 animate-walk-goose-from-title">
-                <div className="w-10 h-10">
-                  <Lottie animationData={gooseAnimation} loop={true} />
-                </div>
-              </div>
-            </div>
-          </div>
+          <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl">
+            Explore Gordon's Recipes
+          </h1>
           <p className="mt-2 text-base text-muted sm:text-lg">
             Swipe through delicious recipes and find your next meal
           </p>

@@ -75,6 +75,58 @@ dialog.kitchen-match-dialog::backdrop {
   background: rgb(0 0 0 / 0.7);
 }
 
+/* ── Category icon animations ── */
+@keyframes icon-float {
+  0%,  100% { transform: translateY(0)    rotate(0deg)   scale(1);    }
+  30%        { transform: translateY(-5px) rotate(-2deg)  scale(1.04); }
+  70%        { transform: translateY(-3px) rotate(1.5deg) scale(1.02); }
+}
+
+@keyframes icon-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.28) rotate(-4deg); }
+  65%  { transform: scale(0.92) rotate(2deg);  }
+  82%  { transform: scale(1.1)  rotate(-1deg); }
+  100% { transform: scale(1)   rotate(0deg);  }
+}
+
+.icon-animate        { animation: icon-float 3.4s ease-in-out infinite; }
+.icon-animate-pop    { animation: icon-pop   0.45s cubic-bezier(.36,.07,.19,.97) forwards; }
+
+/* stagger delays so icons don't bob in sync */
+.icon-d0  { animation-delay: 0s;    }
+.icon-d1  { animation-delay: 0.24s; }
+.icon-d2  { animation-delay: 0.48s; }
+.icon-d3  { animation-delay: 0.72s; }
+.icon-d4  { animation-delay: 0.96s; }
+.icon-d5  { animation-delay: 1.20s; }
+.icon-d6  { animation-delay: 1.44s; }
+.icon-d7  { animation-delay: 1.68s; }
+.icon-d8  { animation-delay: 1.92s; }
+.icon-d9  { animation-delay: 2.16s; }
+.icon-d10 { animation-delay: 2.40s; }
+.icon-d11 { animation-delay: 2.64s; }
+.icon-d12 { animation-delay: 2.88s; }
+.icon-d13 { animation-delay: 3.12s; }
+
+/* ── Goose mascot corner animations ── */
+@keyframes goose-idle {
+  0%,  100% { transform: translateY(0) rotate(0deg); }
+  25%        { transform: translateY(-4px) rotate(-1deg); }
+  75%        { transform: translateY(-2px) rotate(1deg); }
+}
+
+@keyframes goose-bounce {
+  0%   { transform: translateY(0) scale(1); }
+  30%  { transform: translateY(-18px) scale(1.08); }
+  55%  { transform: translateY(0) scale(0.95); }
+  75%  { transform: translateY(-7px) scale(1.03); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.animate-goose-idle   { animation: goose-idle   3.2s ease-in-out infinite; }
+.animate-goose-bounce { animation: goose-bounce 0.6s cubic-bezier(.36,.07,.19,.97) forwards; }
+
 /* ── Motion keyframes ── */
 @keyframes mascot-bob {
   0%, 100% { transform: translateY(0); }

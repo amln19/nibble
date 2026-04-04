@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { CategoryIllustration } from "./CategoryIcons";
 
 export type ExploreCategory = {
   strCategory: string;
@@ -43,7 +43,7 @@ export function ExploreSection({
           className="flex h-full flex-col gap-1.5 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="list"
         >
-          {categories.map((c) => {
+          {categories.map((c, i) => {
             const active = selected === c.strCategory;
             return (
               <button
@@ -58,15 +58,8 @@ export function ExploreSection({
                     : "border-transparent hover:border-edge hover:bg-surface"
                 } ${disabled ? "opacity-50" : ""}`}
               >
-                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-surface">
-                  <Image
-                    src={c.strCategoryThumb}
-                    alt=""
-                    fill
-                    className="object-cover transition-transform group-hover:scale-105"
-                    sizes="36px"
-                    draggable={false}
-                  />
+                <div className="shrink-0">
+                  <CategoryIllustration name={c.strCategory} active={active} size={44} index={i} />
                 </div>
                 <span
                   className={`min-w-0 flex-1 break-words text-left text-[12px] font-extrabold leading-snug line-clamp-2 ${active ? "text-primary-dark" : "text-foreground"}`}
@@ -85,7 +78,7 @@ export function ExploreSection({
               className="flex gap-2.5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
               role="list"
             >
-              {categories.map((c) => {
+              {categories.map((c, i) => {
                 const active = selected === c.strCategory;
                 return (
                   <button
@@ -94,25 +87,12 @@ export function ExploreSection({
                     role="listitem"
                     disabled={disabled}
                     onClick={() => onSelect(c.strCategory)}
-                    className={`flex w-24 shrink-0 snap-center flex-col items-center gap-1.5 overflow-hidden rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
-                      active
-                        ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
-                        : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
-                    } ${disabled ? "opacity-50" : ""}`}
+                    className={`group flex w-20 shrink-0 snap-center flex-col items-center gap-2 rounded-2xl border-0 bg-transparent py-2 transition-all active:scale-95 ${
+                      disabled ? "opacity-50" : ""
+                    }`}
                   >
-                    <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface">
-                      <Image
-                        src={c.strCategoryThumb}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                        draggable={false}
-                      />
-                    </div>
-                    <span
-                      className={`block w-full min-w-0 break-words text-center text-[11px] font-extrabold leading-snug line-clamp-2 ${active ? "text-primary-dark" : "text-foreground"}`}
-                    >
+                    <CategoryIllustration name={c.strCategory} active={active} size={56} index={i} />
+                    <span className={`line-clamp-1 w-full text-center text-[11px] font-extrabold ${active ? "text-primary" : "text-foreground"}`}>
                       {c.strCategory}
                     </span>
                   </button>
@@ -126,7 +106,7 @@ export function ExploreSection({
             className="hidden gap-2.5 lg:grid lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10"
             role="list"
           >
-            {categories.map((c) => {
+            {categories.map((c, i) => {
               const active = selected === c.strCategory;
               return (
                 <button
@@ -135,25 +115,12 @@ export function ExploreSection({
                   role="listitem"
                   disabled={disabled}
                   onClick={() => onSelect(c.strCategory)}
-                  className={`group flex flex-col items-center gap-1.5 overflow-hidden rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
-                    active
-                      ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
-                      : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
-                  } ${disabled ? "opacity-50" : ""}`}
+                  className={`group flex flex-col items-center gap-2 rounded-2xl border-0 bg-transparent py-2 transition-all active:scale-95 ${
+                    disabled ? "opacity-50" : ""
+                  }`}
                 >
-                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface">
-                    <Image
-                      src={c.strCategoryThumb}
-                      alt=""
-                      fill
-                      className="object-cover transition-transform group-hover:scale-105"
-                      sizes="(min-width: 1536px) 10vw, (min-width: 1280px) 12vw, 14vw"
-                      draggable={false}
-                    />
-                  </div>
-                  <span
-                    className={`block w-full min-w-0 break-words text-center text-[11px] font-extrabold leading-snug line-clamp-2 ${active ? "text-primary-dark" : "text-foreground"}`}
-                  >
+                  <CategoryIllustration name={c.strCategory} active={active} size={60} index={i} />
+                  <span className={`line-clamp-1 w-full text-center text-[11px] font-extrabold ${active ? "text-primary" : "text-foreground"}`}>
                     {c.strCategory}
                   </span>
                 </button>

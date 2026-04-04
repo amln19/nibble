@@ -189,10 +189,25 @@ export function PointsClient() {
           .from("creations")
           .select("id", { count: "exact", head: true })
           .eq("user_id", user.id),
-        supabase
-          .from("creation_likes")
-          .select("id", { count: "exact", head: true })
-          .eq("creations.user_id", user.id),
+        // Count likes received: find all creations by this user, then count their likes
+        (async () => {
+          const { data: userCreations } = await supabase
+            .from("creations")
+            .select("id")
+            .eq("user_id", user.id);
+
+          if (!userCreations || userCreations.length === 0) {
+            return { count: 0 };
+          }
+
+          const creationIds = userCreations.map(c => c.id);
+          const { count } = await supabase
+            .from("creation_likes")
+            .select("id", { count: "exact", head: true })
+            .in("creation_id", creationIds);
+
+          return { count: count ?? 0 };
+        })(),
       ]);
 
       setStats({

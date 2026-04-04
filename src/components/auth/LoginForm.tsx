@@ -82,11 +82,11 @@ export function LoginForm() {
       <div className="mb-6">
         <GooseLoginMascot />
       </div>
-      <div className="w-full rounded-2xl border border-pink-100 bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="font-serif text-2xl font-semibold text-zinc-900">
+      <div className="w-full rounded-2xl border-2 border-edge bg-card p-6 shadow-[0_4px_0_var(--edge)] dark:border-edge dark:bg-card/50 dark:shadow-[0_4px_0_rgba(0,0,0,0.35)] dark:backdrop-blur-xl sm:p-8">
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
           {mode === "signin" ? "Sign in" : "Create account"}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-primary">
           {mode === "signin"
             ? "Welcome back — use your Supabase account."
             : "Sign up with email and password."}
@@ -94,14 +94,14 @@ export function LoginForm() {
 
         {(error || urlError) && (
           <p
-            className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+            className="mt-4 rounded-xl border-2 border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-800 dark:border-red-900/80 dark:bg-red-950/45 dark:text-red-300"
             role="alert"
           >
             {error ?? decodeURIComponent(urlError ?? "")}
           </p>
         )}
         {message && (
-          <p className="mt-4 rounded-lg border border-pink-200 bg-pink-50 px-3 py-2 text-sm text-zinc-900">
+          <p className="mt-4 rounded-xl border-2 border-primary/35 bg-primary-light px-3 py-2 text-sm font-bold text-foreground">
             {message}
           </p>
         )}
@@ -110,7 +110,7 @@ export function LoginForm() {
           <div>
             <label
               htmlFor="email"
-              className="block text-xs font-medium uppercase tracking-wide text-zinc-500"
+              className="block text-xs font-extrabold uppercase tracking-wide text-muted"
             >
               Email
             </label>
@@ -122,14 +122,14 @@ export function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400/25"
+              className="mt-1.5 w-full rounded-xl border-2 border-edge bg-surface px-3 py-2.5 text-sm font-bold text-foreground shadow-[0_2px_0_var(--edge)] placeholder:font-normal placeholder:text-muted focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
               placeholder="you@example.com"
             />
           </div>
           <div>
             <label
               htmlFor="password"
-              className="block text-xs font-medium uppercase tracking-wide text-zinc-500"
+              className="block text-xs font-extrabold uppercase tracking-wide text-muted"
             >
               Password
             </label>
@@ -144,14 +144,14 @@ export function LoginForm() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-pink-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400/25"
+              className="mt-1.5 w-full rounded-xl border-2 border-edge bg-surface px-3 py-2.5 text-sm font-bold text-foreground shadow-[0_2px_0_var(--edge)] placeholder:font-normal placeholder:text-muted focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
               placeholder="••••••••"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-orange-400 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-orange-500 disabled:opacity-60"
+            className="w-full rounded-xl border-2 border-primary-dark bg-primary py-2.5 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-0.5 active:shadow-none disabled:opacity-50 disabled:shadow-none"
           >
             {loading
               ? "Please wait…"
@@ -161,13 +161,13 @@ export function LoginForm() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-zinc-600">
+        <p className="mt-6 text-center text-sm text-muted">
           {mode === "signin" ? (
             <>
               No account?{" "}
               <button
                 type="button"
-                className="font-medium text-pink-500 hover:text-pink-600"
+                className="font-extrabold text-primary-dark hover:underline"
                 onClick={() => {
                   setMode("signup");
                   setError(null);
@@ -182,7 +182,7 @@ export function LoginForm() {
               Already have an account?{" "}
               <button
                 type="button"
-                className="font-medium text-pink-500 hover:text-pink-600"
+                className="font-extrabold text-primary-dark hover:underline"
                 onClick={() => {
                   setMode("signin");
                   setError(null);
@@ -198,7 +198,7 @@ export function LoginForm() {
         <p className="mt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-zinc-500 underline-offset-2 hover:text-pink-500 hover:underline"
+            className="text-sm font-bold text-muted underline-offset-2 transition hover:text-primary-dark hover:underline"
           >
             ← Back to Discover
           </Link>

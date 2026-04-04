@@ -11,6 +11,9 @@
   --primary: #ff4b8c;
   --primary-dark: #cc3570;
   --primary-light: #fff0f5;
+  --secondary: #ff8534;
+  --secondary-dark: #e67022;
+  --secondary-light: #fff5ed;
   --accent: #7c5cfc;
   --golden: #ffb800;
   --muted: #afafaf;
@@ -29,6 +32,9 @@
   --primary: #ff5e9e;
   --primary-dark: #ff87b8;
   --primary-light: #2a1520;
+  --secondary: #ff9d5c;
+  --secondary-dark: #ffb380;
+  --secondary-light: #2a1f15;
   --accent: #9b7eff;
   --golden: #ffc233;
   --muted: #6e6e7a;
@@ -49,6 +55,9 @@
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
   --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-secondary-dark: var(--secondary-dark);
+  --color-secondary-light: var(--secondary-light);
   --color-accent: var(--accent);
   --color-golden: var(--golden);
   --color-muted: var(--muted);

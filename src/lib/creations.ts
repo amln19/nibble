@@ -10,6 +10,8 @@ export type CreationRow = {
   likes_count?: number;
   comments_count?: number;
   user_has_liked?: boolean;
+  recipe_id?: string | null;
+  recipe_title?: string | null;
 };
 
 export type CommentRow = {

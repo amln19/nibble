@@ -398,13 +398,13 @@ export function DiscoveryClient() {
             onClick={() => setKitchenMatchOpen(true)}
             className={`inline-flex items-center gap-1.5 rounded-2xl border-2 px-4 py-2 text-xs font-extrabold transition-all active:translate-y-0.5 active:shadow-none ${
               kitchenMatchActive
-                ? "border-primary bg-primary-light text-primary-dark shadow-[0_3px_0_var(--primary)]"
+                ? "border-secondary bg-secondary-light text-secondary-dark shadow-[0_3px_0_var(--secondary)]"
                 : "border-edge bg-card text-foreground shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
             }`}
           >
             Kitchen Match
             {kitchenMatchActive && kitchenMatchBadgeCount > 0 ? (
-              <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-extrabold text-white tabular-nums">
+              <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-extrabold text-white tabular-nums">
                 {kitchenMatchBadgeCount > 99 ? "99+" : kitchenMatchBadgeCount}
               </span>
             ) : null}

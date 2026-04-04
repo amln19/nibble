@@ -44,7 +44,7 @@ function PostCard({
   const hasLiked = post.user_has_liked ?? false;
 
   return (
-    <li className="group relative overflow-hidden rounded-2xl border-[3px] border-edge bg-card shadow-[0_4px_0_var(--edge)] transition-all hover:-translate-y-1 hover:border-primary/60 hover:shadow-[0_6px_0_var(--primary)]">
+    <li className="group relative overflow-hidden rounded-2xl border-[3px] border-edge bg-card shadow-[0_4px_0_var(--edge)] transition-all hover:-translate-y-1 hover:border-secondary/60 hover:shadow-[0_6px_0_var(--secondary)]">
       <button
         type="button"
         className="relative block w-full"
@@ -289,6 +289,21 @@ function PostDetailModal({
               </p>
             ) : null}
 
+            {/* Recipe link */}
+            {post.recipe_id ? (
+              <div className="mt-2 rounded-xl border-2 border-secondary/40 bg-secondary/5 p-3">
+                <p className="mb-2 text-xs font-extrabold text-muted">
+                  📖 Recipe used: <span className="text-foreground">{post.recipe_title || `Recipe #${post.recipe_id}`}</span>
+                </p>
+                <Link
+                  href={`/cook?id=${encodeURIComponent(post.recipe_id)}`}
+                  className="inline-flex items-center gap-1.5 rounded-xl border-2 border-secondary/60 bg-secondary/10 px-3 py-1.5 text-xs font-extrabold text-secondary-dark shadow-[0_2px_0_rgba(255,133,52,0.2)] transition-all hover:bg-secondary hover:text-white hover:border-secondary-dark hover:shadow-[0_2px_0_var(--secondary-dark)] active:translate-y-0.5 active:shadow-none"
+                >
+                  🪿 Cook with Gordon
+                </Link>
+              </div>
+            ) : null}
+
             {/* Like */}
             <div className="mt-3">
               {userId && onLike ? (
@@ -421,10 +436,17 @@ function NewPostModal({
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(true);
+  const [recipeId, setRecipeId] = useState("");
+  const [recipeTitle, setRecipeTitle] = useState("");
+  const [recipeSearch, setRecipeSearch] = useState("");
+  const [recipeResults, setRecipeResults] = useState<Array<{id: string; title: string}>>([]);
+  const [searchingRecipes, setSearchingRecipes] = useState(false);
+  const [showRecipeDropdown, setShowRecipeDropdown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const recipeSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -433,6 +455,50 @@ function NewPostModal({
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  // Close recipe dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (recipeSearchRef.current && !recipeSearchRef.current.contains(e.target as Node)) {
+        setShowRecipeDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Search recipes
+  useEffect(() => {
+    const q = recipeSearch.trim();
+    if (!q || q.length < 2) {
+      setRecipeResults([]);
+      setShowRecipeDropdown(false);
+      return;
+    }
+
+    let cancelled = false;
+    const timeoutId = setTimeout(async () => {
+      setSearchingRecipes(true);
+      try {
+        const res = await fetch(`/api/recipes/search?s=${encodeURIComponent(q)}`);
+        if (!res.ok || cancelled) return;
+        const data = await res.json() as { meals?: Array<{ idMeal: string; strMeal: string }> | null };
+        if (cancelled) return;
+        const meals = data.meals || [];
+        setRecipeResults(meals.slice(0, 8).map(m => ({ id: m.idMeal, title: m.strMeal })));
+        setShowRecipeDropdown(meals.length > 0);
+      } catch {
+        // silently fail
+      } finally {
+        if (!cancelled) setSearchingRecipes(false);
+      }
+    }, 400); // debounce
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [recipeSearch]);
 
   useEffect(() => {
     if (!file) { setPreviewUrl(null); return; }
@@ -473,20 +539,41 @@ function NewPostModal({
       if (upErr) throw upErr;
       const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
       const author_label = userEmail?.split("@")[0]?.slice(0, 40) ?? "Chef";
+      const recipe_id = recipeId.trim() || null;
+
       const { data: row, error: insErr } = await supabase
         .from("creations")
-        .insert({ user_id: userId, title: t, details: details.trim() || null, image_url: publicUrl, author_label, is_public: isPublic })
-        .select()
+        .insert({
+          user_id: userId,
+          title: t,
+          details: details.trim() || null,
+          image_url: publicUrl,
+          author_label,
+          is_public: isPublic,
+        })
+        .select("id, user_id, title, details, image_url, author_label, created_at, is_public")
         .single();
-      if (insErr) throw insErr;
+      if (insErr) {
+        console.error("Insert error:", insErr);
+        throw insErr;
+      }
+
+      // Store recipe info locally for this session (not in DB)
+      if (row && recipe_id) {
+        (row as CreationRow).recipe_id = recipe_id;
+        if (recipeTitle) {
+          (row as CreationRow).recipe_title = recipeTitle;
+        }
+      }
       onPosted(row as CreationRow);
       onClose();
     } catch (err) {
+      console.error("Post creation error:", err);
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setSubmitting(false);
     }
-  }, [userId, userEmail, title, details, file, isPublic, onClose, onPosted]);
+  }, [userId, userEmail, title, details, file, isPublic, recipeId, recipeTitle, onClose, onPosted]);
 
   return (
     <div
@@ -599,6 +686,73 @@ function NewPostModal({
               />
             </div>
 
+            {/* Recipe search (optional) */}
+            <div>
+              <label
+                htmlFor="post-recipe"
+                className="block text-xs font-extrabold uppercase tracking-wide text-muted"
+              >
+                Recipe used <span className="font-normal text-muted/60">(optional)</span>
+              </label>
+              {recipeId ? (
+                <div className="mt-1.5 flex items-center gap-2 rounded-2xl border-2 border-secondary/40 bg-secondary/5 px-3 py-2.5 shadow-[0_2px_0_rgba(255,133,52,0.2)]">
+                  <span className="flex-1 text-sm font-extrabold text-foreground">
+                    {recipeTitle}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecipeId("");
+                      setRecipeTitle("");
+                      setRecipeSearch("");
+                    }}
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface text-muted transition hover:bg-edge hover:text-foreground"
+                    aria-label="Remove recipe"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <div ref={recipeSearchRef} className="relative mt-1.5">
+                  <input
+                    id="post-recipe"
+                    value={recipeSearch}
+                    onChange={(e) => setRecipeSearch(e.target.value)}
+                    onFocus={() => recipeResults.length > 0 && setShowRecipeDropdown(true)}
+                    placeholder="Search for a recipe..."
+                    className="w-full rounded-2xl border-2 border-edge bg-card px-3 py-2.5 text-sm font-bold text-foreground shadow-[0_2px_0_var(--edge)] placeholder:font-normal placeholder:text-muted transition-all focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
+                  />
+                  {searchingRecipes && (
+                    <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-surface border-t-primary" />
+                    </div>
+                  )}
+                  {showRecipeDropdown && recipeResults.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-10 mt-1 max-h-64 overflow-y-auto rounded-2xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)]">
+                      {recipeResults.map((recipe) => (
+                        <button
+                          key={recipe.id}
+                          type="button"
+                          onClick={() => {
+                            setRecipeId(recipe.id);
+                            setRecipeTitle(recipe.title);
+                            setRecipeSearch("");
+                            setShowRecipeDropdown(false);
+                          }}
+                          className="w-full px-3 py-2.5 text-left text-sm font-bold text-foreground transition-colors hover:bg-primary/10 first:rounded-t-2xl last:rounded-b-2xl"
+                        >
+                          {recipe.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              <p className="mt-1 text-xs text-muted">
+                Link to the recipe you used from the explore page
+              </p>
+            </div>
+
             {/* Visibility toggle */}
             <div>
               <p className="mb-1.5 text-xs font-extrabold uppercase tracking-wide text-muted">
@@ -692,13 +846,16 @@ export function CreationsClient() {
       const { data: { user } } = await supabase.auth.getUser();
       const currentUserId = user?.id;
 
-      // Fetch creations
+      // Fetch creations - only select columns that exist in DB
       const { data: creations, error } = await supabase
         .from("creations")
-        .select("*")
+        .select("id, user_id, title, details, image_url, author_label, created_at, is_public")
         .order("created_at", { ascending: false })
         .limit(120);
-      if (error) throw error;
+      if (error) {
+        console.error("Creations fetch error:", error);
+        throw error;
+      }
 
       // Fetch likes counts and user's likes
       const creationIds = creations?.map((c) => c.id) ?? [];

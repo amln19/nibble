@@ -26,18 +26,18 @@ export function ExploreSection({
         <div>
           <h2
             id="explore-heading"
-            className="font-serif text-xl font-semibold tracking-tight text-zinc-900 md:text-2xl dark:text-zinc-50"
+            className="font-serif text-xl font-semibold tracking-tight text-zinc-900 md:text-2xl"
           >
             Explore
           </h2>
-          <p className="mt-1 max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 max-w-2xl text-sm text-zinc-500">
             Browse by course and cuisine-style categories — then swipe recipes
             from the live{" "}
             <a
               href="https://www.themealdb.com/"
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+              className="font-medium text-rose-600 underline-offset-2 hover:text-rose-700 hover:underline"
             >
               TheMealDB
             </a>{" "}
@@ -63,11 +63,11 @@ export function ExploreSection({
                 onClick={() => onSelect(c.strCategory)}
                 className={`flex w-[7.25rem] shrink-0 snap-center flex-col gap-2 rounded-2xl border p-2 text-left transition ${
                   active
-                    ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/40"
-                    : "border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600"
+                    ? "border-rose-400 bg-pink-50/90 ring-2 ring-rose-200/80 shadow-sm shadow-rose-100/60"
+                    : "border-rose-100 bg-white shadow-sm shadow-rose-50/40 hover:border-rose-200"
                 } ${disabled ? "opacity-50" : ""}`}
               >
-                <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+                <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-rose-50">
                   <Image
                     src={c.strCategoryThumb}
                     alt=""
@@ -77,7 +77,7 @@ export function ExploreSection({
                     draggable={false}
                   />
                 </div>
-                <span className="line-clamp-2 text-center text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                <span className="line-clamp-2 text-center text-xs font-semibold text-zinc-900">
                   {c.strCategory}
                 </span>
               </button>
@@ -102,11 +102,11 @@ export function ExploreSection({
               onClick={() => onSelect(c.strCategory)}
               className={`group flex flex-col gap-2 rounded-2xl border p-2 text-left transition ${
                 active
-                  ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/40"
-                  : "border-zinc-200 bg-white hover:border-emerald-300 hover:shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600"
+                  ? "border-rose-400 bg-pink-50/90 ring-2 ring-rose-200/80 shadow-sm shadow-rose-100/60"
+                  : "border-rose-100 bg-white shadow-sm shadow-rose-50/40 hover:border-rose-300 hover:shadow-md"
               } ${disabled ? "opacity-50" : ""}`}
             >
-              <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+              <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-rose-50">
                 <Image
                   src={c.strCategoryThumb}
                   alt=""
@@ -116,7 +116,7 @@ export function ExploreSection({
                   draggable={false}
                 />
               </div>
-              <span className="line-clamp-2 text-center text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+              <span className="line-clamp-2 text-center text-xs font-semibold text-zinc-900">
                 {c.strCategory}
               </span>
             </button>

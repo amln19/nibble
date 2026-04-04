@@ -28,16 +28,16 @@ export function PantryPanel({
   }, [draft, onAdd]);
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white/90 p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/90">
+    <div className="rounded-2xl border border-rose-100 bg-white/95 p-4 shadow-sm shadow-rose-100/50">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+          <h2 className="text-sm font-semibold text-zinc-900">
             Pantry mode
           </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-zinc-500">
             Shows meals where enough of the main ingredients overlap your list
             (salt/water/etc. don’t count). Use broad words —{" "}
-            <span className="text-zinc-600 dark:text-zinc-300">chicken</span> matches
+            <span className="text-rose-700/90">chicken</span> matches
             &quot;chicken breast&quot;.
           </p>
         </div>
@@ -47,7 +47,7 @@ export function PantryPanel({
           aria-checked={pantryMode}
           onClick={() => onPantryModeChange(!pantryMode)}
           className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
-            pantryMode ? "bg-emerald-600" : "bg-zinc-300 dark:bg-zinc-600"
+            pantryMode ? "bg-rose-500" : "bg-zinc-200"
           }`}
         >
           <span
@@ -74,14 +74,14 @@ export function PantryPanel({
               }
             }}
             placeholder="e.g. eggs, tomato, rice…"
-            className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            className="min-w-0 flex-1 rounded-xl border border-rose-100 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300/40"
             autoComplete="off"
             autoCapitalize="off"
           />
           <button
             type="button"
             onClick={submit}
-            className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+            className="shrink-0 rounded-xl bg-rose-500 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-rose-200/80 transition hover:bg-rose-600"
           >
             Add
           </button>
@@ -93,10 +93,10 @@ export function PantryPanel({
                 <button
                   type="button"
                   onClick={() => onRemove(item)}
-                  className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-800 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                  className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-2.5 py-1 text-xs font-medium text-rose-900 ring-1 ring-rose-100/90 transition hover:bg-pink-100/90"
                 >
                   {item}
-                  <span className="text-zinc-500" aria-hidden>
+                  <span className="text-rose-400" aria-hidden>
                     ×
                   </span>
                 </button>
@@ -104,7 +104,7 @@ export function PantryPanel({
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="mt-2 text-xs text-zinc-500">
             {pantryMode
               ? "Add what’s in your fridge — we’ll match recipes."
               : "Turn on Pantry mode and list ingredients to filter the deck."}

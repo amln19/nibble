@@ -18,10 +18,10 @@ export function FilterChips({ value, onChange }: Props) {
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
           Smart filters
         </span>
-        <p className="mt-1 text-xs leading-snug text-zinc-400 dark:text-zinc-500">
+        <p className="mt-1 text-xs leading-snug text-zinc-400">
           Times &amp; tags are inferred from each recipe’s instructions and
           category — use as a guide, not exact nutrition or timing.
         </p>
@@ -36,8 +36,8 @@ export function FilterChips({ value, onChange }: Props) {
               onClick={() => onChange({ ...value, [key]: !active })}
               className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                 active
-                  ? "border-amber-600 bg-amber-500/15 text-amber-950 dark:border-amber-500 dark:text-amber-100"
-                  : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                  ? "border-rose-400 bg-pink-50 text-rose-900 shadow-sm shadow-rose-100/60"
+                  : "border-rose-100 bg-white text-zinc-700 shadow-sm shadow-rose-50/50 hover:border-rose-200"
               }`}
             >
               {label}

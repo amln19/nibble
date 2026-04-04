@@ -58,22 +58,22 @@ export function RecipeBoxClient() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-28 sm:px-6 lg:px-8 md:pb-12">
       <header className="mb-8 text-center md:text-left">
-        <h1 className="font-serif text-2xl font-semibold text-zinc-900 md:text-3xl dark:text-zinc-50">
+        <h1 className="font-serif text-2xl font-semibold text-zinc-900 md:text-3xl">
           Recipe box
         </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-zinc-500">
           Recipes you saved from Discover (loaded from TheMealDB)
         </p>
       </header>
 
       {loading && savedIds.length > 0 ? (
-        <p className="mb-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mb-6 text-center text-sm text-zinc-500">
           Loading saved recipes…
         </p>
       ) : null}
 
       {loadError && savedIds.length > 0 ? (
-        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+        <p className="mb-4 rounded-xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
           Some recipes could not be loaded from the API (for example old saved
           IDs). You can still remove any card below — that clears it from this
           device.
@@ -81,11 +81,11 @@ export function RecipeBoxClient() {
       ) : null}
 
       {savedIds.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/80 p-10 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
-          <p className="text-zinc-700 dark:text-zinc-300">Nothing saved yet.</p>
+        <div className="rounded-2xl border border-dashed border-rose-200/90 bg-white/80 p-10 text-center shadow-inner shadow-rose-100/40">
+          <p className="text-zinc-700">Nothing saved yet.</p>
           <Link
             href="/"
-            className="mt-4 inline-block rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
+            className="mt-4 inline-block rounded-full bg-rose-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-rose-200/60 transition hover:bg-rose-600"
           >
             Start swiping
           </Link>
@@ -97,10 +97,10 @@ export function RecipeBoxClient() {
             return (
               <li
                 key={id}
-                className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+                className="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm shadow-rose-100/50"
               >
                 {r?.imageUrl ? (
-                  <div className="relative aspect-[4/3] bg-zinc-100 dark:bg-zinc-800">
+                  <div className="relative aspect-[4/3] bg-rose-50">
                     <Image
                       src={r.imageUrl}
                       alt=""
@@ -110,15 +110,15 @@ export function RecipeBoxClient() {
                     />
                   </div>
                 ) : (
-                  <div className="flex aspect-[4/3] items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                  <div className="flex aspect-[4/3] items-center justify-center bg-rose-50 text-sm text-zinc-500">
                     Couldn’t load preview
                   </div>
                 )}
                 <div className="p-4">
-                  <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">
+                  <h2 className="font-semibold text-zinc-900">
                     {r?.title ?? "Recipe"}
                   </h2>
-                  <p className="mt-1 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
+                  <p className="mt-1 line-clamp-2 text-sm text-zinc-600">
                     {r?.tagline ??
                       (id.startsWith("r") && /^r\d+$/.test(id)
                         ? "Saved before live recipes — remove or save again from Discover."
@@ -127,7 +127,7 @@ export function RecipeBoxClient() {
                   <button
                     type="button"
                     onClick={() => remove(id)}
-                    className="mt-3 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400"
+                    className="mt-3 text-sm font-medium text-rose-600 hover:text-rose-800"
                   >
                     Remove
                   </button>

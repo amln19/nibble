@@ -48,13 +48,13 @@ export function RecipeSearchBar({
             autoComplete="off"
             autoCapitalize="off"
             enterKeyHint="search"
-            className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pr-9 pl-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+            className="w-full rounded-xl border border-rose-100 bg-white py-2.5 pr-9 pl-3 text-sm text-zinc-900 shadow-sm shadow-rose-50/30 placeholder:text-zinc-400 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-200/60 disabled:opacity-60"
           />
           {value ? (
             <button
               type="button"
               onClick={onClear}
-              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-0.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-0.5 text-zinc-400 transition hover:bg-pink-50 hover:text-rose-700"
               aria-label="Clear search"
             >
               ×
@@ -64,18 +64,18 @@ export function RecipeSearchBar({
         <button
           type="submit"
           disabled={disabled || value.trim().length < 2}
-          className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="shrink-0 rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-rose-200/80 transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Search
         </button>
       </div>
       {activeQuery ? (
-        <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1.5 text-xs text-zinc-500">
           Showing results for &quot;{activeQuery}&quot; · choose a category in
           Explore to browse instead
         </p>
       ) : (
-        <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1.5 text-xs text-zinc-500">
           At least 2 characters. Matches meal names from TheMealDB.
         </p>
       )}

@@ -67,19 +67,19 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
     >
       <div
         data-recipe-sheet
-        className="flex max-h-[min(85vh,720px)] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-2xl sm:max-h-[min(90vh,800px)] sm:rounded-3xl dark:bg-zinc-900"
+        className="flex max-h-[min(85vh,720px)] w-full max-w-lg flex-col rounded-t-3xl border border-rose-100/80 bg-white shadow-2xl shadow-rose-200/30 sm:max-h-[min(90vh,800px)] sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+        <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 border-b border-rose-100 bg-gradient-to-r from-white to-pink-50/50 px-5 py-4">
           <h2
             id="recipe-info-title"
-            className="min-w-0 flex-1 break-words font-serif text-lg font-semibold text-zinc-900 dark:text-zinc-50"
+            className="min-w-0 flex-1 break-words font-serif text-lg font-semibold text-zinc-900"
           >
             {recipe.title}
           </h2>
           <button
             type="button"
-            className="relative z-10 shrink-0 touch-manipulation rounded-full p-2 text-xl leading-none text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 active:bg-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+            className="relative z-10 shrink-0 touch-manipulation rounded-full p-2 text-xl leading-none text-rose-500 transition hover:bg-pink-100/80 hover:text-rose-700 active:bg-pink-200/60"
             aria-label="Close"
             onClick={(e) => {
               e.stopPropagation();
@@ -94,52 +94,52 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
           {meta.length > 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-zinc-600">
               {meta.join(" · ")}
             </p>
           ) : null}
 
           <div className="mt-3 flex flex-wrap gap-2">
             {recipe.tags.vegan && (
-              <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:text-emerald-200">
+              <span className="rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-rose-900">
                 Vegan
               </span>
             )}
             {recipe.tags.highProtein && (
-              <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-medium text-amber-900 dark:text-amber-100">
+              <span className="rounded-full bg-rose-100/90 px-2.5 py-0.5 text-xs font-medium text-rose-950">
                 High protein
               </span>
             )}
             {recipe.tags.beginnerFriendly && (
-              <span className="rounded-full bg-sky-500/15 px-2.5 py-0.5 text-xs font-medium text-sky-900 dark:text-sky-100">
+              <span className="rounded-full bg-pink-50 px-2.5 py-0.5 text-xs font-medium text-rose-800 ring-1 ring-rose-100">
                 Beginner friendly
               </span>
             )}
           </div>
 
-          <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-rose-400">
             Ingredients
           </h3>
           {recipe.ingredients.length > 0 ? (
-            <ul className="mt-2 list-inside list-disc space-y-1.5 text-sm text-zinc-800 dark:text-zinc-200">
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-sm text-zinc-800">
               {recipe.ingredients.map((ing, i) => (
-                <li key={`${ing}-${i}`} className="marker:text-emerald-600">
+                <li key={`${ing}-${i}`} className="marker:text-rose-400">
                   {formatIngredientLine(ing)}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mt-2 text-sm text-zinc-500">
               No ingredient list for this meal.
             </p>
           )}
 
           {recipe.instructions ? (
             <>
-              <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-rose-400">
                 Instructions
               </h3>
-              <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+              <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-700">
                 {recipe.instructions}
               </div>
             </>

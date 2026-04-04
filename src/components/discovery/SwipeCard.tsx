@@ -62,7 +62,7 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
 
   return (
     <article
-      className="relative w-full max-w-md touch-none select-none rounded-3xl bg-zinc-900 shadow-2xl ring-1 ring-white/10 xl:max-w-lg"
+      className="relative w-full max-w-md touch-none select-none rounded-3xl bg-white shadow-2xl shadow-rose-200/40 ring-2 ring-rose-100/90 xl:max-w-lg"
       style={{
         transform: `translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg)`,
         transition: dragging ? "none" : "transform 0.22s ease-out",
@@ -112,14 +112,14 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
           Pass
         </div>
         <div
-          className="pointer-events-none absolute top-6 right-6 rounded-lg border-2 border-emerald-400 px-3 py-1 text-lg font-black tracking-widest text-emerald-400 uppercase opacity-90"
+          className="pointer-events-none absolute top-6 right-6 rounded-lg border-2 border-rose-400 px-3 py-1 text-lg font-black tracking-widest text-rose-400 uppercase opacity-90"
           style={{ opacity: saveOpacity }}
         >
           Save
         </div>
         <button
           type="button"
-          className="pointer-events-auto absolute right-4 bottom-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white shadow-lg backdrop-blur-md transition hover:bg-black/55 hover:border-white/50"
+          className="pointer-events-auto absolute right-4 bottom-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white shadow-lg backdrop-blur-md transition hover:bg-white/35 hover:border-white/70"
           style={{ touchAction: "manipulation" }}
           aria-label="Recipe details and ingredients"
           onPointerDown={(e) => e.stopPropagation()}

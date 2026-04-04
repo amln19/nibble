@@ -232,7 +232,7 @@ export function DiscoveryClient() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-32 sm:px-6 lg:px-8 lg:pb-12">
       {loadingCats ? (
-        <p className="mb-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mb-6 text-center text-sm text-zinc-500">
           Loading categories…
         </p>
       ) : (
@@ -247,7 +247,7 @@ export function DiscoveryClient() {
       )}
 
       {loadError ? (
-        <p className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100">
+        <p className="mb-6 rounded-xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-center text-sm text-red-900">
           {loadError}
         </p>
       ) : null}
@@ -256,10 +256,10 @@ export function DiscoveryClient() {
         <main className="flex flex-col lg:col-span-7 xl:col-span-8">
           <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
             <div className="text-center lg:min-w-0 lg:flex-1 lg:text-left">
-              <h1 className="font-serif text-2xl font-semibold tracking-tight text-zinc-900 md:text-3xl dark:text-zinc-50">
+              <h1 className="font-serif text-2xl font-semibold tracking-tight text-zinc-900 md:text-3xl">
                 Discover
               </h1>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-1 text-sm text-zinc-500">
                 Swipe right to save to your recipe box · left to pass
               </p>
             </div>
@@ -274,8 +274,8 @@ export function DiscoveryClient() {
           </header>
 
           {loadingMeals ? (
-            <div className="flex min-h-[min(60vh,420px)] items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white/60 dark:border-zinc-700 dark:bg-zinc-900/40">
-              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            <div className="flex min-h-[min(60vh,420px)] items-center justify-center rounded-3xl border border-dashed border-rose-200/80 bg-white/70 shadow-inner shadow-rose-100/40">
+              <p className="text-sm font-medium text-zinc-600">
                 {activeQuery ? "Searching…" : "Loading recipes…"}
               </p>
             </div>
@@ -299,7 +299,7 @@ export function DiscoveryClient() {
           />
           <FilterChips value={smart} onChange={setSmart} />
           {pantryMode && pantrySet.size === 0 ? (
-            <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+            <p className="rounded-2xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
               Add what’s in your fridge to see recipes you can make with those
               ingredients.
             </p>
@@ -307,11 +307,11 @@ export function DiscoveryClient() {
         </aside>
       </div>
 
-      <p className="mt-10 text-center text-[11px] text-zinc-400 dark:text-zinc-500">
+      <p className="mt-10 text-center text-[11px] text-zinc-400">
         Recipe data from{" "}
         <a
           href="https://www.themealdb.com/"
-          className="underline-offset-2 hover:underline"
+          className="text-rose-600/90 underline-offset-2 hover:underline"
           target="_blank"
           rel="noreferrer"
         >

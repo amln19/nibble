@@ -17,11 +17,11 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
 
   if (!current) {
     return (
-      <div className="flex min-h-[min(70vh,520px)] w-full max-w-md flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-zinc-50/80 p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/50 xl:max-w-lg">
-        <p className="font-serif text-xl font-medium text-zinc-800 dark:text-zinc-100">
+      <div className="flex min-h-[min(70vh,520px)] w-full max-w-md flex-col items-center justify-center rounded-3xl border border-dashed border-rose-200/90 bg-white/80 p-8 text-center shadow-inner shadow-rose-100/50 xl:max-w-lg">
+        <p className="font-serif text-xl font-medium text-zinc-800">
           {emptyDetail ? "No matches right now" : "You’re all caught up"}
         </p>
-        <p className="mt-2 max-w-sm text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-2 max-w-sm text-sm text-zinc-600">
           {emptyDetail ??
             "Try another category, add pantry items, clear smart filters, or pass more cards in this list."}
         </p>
@@ -38,7 +38,7 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
             aria-hidden
           >
             <div className="w-full max-w-md scale-95">
-              <div className="overflow-hidden rounded-3xl shadow-lg ring-1 ring-white/10">
+              <div className="overflow-hidden rounded-3xl shadow-lg ring-1 ring-rose-200/60">
                 {/* eslint-disable-next-line @next/next/no-img-element -- stacked preview */}
                 <img
                   src={next.imageUrl}
@@ -61,7 +61,7 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
         <button
           type="button"
           onClick={() => onPass(current)}
-          className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-zinc-300 bg-white text-2xl shadow-md transition hover:bg-zinc-50 active:scale-95 dark:border-zinc-600 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+          className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-zinc-200 bg-white text-2xl text-zinc-500 shadow-md shadow-rose-100/50 transition hover:border-rose-200 hover:bg-pink-50/80 active:scale-95"
           aria-label="Pass"
         >
           ✕
@@ -69,7 +69,7 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
         <button
           type="button"
           onClick={() => onSave(current)}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-600 text-2xl text-white shadow-md transition hover:bg-emerald-700 active:scale-95"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-500 text-2xl text-white shadow-md shadow-rose-200/60 transition hover:bg-rose-600 active:scale-95"
           aria-label="Save to recipe box"
         >
           ♥

@@ -13,11 +13,11 @@ export function Nav() {
 
   return (
     <>
-      <header className="hidden border-b border-zinc-200 bg-white/90 backdrop-blur-md md:block dark:border-zinc-800 dark:bg-zinc-950/90">
+      <header className="hidden border-b border-rose-100/80 bg-white/90 backdrop-blur-md md:block">
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 lg:px-8">
           <Link
             href="/"
-            className="font-serif text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
+            className="font-serif text-lg font-semibold tracking-tight text-zinc-900"
           >
             Nibble
           </Link>
@@ -30,8 +30,8 @@ export function Nav() {
                     href={href}
                     className={
                       active
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                        ? "text-rose-600"
+                        : "text-zinc-600 transition-colors hover:text-rose-800"
                     }
                   >
                     {label}
@@ -44,7 +44,7 @@ export function Nav() {
       </header>
 
       <nav
-        className="fixed right-0 bottom-0 left-0 z-50 border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden dark:border-zinc-800 dark:bg-zinc-950/95"
+        className="fixed right-0 bottom-0 left-0 z-50 border-t border-rose-100/90 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
         aria-label="Main"
       >
         <ul className="mx-auto flex max-w-md justify-around px-2 py-2">
@@ -56,8 +56,8 @@ export function Nav() {
                   href={href}
                   className={`flex flex-col items-center gap-0.5 rounded-xl py-2 text-xs font-medium ${
                     active
-                      ? "text-emerald-700 dark:text-emerald-400"
-                      : "text-zinc-500 dark:text-zinc-400"
+                      ? "text-rose-600"
+                      : "text-zinc-500 transition-colors hover:text-rose-700"
                   }`}
                 >
                   <span className="text-lg" aria-hidden>

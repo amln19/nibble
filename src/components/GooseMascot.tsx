@@ -81,13 +81,13 @@ export function GooseMascot() {
     >
       {/* Speech bubble */}
       <div
-        className={`relative max-w-[180px] rounded-2xl rounded-br-sm border-2 border-edge bg-card px-4 py-2.5 text-[14px] font-extrabold text-foreground shadow-xl transition-all duration-300 dark:border-stone-300 dark:bg-white dark:text-neutral-950 ${
+        className={`relative max-w-[180px] rounded-2xl rounded-bl-sm border-2 border-edge bg-card px-4 py-2.5 text-[14px] font-extrabold text-foreground shadow-xl transition-all duration-300 dark:border-stone-300 dark:bg-white dark:text-neutral-950 ${
           message ? "scale-100 opacity-100" : "pointer-events-none scale-75 opacity-0"
         }`}
       >
         {message}
         <span
-          className="absolute -bottom-2.5 right-4 h-0 w-0 border-l-[9px] border-r-0 border-t-[12px] border-solid border-l-transparent border-r-transparent border-t-card dark:border-t-white"
+          className="absolute -bottom-2.5 left-4 h-0 w-0 border-l-0 border-r-[9px] border-t-[12px] border-solid border-l-transparent border-r-transparent border-t-card dark:border-t-white"
           aria-hidden
         />
       </div>

@@ -1,39 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nibble
 
-## Getting Started
+A recipe discovery and cooking companion app: swipe through meals, save a recipe box, cook step-by-step with **Gordon the Goose** (AI guide + voice), share posts, and track points and achievements.
 
-First, run the development server:
+## Stack
+
+- **Next.js** (App Router) · **React** · **TypeScript** · **Tailwind CSS**
+- **Supabase** — auth, Postgres (saved recipes, creations/posts, likes/comments), storage for post photos
+- **Google Gemini** — cooking guide generation and in-flow Q&A (`/api/gordon/prepare`, `/api/gordon/ask`)
+- **ElevenLabs** — text-to-speech for Gordon (`/api/gordon/speak`)
+- **TheMealDB** (via app API routes) — recipe search, filters, details
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build   # production build
+npm run start   # run production server
+npm run lint    # ESLint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment variables
 
-## Learn More
+Create `.env.local` in the project root (never commit real secrets):
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon (public) key |
+| `GEMINI_API_KEY` | Google AI Studio key for Gemini |
+| `ELEVENLABS_API_KEY` | ElevenLabs API key |
+| `ELEVENLABS_VOICE_ID` | *(optional)* Preferred voice ID |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+SQL migrations live in `supabase/migrations/`. Apply them in the Supabase SQL editor (or CLI) in a sensible order, e.g. `001_saved_recipes.sql`, `002_creations.sql`, then `creations2.sql` for social features and any follow-ups (e.g. `is_public` on creations if you use private posts).
 
-## Deploy on Vercel
+Configure a **public** storage bucket for creation photos (e.g. `creation-photos`) and matching RLS policies.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## App routes (high level)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Path | Description |
+|------|-------------|
+| `/` | Discover — search, filters, swipe deck, explore categories |
+| `/box` | Recipe box — saved recipes, cook-with-Gordon link |
+| `/creations` | Posts — your private posts vs community feed |
+| `/points` | Points & achievements (requires sign-in) |
+| `/cook?id=…` | Full-screen cook mode — steps, timer, voice, ask Gordon |
+| `/login`, `/account` | Auth |
 
-Hello
-Hello....
+## Project layout
+
+- `src/app/` — routes, layouts, API route handlers
+- `src/components/` — UI (discovery, companion, creations, nav, etc.)
+- `src/lib/` — Supabase client, recipes, achievements, Gordon types
+- `public/` — static assets (e.g. logo)
+
+## Deploy
+
+Deploy like any Next.js app (e.g. [Vercel](https://vercel.com)): set the same environment variables in the host dashboard and point Supabase auth redirect URLs at your production domain.

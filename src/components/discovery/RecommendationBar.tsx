@@ -67,11 +67,11 @@ export function RecommendationBar({ recommendations, onSave, onRefresh }: Props)
               </span>
             </div>
 
-            <div className="flex flex-1 flex-col p-2.5">
-              <p className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">
+            <div className="flex min-w-0 flex-1 flex-col p-2.5">
+              <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-foreground">
                 {r.title}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-muted">
+              <p className="mt-1 line-clamp-2 break-words text-[11px] font-medium leading-snug text-muted">
                 {r.category}{r.area ? ` · ${r.area}` : ""}
               </p>
 

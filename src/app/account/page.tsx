@@ -32,7 +32,7 @@ export default function AccountPage() {
 
   if (user === undefined) {
     return (
-      <main className="mx-auto flex max-w-lg flex-1 flex-col px-4 py-12">
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-12 sm:px-6">
         <div className="h-8 w-48 animate-pulse rounded bg-zinc-100" />
       </main>
     );
@@ -40,7 +40,7 @@ export default function AccountPage() {
 
   if (!user) {
     return (
-      <main className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center px-4 py-16 text-center">
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
         <h1 className="font-serif text-2xl font-semibold text-zinc-900">
           Account
         </h1>
@@ -64,7 +64,7 @@ export default function AccountPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-12">
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-12 sm:px-6">
       <h1 className="font-serif text-2xl font-semibold text-zinc-900">
         Account
       </h1>

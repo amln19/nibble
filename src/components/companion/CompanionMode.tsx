@@ -16,6 +16,7 @@ import {
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 type Phase = "loading" | "intro" | "cooking" | "complete" | "error";
 
@@ -32,6 +33,7 @@ function useWideCookLayout() {
 }
 
 export function CompanionMode({ recipeId }: { recipeId: string | null }) {
+  const pathname = usePathname();
   const [phase, setPhase] = useState<Phase>("loading");
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [guide, setGuide] = useState<GordonGuide | null>(null);
@@ -51,8 +53,16 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
+  const speakFetchAbortRef = useRef<AbortController | null>(null);
+  const speakGenerationRef = useRef(0);
   const mutedRef = useRef(muted);
   mutedRef.current = muted;
+
+  const cancelPendingSpeak = useCallback(() => {
+    speakFetchAbortRef.current?.abort();
+    speakFetchAbortRef.current = null;
+    speakGenerationRef.current += 1;
+  }, []);
 
   // ── Speech-to-text + Gordon Q&A (state only — callbacks defined after speak) ─
   const [isListening, setIsListening] = useState(false);
@@ -120,15 +130,31 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   // NOT from a useEffect — browsers block autoplay outside gesture context.
   const speak = useCallback(async (text: string) => {
     if (mutedRef.current) return;
+    cancelPendingSpeak();
+    const gen = speakGenerationRef.current;
+    const ac = new AbortController();
+    speakFetchAbortRef.current = ac;
     setIsSpeaking(true);
     try {
       const res = await fetch("/api/gordon/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
+        signal: ac.signal,
       });
-      if (!res.ok) { setIsSpeaking(false); return; }
+      if (gen !== speakGenerationRef.current) {
+        setIsSpeaking(false);
+        return;
+      }
+      if (!res.ok) {
+        setIsSpeaking(false);
+        return;
+      }
       const blob = await res.blob();
+      if (gen !== speakGenerationRef.current) {
+        setIsSpeaking(false);
+        return;
+      }
       if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
       const url = URL.createObjectURL(blob);
       audioUrlRef.current = url;
@@ -137,12 +163,27 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
       audioRef.current.onended = () => setIsSpeaking(false);
       audioRef.current.onerror = () => setIsSpeaking(false);
       await audioRef.current.play();
-    } catch {
+      if (gen !== speakGenerationRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute("src");
+        audioRef.current.load();
+        if (audioUrlRef.current) {
+          URL.revokeObjectURL(audioUrlRef.current);
+          audioUrlRef.current = null;
+        }
+        setIsSpeaking(false);
+      }
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        setIsSpeaking(false);
+        return;
+      }
       setIsSpeaking(false);
     }
-  }, []);
+  }, [cancelPendingSpeak]);
 
   const stopAudio = useCallback(() => {
+    cancelPendingSpeak();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -154,7 +195,7 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
       audioUrlRef.current = null;
     }
     setIsSpeaking(false);
-  }, []);
+  }, [cancelPendingSpeak]);
 
   useEffect(() => {
     return () => {
@@ -164,6 +205,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
         /* noop */
       }
       recognitionRef.current = null;
+      speakFetchAbortRef.current?.abort();
+      speakFetchAbortRef.current = null;
+      speakGenerationRef.current += 1;
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -176,6 +220,12 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (pathname != null && pathname !== "/cook") {
+      stopAudio();
+    }
+  }, [pathname, stopAudio]);
 
   // ── STT callbacks (declared after speak/stopAudio) ──────────────────────────
   const askGordon = useCallback(async (

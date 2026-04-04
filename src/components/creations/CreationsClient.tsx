@@ -233,7 +233,7 @@ function PostDetailModal({
     >
       {/* Modal: stacked on mobile, side-by-side on md+ */}
       <div
-        className="flex w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border-2 border-edge bg-card shadow-[0_8px_0_var(--edge)] sm:rounded-3xl md:max-w-5xl md:flex-row md:max-h-[90vh]"
+        className="flex w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border-2 border-edge bg-card shadow-[0_8px_0_var(--edge)] sm:rounded-3xl md:max-w-6xl md:flex-row md:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Left: image ── */}
@@ -494,7 +494,7 @@ function NewPostModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-t-3xl border-2 border-edge bg-card shadow-[0_-4px_0_var(--edge)] sm:rounded-3xl sm:shadow-[0_8px_0_var(--edge)]"
+        className="w-full max-w-xl overflow-hidden rounded-t-3xl border-2 border-edge bg-card shadow-[0_-4px_0_var(--edge)] sm:rounded-3xl sm:shadow-[0_8px_0_var(--edge)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -862,7 +862,7 @@ export function CreationsClient() {
   const communityPosts = posts.filter((p) => p.is_public !== false);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
+    <div className="mx-auto w-full max-w-8xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
       {/* Modals */}
       {showNewPost && userId ? (
         <NewPostModal

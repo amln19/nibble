@@ -68,7 +68,9 @@ export function ExploreSection({
                     draggable={false}
                   />
                 </div>
-                <span className={`line-clamp-1 text-[12px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
+                <span
+                  className={`min-w-0 flex-1 break-words text-left text-[12px] font-extrabold leading-snug line-clamp-2 ${active ? "text-primary-dark" : "text-foreground"}`}
+                >
                   {c.strCategory}
                 </span>
               </button>
@@ -77,10 +79,10 @@ export function ExploreSection({
         </div>
       ) : (
         <>
-          {/* Mobile / tablet: horizontal scroll */}
-          <div className="-mx-1 lg:hidden">
+          {/* Mobile / tablet: horizontal scroll (no negative margin — stays aligned with page padding) */}
+          <div className="lg:hidden">
             <div
-              className="flex gap-2.5 overflow-x-auto px-1 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+              className="flex gap-2.5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
               role="list"
             >
               {categories.map((c) => {
@@ -92,7 +94,7 @@ export function ExploreSection({
                     role="listitem"
                     disabled={disabled}
                     onClick={() => onSelect(c.strCategory)}
-                    className={`flex w-24 shrink-0 snap-center flex-col items-center gap-1.5 rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
+                    className={`flex w-24 shrink-0 snap-center flex-col items-center gap-1.5 overflow-hidden rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
                       active
                         ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
                         : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
@@ -108,7 +110,9 @@ export function ExploreSection({
                         draggable={false}
                       />
                     </div>
-                    <span className={`line-clamp-1 text-center text-[11px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
+                    <span
+                      className={`block w-full min-w-0 break-words text-center text-[11px] font-extrabold leading-snug line-clamp-2 ${active ? "text-primary-dark" : "text-foreground"}`}
+                    >
                       {c.strCategory}
                     </span>
                   </button>
@@ -131,7 +135,7 @@ export function ExploreSection({
                   role="listitem"
                   disabled={disabled}
                   onClick={() => onSelect(c.strCategory)}
-                  className={`group flex flex-col items-center gap-1.5 rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
+                  className={`group flex flex-col items-center gap-1.5 overflow-hidden rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
                     active
                       ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
                       : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
@@ -147,7 +151,9 @@ export function ExploreSection({
                       draggable={false}
                     />
                   </div>
-                  <span className={`line-clamp-1 text-center text-[11px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
+                  <span
+                    className={`block w-full min-w-0 break-words text-center text-[11px] font-extrabold leading-snug line-clamp-2 ${active ? "text-primary-dark" : "text-foreground"}`}
+                  >
                     {c.strCategory}
                   </span>
                 </button>

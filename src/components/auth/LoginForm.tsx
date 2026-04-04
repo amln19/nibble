@@ -78,7 +78,7 @@ export function LoginForm() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col items-center">
+    <div className="mx-auto flex w-full max-w-md flex-col items-center sm:max-w-lg">
       <div className="mb-6">
         <BrandMascot variant="welcome" priority />
       </div>

@@ -83,7 +83,7 @@ export function RecipeBoxClient() {
   }, [idsKey]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
+    <div className="mx-auto w-full max-w-8xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
       {selectedRecipe && (
         <RecipeInfoSheet
           recipe={selectedRecipe}
@@ -264,11 +264,11 @@ export function RecipeBoxClient() {
                     {Math.round(r.score * 100)}% match
                   </span>
                 </div>
-                <div className="flex flex-1 flex-col p-2.5">
-                  <p className="line-clamp-2 text-sm font-extrabold leading-tight text-foreground">
+                <div className="flex min-w-0 flex-1 flex-col p-2.5">
+                  <p className="line-clamp-2 break-words text-sm font-extrabold leading-snug text-foreground">
                     {r.title}
                   </p>
-                  <p className="mt-1 text-[11px] text-muted">
+                  <p className="mt-1 line-clamp-2 break-words text-[11px] leading-snug text-muted">
                     {r.category}{r.area ? ` · ${r.area}` : ""}
                   </p>
                   <button

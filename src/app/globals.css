@@ -37,6 +37,9 @@
 }
 
 @theme inline {
+  /* Extra-wide page shell (beyond default max-w-7xl) */
+  --max-width-8xl: 88rem;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);

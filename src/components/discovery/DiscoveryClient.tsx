@@ -42,7 +42,7 @@ async function fetchRecipeDetails(ids: string[]): Promise<Recipe[]> {
 function CategoriesSkeleton() {
   return (
     <div className="w-full">
-      <div className="flex gap-3 overflow-hidden">
+      <div className="flex gap-2.5 overflow-hidden pb-2">
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
@@ -336,7 +336,7 @@ export function DiscoveryClient() {
     pantryMode || smartFilterCount > 0 || pantryItems.length > 0;
 
   return (
-    <div className="flex flex-col pb-28 md:pb-8">
+    <div className="flex flex-col">
       <KitchenMatchDialog
         open={kitchenMatchOpen}
         onClose={() => setKitchenMatchOpen(false)}
@@ -350,7 +350,7 @@ export function DiscoveryClient() {
         showPantryHint={pantryMode && pantrySet.size === 0}
       />
 
-      <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-8xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
         {/* ── Page Title with Walking Goose ── */}
         <div className="mb-6">
           <div className="relative">

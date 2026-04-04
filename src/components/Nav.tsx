@@ -23,7 +23,7 @@ export function Nav() {
     <>
       {/* ── Desktop top bar ── */}
       <header className="hidden border-b-2 border-edge bg-background md:block">
-        <nav className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-3 lg:px-8">
+        <nav className="mx-auto flex max-w-8xl items-center justify-between gap-6 px-6 py-3 lg:px-8">
           <Link
             href="/"
             className="flex items-center gap-2.5 font-extrabold tracking-tight text-foreground transition-transform hover:scale-[1.02]"
@@ -65,7 +65,7 @@ export function Nav() {
         className="fixed right-0 bottom-0 left-0 z-50 border-t-2 border-edge bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
         aria-label="Main"
       >
-        <ul className="mx-auto flex max-w-lg justify-around px-2 py-1">
+        <ul className="mx-auto flex max-w-2xl justify-around px-2 py-1">
           {links.map(({ href, label, Icon }) => {
             const active = pathname === href;
             return (

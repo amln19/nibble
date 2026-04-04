@@ -10,9 +10,14 @@ function readLocalIds(): string[] {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw == null) return [];
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed)
-      ? parsed.filter((x): x is string => typeof x === "string")
-      : [];
+    if (!Array.isArray(parsed)) return [];
+    // Deduplicate while preserving order
+    const seen = new Set<string>();
+    return parsed.filter((x): x is string => {
+      if (typeof x !== "string" || seen.has(x)) return false;
+      seen.add(x);
+      return true;
+    });
   } catch {
     return [];
   }
@@ -33,6 +38,7 @@ export function useRecipeBox() {
 
   const syncFromCloud = useCallback(async (userId: string) => {
     const supabase = createClient();
+    if (!supabase) { setSavedIds(readLocalIds()); setReady(true); return; }
     const { data, error } = await supabase
       .from("saved_recipes")
       .select("recipe_id")
@@ -62,12 +68,28 @@ export function useRecipeBox() {
       }
     }
 
-    setSavedIds(merged);
+    setSavedIds((prev) => {
+      // Merge cloud + local + anything added in-flight via add()
+      const all = new Set([...merged, ...prev]);
+      return [...all];
+    });
     setReady(true);
   }, []);
 
   useEffect(() => {
     const supabase = createClient();
+    if (!supabase) {
+      setSavedIds((prev) => {
+        const local = readLocalIds();
+        if (prev.length === 0) return local;
+        // Merge: keep anything already added via add() that isn't in local
+        const set = new Set(local);
+        const extra = prev.filter((id) => !set.has(id));
+        return [...local, ...extra];
+      });
+      setReady(true);
+      return;
+    }
 
     const bootstrap = async () => {
       const {
@@ -113,6 +135,7 @@ export function useRecipeBox() {
 
     void (async () => {
       const supabase = createClient();
+      if (!supabase) return;
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -132,6 +155,7 @@ export function useRecipeBox() {
 
     void (async () => {
       const supabase = createClient();
+      if (!supabase) return;
       const {
         data: { user },
       } = await supabase.auth.getUser();

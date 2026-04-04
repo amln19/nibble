@@ -2,7 +2,7 @@
 
 import { NavAuth } from "@/components/NavAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { BookmarkCheck, Compass, LayoutGrid, Trophy, User } from "lucide-react";
+import { BookmarkCheck, Compass, LayoutGrid, Trophy, User, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -54,6 +54,17 @@ export function Nav() {
           </ul>
 
           <div className="flex items-center gap-3">
+            <Link
+              href="/friends"
+              className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-sm font-extrabold transition-all ${
+                pathname === "/friends"
+                  ? "border-primary bg-primary-light text-primary-dark shadow-[0_2px_0_var(--primary)]"
+                  : "border-transparent text-muted hover:border-edge hover:text-foreground"
+              }`}
+            >
+              <Users size={15} aria-hidden />
+              Friends
+            </Link>
             <ThemeToggle />
             <NavAuth />
           </div>

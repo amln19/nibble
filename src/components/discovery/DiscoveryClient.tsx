@@ -348,7 +348,7 @@ export function DiscoveryClient() {
         showPantryHint={pantryMode && pantrySet.size === 0}
       />
 
-      <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-8xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
         {/* ── Page Title ── */}
         <div className="mb-6">
           <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl">

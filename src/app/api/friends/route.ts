@@ -42,15 +42,17 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const username = (body.username ?? "").trim().toLowerCase();
+  const username = (body.username ?? "").trim();
   if (!username) return NextResponse.json({ error: "Username required" }, { status: 400 });
 
-  // Find the target user by username
-  const { data: target } = await supabase
+  // Find the target user by username (case-insensitive)
+  const { data: targets } = await supabase
     .from("profiles")
     .select("id, username")
     .ilike("username", username)
-    .single();
+    .limit(1);
+
+  const target = targets?.[0] ?? null;
 
   if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
   if (target.id === user.id) return NextResponse.json({ error: "Cannot add yourself" }, { status: 400 });

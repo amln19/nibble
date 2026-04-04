@@ -16,7 +16,7 @@ export function SavedRecipesStrip({ recipes, onRemove }: Props) {
     <section className="mt-12 mb-6 lg:mt-16">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div className="min-w-0 space-y-1.5">
-          <h2 className="font-serif text-lg font-semibold leading-snug tracking-tight text-foreground">
+          <h2 className="text-lg font-extrabold text-foreground">
             In your recipe box
           </h2>
           <p className="max-w-md text-xs leading-relaxed text-muted">

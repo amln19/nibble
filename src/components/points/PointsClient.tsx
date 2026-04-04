@@ -34,7 +34,7 @@ type CategoryMeta = {
 
 const CATEGORY_META: Record<AchievementCategory, CategoryMeta> = {
   saver:   { label: "Recipe Saver", Icon: BookmarkCheck, iconClass: "text-primary-dark" },
-  creator: { label: "Creator",      Icon: Camera,        iconClass: "text-accent" },
+  creator: { label: "Creator",      Icon: Camera,        iconClass: "text-primary-dark" },
   chef:    { label: "Cook-Along",   Icon: ChefHat,       iconClass: "text-golden" },
   social:  { label: "Social",       Icon: Heart,         iconClass: "text-sky-600 dark:text-sky-400" },
 };
@@ -58,10 +58,10 @@ const CATEGORY_ACCENT: Record<
     iconText: "text-primary-dark",
   },
   creator: {
-    leftBar: "border-l-accent",
-    iconBg: "bg-accent/12",
-    iconBorder: "border-accent/45",
-    iconText: "text-accent",
+    leftBar: "border-l-primary",
+    iconBg: "bg-primary/12",
+    iconBorder: "border-primary/45",
+    iconText: "text-primary-dark",
   },
   chef: {
     leftBar: "border-l-golden",
@@ -144,7 +144,7 @@ function AchievementCard({
         <div className="space-y-1">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
             <div
-              className="h-full rounded-full bg-accent/80 transition-all duration-500"
+              className="h-full rounded-full bg-primary/80 transition-all duration-500"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -263,7 +263,7 @@ export function PointsClient() {
         </p>
       </header>
 
-      {/* ── Rank card (neutral shell; golden + accent highlights) ── */}
+      {/* ── Rank card (neutral shell; golden + pink progress) ── */}
       <div className="overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)]">
         <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:gap-6">
           {/* Tier icon */}
@@ -299,7 +299,7 @@ export function PointsClient() {
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-elevated">
               <div
-                className="h-full rounded-full bg-accent transition-all duration-700"
+                className="h-full rounded-full bg-primary transition-all duration-700"
                 style={{ width: `${tier.progress}%` }}
               />
             </div>
@@ -352,7 +352,7 @@ export function PointsClient() {
               label: "Posts",
               value: stats!.postsCount,
               Icon: Camera,
-              iconClass: "text-accent",
+              iconClass: "text-primary-dark",
             },
             {
               label: "Cooked",

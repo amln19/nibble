@@ -2,6 +2,7 @@
 
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useRecipeBox } from "@/hooks/useRecipeBox";
+import { createPortal } from "react-dom";
 import { useRecipeCache } from "@/hooks/useRecipeCache";
 import { useSkippedRecipes } from "@/hooks/useLocalStorageState";
 import { normalizeIngredient } from "@/lib/ingredients";
@@ -77,7 +78,7 @@ export function DiscoveryClient() {
     [],
   );
   const { savedIds, add: saveRecipe, remove: unsaveRecipe } = useRecipeBox();
-  const { skippedIds, skip } = useSkippedRecipes();
+  const { skippedIds, skip, clearSession } = useSkippedRecipes();
   const { cacheRecipes, recordLike, recordPass, getRecommendations, getLikedCount } = useRecipeCache();
   const [currentRecipe, setCurrentRecipe] = useState<Recipe | null>(null);
   const [recsOffset, setRecsOffset] = useState(0);
@@ -92,6 +93,7 @@ export function DiscoveryClient() {
   const [loadingMeals, setLoadingMeals] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [kitchenMatchOpen, setKitchenMatchOpen] = useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -226,14 +228,30 @@ export function DiscoveryClient() {
     setCategory(c);
   }, []);
 
+  const resetFilters = useCallback(() => {
+    setSearchDraft("");
+    setActiveQuery(null);
+    setSmart(defaultFilters);
+    setPantryMode(false);
+  }, []);
+
+  const handleResetSkipped = useCallback(() => {
+    clearSession();
+    setConfirmResetOpen(false);
+  }, [clearSession]);
+
   const pantrySet = useMemo(
     () => new Set(pantryItems.map((s) => normalizeIngredient(s))),
     [pantryItems],
   );
 
   const excludeIds = useMemo(
-    () => new Set<string>([...savedIds, ...skippedIds]),
-    [savedIds, skippedIds],
+    () => {
+      // When searching, don't exclude saved recipes so they still appear
+      const base = activeQuery ? [] : [...savedIds];
+      return new Set<string>([...base, ...skippedIds]);
+    },
+    [savedIds, skippedIds, activeQuery],
   );
 
   const deck = useMemo(
@@ -409,6 +427,29 @@ export function DiscoveryClient() {
               </span>
             ) : null}
           </button>
+
+          {(activeQuery || kitchenMatchActive) ? (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex items-center gap-1.5 rounded-2xl border-2 border-edge bg-card px-4 py-2 text-xs font-extrabold text-muted shadow-[0_3px_0_var(--edge)] transition-all hover:border-edge-hover hover:text-foreground active:translate-y-0.5 active:shadow-none"
+            >
+              ✕ Reset Filters
+            </button>
+          ) : null}
+
+          {skippedIds.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setConfirmResetOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-2xl border-2 border-edge bg-card px-4 py-2 text-xs font-extrabold text-muted shadow-[0_3px_0_var(--edge)] transition-all hover:border-edge-hover hover:text-foreground active:translate-y-0.5 active:shadow-none"
+            >
+              ↺ Reset Skipped
+              <span className="rounded-full bg-edge px-1.5 py-0.5 text-[10px] font-extrabold text-foreground tabular-nums">
+                {skippedIds.length}
+              </span>
+            </button>
+          ) : null}
 
           {!loadingMeals && apiRecipes.length > 0 ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-edge bg-card px-3 py-1.5 text-[11px] font-bold text-muted">
@@ -602,6 +643,42 @@ export function DiscoveryClient() {
           . Times &amp; tags are estimated.
         </p>
       </div>
+
+      {/* ── Reset Skipped Confirmation Dialog ── */}
+      {confirmResetOpen && createPortal(
+        <dialog
+          open
+          className="fixed inset-0 z-[10000] m-0 flex max-h-none min-h-full w-full max-w-none min-w-full items-center justify-center bg-black/50 p-4"
+          onClick={() => setConfirmResetOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl border-2 border-edge bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-extrabold text-foreground">Reset Skipped Recipes?</h3>
+            <p className="mt-2 text-sm text-muted">
+              This will bring back all <strong className="text-foreground">{skippedIds.length}</strong> recipes you previously swiped left on. They&apos;ll appear in your deck again.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmResetOpen(false)}
+                className="flex-1 rounded-2xl border-2 border-edge bg-card px-4 py-3 text-sm font-extrabold text-foreground shadow-[0_3px_0_var(--edge)] transition-all hover:bg-surface active:translate-y-0.5 active:shadow-none"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleResetSkipped}
+                className="flex-1 rounded-2xl border-2 border-primary-dark bg-primary px-4 py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
+              >
+                Reset All
+              </button>
+            </div>
+          </div>
+        </dialog>,
+        document.body,
+      )}
     </div>
   );
 }

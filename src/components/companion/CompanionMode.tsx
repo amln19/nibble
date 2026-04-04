@@ -253,10 +253,16 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
     }
   }, [speak]);
 
+  const openAskModal = useCallback(() => {
+    stopAudio();
+    setShowAskModal(true);
+  }, [stopAudio]);
+
   const startListening = useCallback((
     context: { recipeTitle: string; currentStep: string; stepNumber: number; totalSteps: number },
   ) => {
     if (!sttSupported) return;
+    stopAudio();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SR = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -277,7 +283,7 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
     setIsListening(true);
     setTranscript(null);
     setGordonAnswer(null);
-  }, [sttSupported, askGordon]);
+  }, [sttSupported, askGordon, stopAudio]);
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
@@ -828,7 +834,7 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               {sttSupported && (
                 <button
                   type="button"
-                  onClick={() => setShowAskModal(true)}
+                  onClick={openAskModal}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary-dark bg-primary py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
                 >
                   <Mic size={16} />
@@ -875,7 +881,7 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
                     type="button"
                     onClick={() => {
                       setShowHelpPanel(false);
-                      setShowAskModal(true);
+                      openAskModal();
                     }}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary-dark bg-primary py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
                   >

@@ -233,22 +233,22 @@ function PostDetailModal({
     >
       {/* Modal: stacked on mobile, side-by-side on md+ */}
       <div
-        className="flex w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border-2 border-edge bg-card shadow-[0_8px_0_var(--edge)] sm:rounded-3xl md:max-w-6xl md:flex-row md:max-h-[90vh]"
+        className="flex h-[90dvh] max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border-2 border-edge bg-card shadow-[0_8px_0_var(--edge)] sm:h-[min(92dvh,880px)] sm:rounded-3xl md:h-auto md:max-h-[90vh] md:min-h-[min(85vh,720px)] md:max-w-6xl md:flex-row"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Left: image ── */}
-        <div className="relative aspect-[4/5] w-full shrink-0 bg-surface md:aspect-auto md:w-[520px] md:self-stretch">
+        {/* ── Left: image (taller on mobile; fills left rail on desktop) ── */}
+        <div className="relative h-[42dvh] min-h-[220px] w-full shrink-0 bg-surface sm:h-[44dvh] sm:min-h-[260px] md:w-[min(46vw,560px)] md:self-stretch md:min-h-[min(85vh,640px)]">
           <Image
             src={post.image_url}
             alt=""
             fill
             className="object-cover"
-            sizes="(max-width: 768px) 100vw, 520px"
+            sizes="(max-width: 768px) 100vw, 560px"
           />
         </div>
 
         {/* ── Right: info + comments ── */}
-        <div className="flex flex-1 flex-col overflow-hidden md:border-l-2 md:border-edge">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:border-l-2 md:border-edge">
           {/* Header: title, author, action buttons — X lives here, never floats */}
           <div className="shrink-0 border-b-2 border-edge p-4">
             <div className="flex items-start gap-3">

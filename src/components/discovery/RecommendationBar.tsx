@@ -17,7 +17,7 @@ export function RecommendationBar({ recommendations, onSave, onRefresh }: Props)
     <section className="mt-8">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h2 className="font-serif text-lg font-semibold text-foreground">
+          <h2 className="text-lg font-extrabold text-foreground">
             Recommended for you
           </h2>
           <p className="text-xs text-muted">

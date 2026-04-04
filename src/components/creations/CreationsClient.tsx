@@ -236,8 +236,8 @@ function PostDetailModal({
         className="flex h-[90dvh] max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border-2 border-edge bg-card shadow-[0_8px_0_var(--edge)] sm:h-[min(92dvh,880px)] sm:rounded-3xl md:h-auto md:max-h-[90vh] md:min-h-[min(85vh,720px)] md:max-w-6xl md:flex-row"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Left: image (taller on mobile; fills left rail on desktop) ── */}
-        <div className="relative h-[42dvh] min-h-[220px] w-full shrink-0 bg-surface sm:h-[44dvh] sm:min-h-[260px] md:w-[min(46vw,560px)] md:self-stretch md:min-h-[min(85vh,640px)]">
+        {/* ── Left: image (fills entire height) ── */}
+        <div className="relative flex-1 min-h-[50vh] w-full shrink-0 bg-surface md:flex-initial md:min-h-0 md:w-[min(46vw,560px)] md:self-stretch">
           <Image
             src={post.image_url}
             alt=""

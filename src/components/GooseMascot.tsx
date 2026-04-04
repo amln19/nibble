@@ -71,23 +71,36 @@ export function GooseMascot() {
     return () => clearTimeout(t);
   }, []);
 
+  // Hide on login page only
   if (pathname === "/login") return null;
+
+  // Check if in companion mode (cook/prep pages)
+  const isCompanionMode = pathname?.startsWith("/cook") || pathname?.startsWith("/prep");
+  const positionClasses = isCompanionMode
+    ? "left-6 items-start"
+    : "right-6 items-end";
+  const bubbleClasses = isCompanionMode
+    ? "rounded-br-sm"
+    : "rounded-bl-sm";
+  const bubbleTailClasses = isCompanionMode
+    ? "right-4 border-l-[9px] border-r-0"
+    : "left-4 border-l-0 border-r-[9px]";
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 transition-all duration-700 ease-out ${
+      className={`fixed bottom-6 ${positionClasses} z-[10000] flex flex-col gap-3 transition-all duration-700 ease-out ${
         visible ? "translate-y-0 opacity-100" : "translate-y-32 opacity-0"
       }`}
     >
       {/* Speech bubble */}
       <div
-        className={`relative max-w-[180px] rounded-2xl rounded-bl-sm border-2 border-edge bg-card px-4 py-2.5 text-[14px] font-extrabold text-foreground shadow-xl transition-all duration-300 dark:border-stone-300 dark:bg-white dark:text-neutral-950 ${
+        className={`relative max-w-[180px] rounded-2xl ${bubbleClasses} border-2 border-edge bg-card px-4 py-2.5 text-[14px] font-extrabold text-foreground shadow-xl transition-all duration-300 dark:border-stone-300 dark:bg-white dark:text-neutral-950 ${
           message ? "scale-100 opacity-100" : "pointer-events-none scale-75 opacity-0"
         }`}
       >
         {message}
         <span
-          className="absolute -bottom-2.5 left-4 h-0 w-0 border-l-0 border-r-[9px] border-t-[12px] border-solid border-l-transparent border-r-transparent border-t-card dark:border-t-white"
+          className={`absolute -bottom-2.5 ${bubbleTailClasses} h-0 w-0 border-t-[12px] border-solid border-l-transparent border-r-transparent border-t-card dark:border-t-white`}
           aria-hidden
         />
       </div>

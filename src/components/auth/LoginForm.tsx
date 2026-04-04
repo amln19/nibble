@@ -80,26 +80,26 @@ export function LoginForm() {
       <div className="mb-6">
         <BrandMascot variant="welcome" priority />
       </div>
-      <div className="w-full rounded-2xl border border-pink-100 bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="font-serif text-2xl font-semibold text-zinc-900">
-          {mode === "signin" ? "Sign in" : "Create account"}
+      <div className="w-full rounded-3xl border-2 border-edge bg-card p-6 shadow-[0_4px_0_var(--edge)] sm:p-8">
+        <h1 className="text-2xl font-extrabold text-foreground">
+          {mode === "signin" ? "Welcome back!" : "Create an account"}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted">
           {mode === "signin"
-            ? "Welcome back — use your Supabase account."
-            : "Sign up with email and password."}
+            ? "Sign in to your account."
+            : "Create an account with email."}
         </p>
 
         {(error || urlError) && (
           <p
-            className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+            className="mt-4 rounded-2xl border-2 border-red-200 bg-red-50 px-3 py-2.5 text-sm font-bold text-red-800"
             role="alert"
           >
             {error ?? decodeURIComponent(urlError ?? "")}
           </p>
         )}
         {message && (
-          <p className="mt-4 rounded-lg border border-pink-200 bg-pink-50 px-3 py-2 text-sm text-zinc-900">
+          <p className="mt-4 rounded-2xl border-2 border-primary bg-primary-light px-3 py-2.5 text-sm font-bold text-primary-dark">
             {message}
           </p>
         )}
@@ -108,7 +108,7 @@ export function LoginForm() {
           <div>
             <label
               htmlFor="email"
-              className="block text-xs font-medium uppercase tracking-wide text-zinc-500"
+              className="block text-xs font-extrabold uppercase tracking-wide text-muted"
             >
               Email
             </label>
@@ -120,14 +120,14 @@ export function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/25"
+              className="mt-1.5 w-full rounded-2xl border-2 border-edge bg-card px-3 py-2.5 text-sm font-bold text-foreground shadow-[0_2px_0_var(--edge)] placeholder:font-normal placeholder:text-muted transition-all focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
               placeholder="you@example.com"
             />
           </div>
           <div>
             <label
               htmlFor="password"
-              className="block text-xs font-medium uppercase tracking-wide text-zinc-500"
+              className="block text-xs font-extrabold uppercase tracking-wide text-muted"
             >
               Password
             </label>
@@ -142,30 +142,30 @@ export function LoginForm() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/25"
-              placeholder="••••••••"
+              className="mt-1.5 w-full rounded-2xl border-2 border-edge bg-card px-3 py-2.5 text-sm font-bold text-foreground shadow-[0_2px_0_var(--edge)] placeholder:font-normal placeholder:text-muted transition-all focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
+              placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
+            className="w-full rounded-2xl border-2 border-primary-dark bg-primary py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:shadow-none"
           >
             {loading
-              ? "Please wait…"
+              ? "Please wait\u2026"
               : mode === "signin"
                 ? "Sign in"
                 : "Sign up"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-zinc-600">
+        <p className="mt-6 text-center text-sm text-muted">
           {mode === "signin" ? (
             <>
               No account?{" "}
               <button
                 type="button"
-                className="font-medium text-green-600 hover:text-green-700"
+                className="font-extrabold text-primary-dark transition hover:text-primary"
                 onClick={() => {
                   setMode("signup");
                   setError(null);
@@ -180,7 +180,7 @@ export function LoginForm() {
               Already have an account?{" "}
               <button
                 type="button"
-                className="font-medium text-green-600 hover:text-green-700"
+                className="font-extrabold text-primary-dark transition hover:text-primary"
                 onClick={() => {
                   setMode("signin");
                   setError(null);
@@ -196,9 +196,9 @@ export function LoginForm() {
         <p className="mt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-zinc-500 underline-offset-2 hover:text-green-600 hover:underline"
+            className="text-sm font-bold text-muted underline-offset-2 hover:text-primary-dark hover:underline"
           >
-            ← Back to Discover
+            &larr; Back to Discover
           </Link>
         </p>
       </div>

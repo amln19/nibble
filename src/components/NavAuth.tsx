@@ -34,7 +34,7 @@ export function NavAuth() {
 
   if (loading) {
     return (
-      <span className="h-4 w-16 shrink-0 animate-pulse rounded bg-zinc-100" />
+      <span className="h-4 w-16 shrink-0 animate-pulse rounded-lg bg-surface" />
     );
   }
 
@@ -42,7 +42,7 @@ export function NavAuth() {
     return (
       <div className="flex items-center gap-3">
         <span
-          className="hidden max-w-[10rem] truncate text-sm text-zinc-600 sm:inline"
+          className="hidden max-w-40 truncate text-sm text-muted sm:inline"
           title={user.email ?? ""}
         >
           {user.email}
@@ -50,7 +50,7 @@ export function NavAuth() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="text-sm font-medium text-zinc-600 transition hover:text-green-700"
+          className="rounded-xl border-2 border-edge px-3 py-1.5 text-sm font-bold text-muted transition-all hover:border-edge-hover hover:text-foreground active:translate-y-0.5"
         >
           Sign out
         </button>
@@ -61,7 +61,7 @@ export function NavAuth() {
   return (
     <Link
       href="/login"
-      className="text-sm font-medium text-green-600 transition hover:text-green-700"
+      className="rounded-xl border-2 border-primary bg-primary-light px-4 py-1.5 text-sm font-extrabold text-primary-dark transition-all hover:bg-primary hover:text-white active:translate-y-0.5"
     >
       Sign in
     </Link>

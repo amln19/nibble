@@ -124,6 +124,8 @@ export function RecipeBoxClient() {
       setRecsReady(true);
       return;
     }
+    // Derive IDs from idsKey (not savedIds) to avoid stale closure
+    const currentIds = idsKey.split(",").filter(Boolean);
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -142,7 +144,7 @@ export function RecipeBoxClient() {
             merged.set(recipe.id, recipe);
           }
           const next = new Map<string, Recipe>();
-          for (const id of savedIds) {
+          for (const id of currentIds) {
             const r = merged.get(id) ?? prev.get(id);
             if (r) next.set(id, r);
           }
@@ -152,8 +154,7 @@ export function RecipeBoxClient() {
         // engine has candidates to score against on this page
         cacheRecipes(list);
         setRecsReady(true);
-        const expected = idsKey.split(",").filter(Boolean).length;
-        if (list.length < expected) {
+        if (list.length < currentIds.length) {
           setLoadError(true);
         }
       } catch {

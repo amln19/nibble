@@ -309,9 +309,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
 
   const gordonMood =
     phase === "loading" || phase === "error" ? "thinking"
-    : phase === "complete" ? "celebrating"
-    : isSpeaking ? "speaking"
-    : "idle";
+      : phase === "complete" ? "celebrating"
+        : isSpeaking ? "speaking"
+          : "idle";
 
   function toggleIngredient(index: number) {
     setCheckedIngredients((prev) => {
@@ -878,13 +878,12 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               {guide.steps.map((_, i) => (
                 <div
                   key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentStep
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStep
                       ? "w-6 bg-primary"
                       : i < currentStep
                         ? "w-1.5 bg-primary/40"
                         : "w-1.5 bg-edge"
-                  }`}
+                    }`}
                 />
               ))}
             </div>

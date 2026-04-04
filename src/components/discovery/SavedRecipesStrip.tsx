@@ -16,14 +16,14 @@ export function SavedRecipesStrip({ recipes, onRemove }: Props) {
     <section className="mb-6">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h2 className="font-serif text-lg font-semibold text-zinc-900">
+          <h2 className="font-serif text-lg font-semibold text-foreground">
             In your recipe box
           </h2>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-muted">
             Saved on this device — manage anytime in{" "}
             <Link
               href="/box"
-              className="font-medium text-rose-600 underline-offset-2 hover:underline"
+              className="font-bold text-primary-dark underline-offset-2 hover:underline"
             >
               Recipe box
             </Link>
@@ -36,7 +36,7 @@ export function SavedRecipesStrip({ recipes, onRemove }: Props) {
             key={r.id}
             className="group relative w-28 shrink-0 sm:w-32"
           >
-            <div className="relative overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
+            <div className="relative overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-sm transition hover:border-primary/50">
               <Link href="/box" className="block">
                 <div className="relative aspect-square w-full">
                   {r.imageUrl ? (
@@ -48,19 +48,19 @@ export function SavedRecipesStrip({ recipes, onRemove }: Props) {
                       className="object-cover transition group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center bg-rose-50 text-[10px] text-zinc-400">
+                    <div className="flex h-full items-center justify-center bg-surface text-[10px] text-muted">
                       No image
                     </div>
                   )}
                 </div>
-                <p className="line-clamp-2 px-2 py-2 text-[11px] font-medium leading-tight text-zinc-800">
+                <p className="line-clamp-2 px-2 py-2 text-[11px] font-semibold leading-tight text-foreground">
                   {r.title}
                 </p>
               </Link>
               <button
                 type="button"
                 onClick={() => onRemove(r.id)}
-                className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-xs text-zinc-500 shadow-md ring-1 ring-rose-100/80 transition hover:bg-rose-50 hover:text-rose-700"
+                className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-card/95 text-xs text-muted shadow-md ring-2 ring-edge transition-all hover:text-red-500 hover:ring-red-400 active:scale-95"
                 aria-label={`Remove ${r.title} from recipe box`}
               >
                 ✕

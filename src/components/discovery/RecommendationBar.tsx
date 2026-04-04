@@ -17,10 +17,10 @@ export function RecommendationBar({ recommendations, onSave, onRefresh }: Props)
     <section className="mt-8">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h2 className="font-serif text-lg font-semibold text-zinc-900">
+          <h2 className="font-serif text-lg font-semibold text-foreground">
             Recommended for you
           </h2>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-muted">
             Based on what you liked this session
           </p>
         </div>
@@ -28,7 +28,7 @@ export function RecommendationBar({ recommendations, onSave, onRefresh }: Props)
           <button
             type="button"
             onClick={onRefresh}
-            className="flex items-center gap-1.5 rounded-full border border-rose-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-rose-600 shadow-sm transition hover:bg-rose-50 active:scale-95"
+            className="flex items-center gap-1.5 rounded-full border-2 border-edge bg-card px-3 py-1.5 text-xs font-extrabold text-muted shadow-sm transition hover:border-primary hover:text-foreground active:scale-95"
           >
             <svg
               className="h-3.5 w-3.5"
@@ -52,7 +52,7 @@ export function RecommendationBar({ recommendations, onSave, onRefresh }: Props)
         {recommendations.map((r) => (
           <div
             key={r.id}
-            className="group relative flex w-40 shrink-0 flex-col overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm transition hover:shadow-md"
+            className="group relative flex w-40 shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-sm transition hover:border-primary/50 hover:shadow-md"
           >
             <div className="relative aspect-square w-full overflow-hidden">
               <Image
@@ -62,23 +62,23 @@ export function RecommendationBar({ recommendations, onSave, onRefresh }: Props)
                 sizes="160px"
                 className="object-cover transition group-hover:scale-105"
               />
-              <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-rose-600 shadow-sm">
+              <span className="absolute top-2 left-2 rounded-full bg-card/90 px-2 py-0.5 text-[10px] font-extrabold text-primary shadow-sm">
                 {Math.round(r.score * 100)}% match
               </span>
             </div>
 
             <div className="flex flex-1 flex-col p-2.5">
-              <p className="line-clamp-2 text-sm font-medium leading-tight text-zinc-800">
+              <p className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">
                 {r.title}
               </p>
-              <p className="mt-1 text-[11px] text-zinc-500">
+              <p className="mt-1 text-[11px] font-medium text-muted">
                 {r.category}{r.area ? ` · ${r.area}` : ""}
               </p>
 
               <button
                 type="button"
                 onClick={() => onSave(r)}
-                className="mt-2 w-full rounded-lg bg-rose-500 py-1.5 text-xs font-medium text-white transition hover:bg-rose-600 active:scale-95"
+                className="mt-2 w-full rounded-xl border-2 border-primary-dark bg-primary py-1.5 text-xs font-extrabold text-white shadow-[0_2px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-0.5 active:shadow-none"
               >
                 Save ♥
               </button>

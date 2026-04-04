@@ -254,11 +254,11 @@ export function PointsClient() {
     <div className="mx-auto w-full max-w-8xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
 
       {/* ── Page header ── */}
-      <header className="mb-6">
+      <header className="mb-6 rounded-3xl border-2 border-primary/40 bg-primary/5 px-6 py-5 shadow-[0_4px_0_var(--primary)]">
         <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
           Points &amp; Achievements
         </h1>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 text-sm text-foreground">
           {unlocked.length} of {ACHIEVEMENTS.length} unlocked · {totalPoints} pts earned
         </p>
       </header>

@@ -91,11 +91,11 @@ export function RecipeBoxClient() {
         />
       )}
 
-      <header className="mb-6">
+      <header className="mb-6 rounded-3xl border-2 border-primary/40 bg-primary/5 px-6 py-5 shadow-[0_4px_0_var(--primary)]">
         <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
           Recipe Box
         </h1>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 text-sm text-foreground">
           Your saved recipes. Tap any card to cook with Gordon.
         </p>
       </header>

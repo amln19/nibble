@@ -19,6 +19,7 @@ import { SavedRecipesStrip } from "./SavedRecipesStrip";
 import { RecipeSearchBar } from "./RecipeSearchBar";
 import { SwipeDeck } from "./SwipeDeck";
 import { RecipeInfoPanel } from "./RecipeInfoPanel";
+import { WalkingGoose } from "../WalkingGoose";
 
 const defaultFilters: SmartFilters = {
   under30: false,
@@ -350,11 +351,12 @@ export function DiscoveryClient() {
 
       <div className="mx-auto w-full max-w-8xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
         {/* ── Page Title ── */}
-        <div className="mb-6">
+        <div className="relative mb-6 overflow-hidden rounded-3xl border-2 border-primary/40 bg-primary/5 px-6 py-5 shadow-[0_4px_0_var(--primary)]">
           <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl">
             Explore Gordon's Recipes
           </h1>
-          <p className="mt-2 text-base text-muted sm:text-lg">
+          <WalkingGoose />
+          <p className="mt-2 text-base text-foreground sm:text-lg">
             Swipe through delicious recipes and find your next meal
           </p>
         </div>

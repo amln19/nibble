@@ -44,7 +44,7 @@ function PostCard({
   const hasLiked = post.user_has_liked ?? false;
 
   return (
-    <li className="group relative overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-[0_3px_0_var(--edge)] transition-all hover:-translate-y-0.5 hover:shadow-[0_5px_0_var(--edge)]">
+    <li className="group relative overflow-hidden rounded-2xl border-[3px] border-edge bg-card shadow-[0_4px_0_var(--edge)] transition-all hover:-translate-y-1 hover:border-primary/60 hover:shadow-[0_6px_0_var(--primary)]">
       <button
         type="button"
         className="relative block w-full"
@@ -885,12 +885,12 @@ export function CreationsClient() {
       ) : null}
 
       {/* ── Page header ── */}
-      <header className="mb-8 flex items-center justify-between gap-4">
+      <header className="mb-8 flex items-center justify-between gap-4 rounded-3xl border-2 border-primary/40 bg-primary/5 px-6 py-5 shadow-[0_4px_0_var(--primary)]">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
             Posts
           </h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-sm text-foreground">
             Share your kitchen wins with the community.
           </p>
         </div>
@@ -908,7 +908,7 @@ export function CreationsClient() {
 
       {/* ── Your posts ── */}
       {userId ? (
-        <section className="mb-10" aria-labelledby="my-posts-heading">
+        <section className="mb-10 rounded-3xl border-2 border-edge bg-card/50 p-5 shadow-[0_3px_0_var(--edge)]" aria-labelledby="my-posts-heading">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <User size={15} className="text-muted" />
@@ -927,7 +927,7 @@ export function CreationsClient() {
           </div>
 
           {feedLoading ? (
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:gap-5">
               {Array.from({ length: 4 }).map((_, i) => (
                 <li key={i} className="aspect-square animate-pulse rounded-2xl bg-surface" />
               ))}
@@ -950,7 +950,7 @@ export function CreationsClient() {
               </button>
             </div>
           ) : (
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:gap-5">
               {myPosts.map((p) => (
                 <PostCard
                   key={p.id}
@@ -983,7 +983,7 @@ export function CreationsClient() {
       )}
 
       {/* ── Community feed ── */}
-      <section aria-labelledby="community-heading">
+      <section className="rounded-3xl border-2 border-edge bg-card/50 p-5 shadow-[0_3px_0_var(--edge)]" aria-labelledby="community-heading">
         <div className="mb-4 flex items-center gap-2">
           <Globe size={15} className="text-muted" />
           <h2
@@ -995,7 +995,7 @@ export function CreationsClient() {
         </div>
 
         {feedLoading ? (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
               <li key={i} className="aspect-square animate-pulse rounded-2xl bg-surface" />
             ))}
@@ -1005,14 +1005,14 @@ export function CreationsClient() {
             ⚠️ {feedError}
           </div>
         ) : communityPosts.length === 0 ? (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:gap-5">
             <EmptyGrid
               message="Nothing from the community yet"
               sub="Be the first to inspire others!"
             />
           </ul>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:gap-5">
             {communityPosts.map((p) => (
               <PostCard
                 key={p.id}

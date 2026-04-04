@@ -1,10 +1,14 @@
+import type { Recipe } from "@/lib/recipes";
 import { mealDetailToRecipe } from "@/lib/themealdb/parse";
 import type { MealDbMealDetail } from "@/lib/themealdb/types";
 import { NextResponse } from "next/server";
 
 const LOOKUP = "https://www.themealdb.com/api/json/v1/1/lookup.php";
 
-/** Batch lookup by comma-separated idMeal values (max 40) */
+/** Parallel lookups per chunk — avoids hammering TheMealDB with hundreds at once */
+const CHUNK_SIZE = 40;
+
+/** Batch lookup by comma-separated idMeal values (chunks of 40; order preserved) */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const idsParam = searchParams.get("ids");
@@ -15,29 +19,34 @@ export async function GET(req: Request) {
   const ids = idsParam
     .split(",")
     .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 40);
+    .filter(Boolean);
 
   if (ids.length === 0) {
     return NextResponse.json({ recipes: [] });
   }
 
   try {
-    const meals = await Promise.all(
-      ids.map(async (id) => {
-        const res = await fetch(`${LOOKUP}?i=${encodeURIComponent(id)}`, {
-          next: { revalidate: 3600 },
-        });
-        if (!res.ok) return null;
-        const data = (await res.json()) as { meals?: MealDbMealDetail[] | null };
-        const m = data.meals?.[0];
-        return m ?? null;
-      }),
-    );
+    const recipes: Recipe[] = [];
 
-    const recipes = meals
-      .filter((m): m is MealDbMealDetail => m != null)
-      .map(mealDetailToRecipe);
+    for (let offset = 0; offset < ids.length; offset += CHUNK_SIZE) {
+      const chunk = ids.slice(offset, offset + CHUNK_SIZE);
+      const meals = await Promise.all(
+        chunk.map(async (id) => {
+          const res = await fetch(`${LOOKUP}?i=${encodeURIComponent(id)}`, {
+            next: { revalidate: 3600 },
+          });
+          if (!res.ok) return null;
+          const data = (await res.json()) as { meals?: MealDbMealDetail[] | null };
+          const m = data.meals?.[0];
+          return m ?? null;
+        }),
+      );
+
+      const chunkRecipes = meals
+        .filter((m): m is MealDbMealDetail => m != null)
+        .map(mealDetailToRecipe);
+      recipes.push(...chunkRecipes);
+    }
 
     return NextResponse.json({ recipes });
   } catch {

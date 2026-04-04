@@ -1,19 +1,23 @@
 "use client";
 
 import { useRecipeBox } from "@/hooks/useRecipeBox";
+import { useRecipeCache } from "@/hooks/useRecipeCache";
 import type { Recipe } from "@/lib/recipes";
+import type { ScoredRecipe } from "@/lib/recommend";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { RecipeInfoSheet } from "./RecipeInfoSheet";
 
 export function RecipeBoxClient() {
-  const { savedIds, remove, ready: recipeBoxReady } = useRecipeBox();
+  const { savedIds, add: saveRecipe, remove, ready: recipeBoxReady } = useRecipeBox();
+  const { getOverallRecommendations } = useRecipeCache();
   const [byId, setById] = useState<Map<string, Recipe>>(new Map());
   const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [recsReady, setRecsReady] = useState(false);
 
   const idsKey = useMemo(() => savedIds.join(","), [savedIds]);
 
@@ -25,6 +29,17 @@ export function RecipeBoxClient() {
       return title.includes(q);
     });
   }, [savedIds, byId, searchQuery]);
+
+  // Show recs after initial load
+  useEffect(() => {
+    if (recipeBoxReady && !loading) setRecsReady(true);
+  }, [recipeBoxReady, loading]);
+
+  const excludeSet = useMemo(() => new Set(savedIds), [savedIds]);
+  const overallRecs: ScoredRecipe[] = useMemo(() => {
+    if (!recsReady) return [];
+    return getOverallRecommendations(excludeSet, 10);
+  }, [recsReady, getOverallRecommendations, excludeSet]);
 
   useEffect(() => {
     if (!idsKey) {
@@ -221,6 +236,54 @@ export function RecipeBoxClient() {
           })}
         </ul>
       ) : null}
+
+      {/* ── Recommendations ── */}
+      {overallRecs.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-lg font-extrabold text-foreground">
+            Recommended for you
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            Based on what you liked this session
+          </p>
+          <div className="mt-4 flex gap-3 overflow-x-auto pb-3">
+            {overallRecs.map((r) => (
+              <div
+                key={r.id}
+                className="group relative flex w-40 shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)] transition-all hover:-translate-y-0.5"
+              >
+                <div className="relative aspect-square w-full overflow-hidden">
+                  <Image
+                    src={r.imageUrl}
+                    alt={r.title}
+                    fill
+                    sizes="160px"
+                    className="object-cover transition group-hover:scale-105"
+                  />
+                  <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-extrabold text-primary-dark shadow-sm">
+                    {Math.round(r.score * 100)}% match
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col p-2.5">
+                  <p className="line-clamp-2 text-sm font-extrabold leading-tight text-foreground">
+                    {r.title}
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted">
+                    {r.category}{r.area ? ` · ${r.area}` : ""}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => saveRecipe(r.id)}
+                    className="mt-2 w-full rounded-xl border-2 border-primary-dark bg-primary py-1.5 text-xs font-extrabold text-white shadow-[0_3px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-0.5 active:shadow-none"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

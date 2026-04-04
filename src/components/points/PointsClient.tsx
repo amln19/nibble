@@ -130,6 +130,7 @@ export function PointsClient() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
+      if (!supabase) { setLoading(false); return; }
       const {
         data: { user },
       } = await supabase.auth.getUser();

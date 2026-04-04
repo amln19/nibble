@@ -171,6 +171,7 @@ function PostDetailModal({
     const loadComments = async () => {
       try {
         const supabase = createClient();
+        if (!supabase) { setComments([]); setLoadingComments(false); return; }
         const { data, error } = await supabase
           .from("creation_comments")
           .select("*")
@@ -192,6 +193,7 @@ function PostDetailModal({
     setSubmittingComment(true);
     try {
       const supabase = createClient();
+      if (!supabase) return;
       const author_label = userEmail?.split("@")[0]?.slice(0, 40) ?? "Chef";
       const { data: row, error } = await supabase
         .from("creation_comments")
@@ -217,6 +219,7 @@ function PostDetailModal({
     setComments((prev) => prev.filter((c) => c.id !== commentId));
     try {
       const supabase = createClient();
+      if (!supabase) return;
       await supabase.from("creation_comments").delete().eq("id", commentId);
     } catch {
       // silently fail
@@ -461,6 +464,7 @@ function NewPostModal({
     setSubmitting(true);
     try {
       const supabase = createClient();
+      if (!supabase) { setError("Not connected"); setSubmitting(false); return; }
       const ext = file.name.split(".").pop()?.slice(0, 8) || "jpg";
       const path = `${userId}/${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage
@@ -682,6 +686,7 @@ export function CreationsClient() {
     setFeedError(null);
     try {
       const supabase = createClient();
+      if (!supabase) { setFeedError("Not connected"); setFeedLoading(false); return; }
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -748,6 +753,7 @@ export function CreationsClient() {
   // Auth
   useEffect(() => {
     const supabase = createClient();
+    if (!supabase) return;
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserId(user?.id ?? null);
       setUserEmail(user?.email ?? null);
@@ -763,6 +769,7 @@ export function CreationsClient() {
     setPosts((prev) => prev.filter((p) => p.id !== id));
     try {
       const supabase = createClient();
+      if (!supabase) return;
       await supabase.from("creations").delete().eq("id", id);
     } catch {
       // silently fail — the optimistic remove is fine
@@ -777,6 +784,7 @@ export function CreationsClient() {
     if (!userId) return;
 
     const supabase = createClient();
+    if (!supabase) return;
     const post = posts.find((p) => p.id === creationId);
     if (!post) return;
 

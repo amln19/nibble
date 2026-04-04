@@ -2,6 +2,7 @@
 
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useRecipeBox } from "@/hooks/useRecipeBox";
+import { useRecipeCache } from "@/hooks/useRecipeCache";
 import { useSkippedRecipes } from "@/hooks/useLocalStorageState";
 import { normalizeIngredient } from "@/lib/ingredients";
 import {
@@ -13,6 +14,8 @@ import { shuffle } from "@/lib/shuffle";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExploreSection, type ExploreCategory } from "./ExploreSection";
 import { KitchenMatchDialog } from "./KitchenMatchDialog";
+import { RecommendationBar } from "./RecommendationBar";
+import { SavedRecipesStrip } from "./SavedRecipesStrip";
 import { RecipeSearchBar } from "./RecipeSearchBar";
 import { SwipeDeck } from "./SwipeDeck";
 import { RecipeInfoPanel } from "./RecipeInfoPanel";
@@ -74,9 +77,12 @@ export function DiscoveryClient() {
     "recipe-pantry-items",
     [],
   );
-  const { savedIds, add: saveRecipe } = useRecipeBox();
+  const { savedIds, add: saveRecipe, remove: unsaveRecipe } = useRecipeBox();
   const { skippedIds, skip } = useSkippedRecipes();
+  const { cacheRecipes, recordLike, recordPass, getRecommendations, getLikedCount } = useRecipeCache();
   const [currentRecipe, setCurrentRecipe] = useState<Recipe | null>(null);
+  const [recsOffset, setRecsOffset] = useState(0);
+  const [savedRecipeData, setSavedRecipeData] = useState<Recipe[]>([]);
 
   const [categories, setCategories] = useState<ExploreCategory[]>([]);
   const [category, setCategory] = useState<string | null>(null);
@@ -226,6 +232,47 @@ export function DiscoveryClient() {
   useEffect(() => {
     setCurrentRecipe(deck[0] ?? null);
   }, [deck]);
+
+  // Cache loaded recipes for the recommendation engine
+  useEffect(() => {
+    if (apiRecipes.length > 0) cacheRecipes(apiRecipes);
+  }, [apiRecipes, cacheRecipes]);
+
+  // Fetch saved recipe data for the strip
+  useEffect(() => {
+    if (savedIds.length === 0) { setSavedRecipeData([]); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch(`/api/recipes/details?ids=${encodeURIComponent(savedIds.slice(0, 10).join(","))}`);
+        if (!r.ok || cancelled) return;
+        const data = (await r.json()) as { recipes?: Recipe[] };
+        if (!cancelled) setSavedRecipeData(data.recipes ?? []);
+      } catch { /* best effort */ }
+    })();
+    return () => { cancelled = true; };
+  }, [savedIds]);
+
+  const handleSave = useCallback((r: Recipe) => {
+    saveRecipe(r.id);
+    recordLike(r);
+  }, [saveRecipe, recordLike]);
+
+  const handlePass = useCallback((r: Recipe) => {
+    skip(r.id);
+    recordPass(r);
+  }, [skip, recordPass]);
+
+  // Recommendations — auto-show when user has liked 3+ recipes
+  const hasEnoughLikes = getLikedCount() >= 3;
+  const recommendations = useMemo(() => {
+    if (!hasEnoughLikes) return [];
+    return getRecommendations(excludeIds, 10, category, recsOffset);
+  }, [hasEnoughLikes, getRecommendations, excludeIds, category, recsOffset]);
+
+  const handleRefreshRecs = useCallback(() => {
+    setRecsOffset((prev) => prev + 10);
+  }, []);
 
   const anySmart =
     smart.under30 ||
@@ -429,8 +476,8 @@ export function DiscoveryClient() {
                 ) : (
                   <SwipeDeck
                     recipes={deck}
-                    onPass={(r) => skip(r.id)}
-                    onSave={(r) => saveRecipe(r.id)}
+                    onPass={handlePass}
+                    onSave={handleSave}
                     emptyDetail={emptyDetailText}
                   />
                 )}
@@ -495,8 +542,8 @@ export function DiscoveryClient() {
                   ) : (
                     <SwipeDeck
                       recipes={deck}
-                      onPass={(r) => skip(r.id)}
-                      onSave={(r) => saveRecipe(r.id)}
+                      onPass={handlePass}
+                      onSave={handleSave}
                       emptyDetail={emptyDetailText}
                     />
                   )}
@@ -517,6 +564,18 @@ export function DiscoveryClient() {
             </div>
           </div>
         </div>
+
+        {/* ── Saved recipes strip ── */}
+        <SavedRecipesStrip recipes={savedRecipeData} onRemove={unsaveRecipe} />
+
+        {/* ── Recommendations ── */}
+        {recommendations.length > 0 && (
+          <RecommendationBar
+            recommendations={recommendations}
+            onSave={handleSave}
+            onRefresh={handleRefreshRecs}
+          />
+        )}
 
         <p className="mt-10 text-[11px] text-muted">
           Recipe data from{" "}

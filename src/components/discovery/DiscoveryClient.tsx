@@ -177,6 +177,26 @@ export function DiscoveryClient() {
     }
   }, []);
 
+  const loadSpecificRecipe = useCallback(async (id: string) => {
+    setLoadingMeals(true);
+    setLoadError(null);
+    setApiRecipes([]);
+    try {
+      const recipes = await fetchRecipeDetails([id]);
+      if (recipes.length > 0) {
+        setApiRecipes(recipes);
+        const recipeTitle = recipes[0].title;
+        setSearchDraft(recipeTitle);
+        setActiveQuery(recipeTitle);
+      }
+    } catch {
+      setLoadError("Failed to load recipe.");
+    } finally {
+      setLoadingMeals(false);
+    }
+  }, []);
+
+
   useEffect(() => {
     if (!category || activeQuery) return;
     void loadMeals(category);
@@ -365,6 +385,7 @@ export function DiscoveryClient() {
           onChange={setSearchDraft}
           onSubmit={handleSearchSubmit}
           onClear={clearSearch}
+          onRecipeSelect={loadSpecificRecipe}
           activeQuery={activeQuery}
           disabled={loadingMeals}
         />

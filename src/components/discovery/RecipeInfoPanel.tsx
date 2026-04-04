@@ -123,12 +123,9 @@ export function RecipeInfoPanel({ recipe }: Props) {
               onClick={() => {
                 router.push(`/prep?id=${encodeURIComponent(recipe.id)}`);
               }}
-              className="tap-3d flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-accent/60 bg-accent/10 px-6 py-3.5 text-sm font-black text-accent shadow-[0_3px_0_rgba(124,92,252,0.3)] transition-all hover:bg-accent hover:text-white hover:shadow-[0_4px_12px_rgba(124,92,252,0.35)]"
+              className="tap-3d flex w-full items-center justify-center rounded-2xl border-2 border-primary/60 bg-primary/10 px-6 py-3.5 text-sm font-black text-primary shadow-[0_3px_0_var(--primary-dark)] transition-all hover:bg-primary hover:text-white hover:shadow-[0_4px_12px_rgba(255,75,140,0.35)]"
             >
-              🧪 Practice in Virtual Kitchen
-              <span className="rounded-lg bg-accent/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-                AI Sim
-              </span>
+              Practice in Virtual Kitchen
             </button>
           </div>
         ) : null}

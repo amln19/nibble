@@ -82,6 +82,10 @@ body {
   border-color: var(--primary);
 }
 
+@media (pointer: fine) {
+  * { cursor: none !important; }
+}
+
 /* ── Dialog backdrop ── */
 dialog.recipe-info-dialog::backdrop,
 dialog.kitchen-match-dialog::backdrop {
@@ -221,7 +225,8 @@ dialog.kitchen-match-dialog::backdrop {
   .animate-mascot-ring,
   .animate-card-pop-in,
   .animate-walk-goose-title,
-  .animate-walk-goose-from-title {
+  .animate-walk-goose-from-title,
+  .swipe-card-promote {
     animation: none !important;
   }
 }
@@ -596,10 +601,19 @@ dialog.kitchen-match-dialog::backdrop {
   50% { transform: translateY(-2px) scaleY(1.5); }
 }
 
+/* Swipe card promote (back → front) */
+@keyframes swipe-card-promote {
+  from { transform: scale(0.94); opacity: 0.5; }
+  to { transform: scale(1); opacity: 1; }
+}
+.swipe-card-promote {
+  animation: swipe-card-promote 0.32s ease-out both;
+}
+
 /* Drag target pulse */
 @keyframes prep-drag-pulse-anim {
   0%, 100% { border-color: var(--edge); }
-  50% { border-color: var(--accent); }
+  50% { border-color: var(--primary); }
 }
 
 .prep-drag-pulse {

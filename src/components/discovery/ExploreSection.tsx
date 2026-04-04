@@ -25,7 +25,7 @@ export function ExploreSection({
   sidebar = false,
 }: Props) {
   return (
-    <section className="w-full" aria-labelledby="explore-heading">
+    <section className="flex min-h-0 w-full flex-1 flex-col" aria-labelledby="explore-heading">
       {!embedded && (
         <div className="mb-3">
           <h2
@@ -40,7 +40,7 @@ export function ExploreSection({
       {/* Sidebar: vertical scrollable list */}
       {sidebar ? (
         <div
-          className="flex h-full flex-col gap-1.5 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex h-full flex-col gap-1 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="list"
         >
           {categories.map((c, i) => {
@@ -52,17 +52,17 @@ export function ExploreSection({
                 role="listitem"
                 disabled={disabled}
                 onClick={() => onSelect(c.strCategory)}
-                className={`group flex w-full items-center gap-3 rounded-xl border-2 p-2 text-left transition-all active:translate-y-[2px] active:shadow-none ${
+                className={`group flex w-full items-center gap-2 rounded-lg border-2 px-2 py-1.5 text-left transition-all active:translate-y-[1px] active:shadow-none ${
                   active
                     ? "border-primary bg-primary-light shadow-[0_2px_0_var(--primary)]"
                     : "border-transparent hover:border-edge hover:bg-surface"
                 } ${disabled ? "opacity-50" : ""}`}
               >
                 <div className="shrink-0">
-                  <CategoryIllustration name={c.strCategory} active={active} size={44} index={i} />
+                  <CategoryIllustration name={c.strCategory} active={active} size={30} index={i} />
                 </div>
                 <span
-                  className={`min-w-0 flex-1 break-words text-left text-[12px] font-extrabold leading-snug line-clamp-2 ${active ? "text-primary-dark" : "text-foreground"}`}
+                  className={`min-w-0 flex-1 break-words text-left text-[11px] font-extrabold leading-tight line-clamp-1 ${active ? "text-primary-dark" : "text-foreground"}`}
                 >
                   {c.strCategory}
                 </span>

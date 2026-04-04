@@ -213,27 +213,27 @@ export function RecipeBoxClient() {
                         : "Not found — remove to clear.")}
                   </p>
 
-                  <div className="mt-3 flex items-center gap-2">
+                  <div className="mt-3 flex flex-col gap-2">
                     {r?.instructions ? (
-                      <Link
-                        href={`/prep?id=${encodeURIComponent(id)}`}
-                        className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-accent/60 bg-accent/10 py-2 px-3 text-xs font-extrabold text-accent shadow-[0_3px_0_rgba(124,92,252,0.3)] transition-all hover:bg-accent hover:text-white hover:shadow-[0_3px_0_rgba(124,92,252,0.5)] active:translate-y-0.5 active:shadow-none"
-                      >
-                        🧪 Prep
-                      </Link>
-                    ) : null}
-                    {r?.instructions ? (
-                      <Link
-                        href={`/cook?id=${encodeURIComponent(id)}`}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-primary bg-primary-light py-2 text-xs font-extrabold text-primary-dark shadow-[0_3px_0_var(--primary)] transition-all hover:bg-primary hover:text-white hover:shadow-[0_3px_0_var(--primary-dark)] active:translate-y-0.5 active:shadow-none"
-                      >
-                        <span>🪿</span> Cook with Gordon
-                      </Link>
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/prep?id=${encodeURIComponent(id)}`}
+                          className="flex flex-1 items-center justify-center rounded-xl border-2 border-primary/60 bg-primary/10 py-2.5 text-sm font-extrabold text-primary shadow-[0_3px_0_var(--primary-dark)] transition-all hover:bg-primary hover:text-white hover:shadow-[0_3px_0_var(--primary-dark)] active:translate-y-0.5 active:shadow-none"
+                        >
+                          Prep
+                        </Link>
+                        <Link
+                          href={`/cook?id=${encodeURIComponent(id)}`}
+                          className="flex flex-1 items-center justify-center rounded-xl border-2 border-primary bg-primary-light py-2.5 text-sm font-extrabold text-primary-dark shadow-[0_3px_0_var(--primary)] transition-all hover:bg-primary hover:text-white hover:shadow-[0_3px_0_var(--primary-dark)] active:translate-y-0.5 active:shadow-none"
+                        >
+                          Cook with Gordon
+                        </Link>
+                      </div>
                     ) : null}
                     <button
                       type="button"
                       onClick={() => remove(id)}
-                      className="shrink-0 rounded-xl border-2 border-edge px-3 py-2 text-xs font-extrabold text-muted transition-all hover:border-red-300 hover:text-red-600 active:translate-y-0.5"
+                      className="w-full rounded-xl border-2 border-edge py-2 text-sm font-extrabold text-muted transition-all hover:border-red-300 hover:text-red-500 active:translate-y-0.5"
                     >
                       Remove
                     </button>

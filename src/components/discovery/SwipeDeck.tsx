@@ -2,7 +2,8 @@
 
 import type { Recipe } from "@/lib/recipes";
 import Link from "next/link";
-import { SwipeCard } from "./SwipeCard";
+import { useRef } from "react";
+import { SwipeCard, type SwipeCardHandle } from "./SwipeCard";
 import { Search, CheckCircle, X, Heart, ChefHat } from "lucide-react";
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
 export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
   const current = recipes[0];
   const next = recipes[1];
+  const cardRef = useRef<SwipeCardHandle>(null);
 
   if (!current) {
     return (
@@ -45,22 +47,20 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
       <div className="relative">
         {next ? (
           <div
-            className="pointer-events-none absolute inset-0 z-0 overflow-hidden flex justify-center opacity-50"
+            className="pointer-events-none absolute inset-0 z-0 flex justify-center scale-[0.94] opacity-50"
             aria-hidden
           >
-            <div className="w-full scale-[0.94]">
-              <div className="overflow-hidden rounded-3xl border-2 border-edge shadow-[0_4px_0_var(--edge)]">
-                <img
-                  src={next.imageUrl}
-                  alt=""
-                  className="aspect-3/4 w-full object-cover"
-                />
-              </div>
-            </div>
+            <SwipeCard
+              key={next.id}
+              recipe={next}
+              onSwipeLeft={() => {}}
+              onSwipeRight={() => {}}
+            />
           </div>
         ) : null}
-        <div className="relative z-20 flex justify-center">
+        <div key={current.id} className="swipe-card-promote relative z-20 flex justify-center">
           <SwipeCard
+            ref={cardRef}
             recipe={current}
             onSwipeLeft={() => onPass(current)}
             onSwipeRight={() => onSave(current)}
@@ -73,7 +73,7 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
         <div className="flex flex-col items-center gap-2">
           <button
             type="button"
-            onClick={() => onPass(current)}
+            onClick={() => cardRef.current?.triggerFly("left")}
             className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)] transition-all hover:border-edge-hover active:translate-y-1 active:shadow-none"
             aria-label="Pass"
           >
@@ -98,8 +98,8 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
         <div className="flex flex-col items-center gap-2">
           <button
             type="button"
-            onClick={() => onSave(current)}
-            className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-primary-dark bg-primary shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
+            onClick={() => cardRef.current?.triggerFly("right")}
+            className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#a0204e] bg-primary shadow-[0_4px_0_#a0204e] transition-all hover:bg-[#e8005a] hover:border-[#8a1040] hover:shadow-[0_4px_0_#8a1040] active:translate-y-1 active:shadow-none"
             aria-label="Save to recipe box"
           >
             <Heart className="h-7 w-7 text-white fill-white" />

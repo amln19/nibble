@@ -195,6 +195,44 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
               </div>
             </div>
           ) : null}
+
+          {/* Practice in Virtual Kitchen */}
+          {recipe.instructions ? (
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  requestClose();
+                  router.push(`/prep?id=${encodeURIComponent(recipe.id)}`);
+                }}
+                className="tap-3d flex w-full items-center justify-center rounded-2xl border-2 border-primary/60 bg-primary/10 px-6 py-3.5 text-sm font-black text-primary shadow-[0_3px_0_var(--primary-dark)] transition-all hover:bg-primary hover:text-white hover:shadow-[0_4px_12px_rgba(255,75,140,0.35)]"
+              >
+                Practice in Virtual Kitchen
+              </button>
+            </div>
+          ) : null}
+
+          {/* Cook with Gordon */}
+          {recipe.instructions ? (
+            <div className="mt-3 mb-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  requestClose();
+                  router.push(`/cook?id=${encodeURIComponent(recipe.id)}`);
+                }}
+                className="tap-3d flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-orange-300 bg-orange-300 px-6 py-4 text-sm font-black text-stone-900 shadow-[0_4px_0_rgba(180,120,60,0.3)] transition-all hover:bg-orange-400 hover:border-orange-400 hover:shadow-[0_6px_20px_rgba(251,146,60,0.35)] active:translate-y-[2px] active:shadow-none"
+              >
+                <ChefHat className="h-5 w-5" />
+                Cook with Gordon
+                <span className="rounded-lg bg-stone-900/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
+                  Voice AI
+                </span>
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     </dialog>

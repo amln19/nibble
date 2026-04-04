@@ -63,7 +63,7 @@ export function ActionGame({ step, onComplete }: Props) {
             className="h-full rounded-full transition-none"
             style={{
               width: `${progress}%`,
-              backgroundColor: ready ? "#10b981" : "var(--accent)",
+              backgroundColor: ready ? "#10b981" : "var(--primary)",
             }}
           />
         </div>
@@ -78,7 +78,7 @@ export function ActionGame({ step, onComplete }: Props) {
           done
             ? "border-edge bg-surface text-muted"
             : ready
-              ? "border-accent bg-accent text-white shadow-[0_4px_0_rgba(124,92,252,0.5)] active:translate-y-1 active:shadow-none"
+              ? "border-primary-dark bg-primary text-white shadow-[0_4px_0_var(--primary-dark)] active:translate-y-1 active:shadow-none"
               : "border-edge bg-surface text-muted"
         }`}
       >

@@ -132,7 +132,7 @@ export function PrepClient({ recipeId }: { recipeId: string | null }) {
           </div>
           <div className="flex gap-1.5">
             {[0, 1, 2].map(i => (
-              <div key={i} className="h-2.5 w-2.5 rounded-full bg-accent loading-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              <div key={i} className="h-2.5 w-2.5 rounded-full bg-primary loading-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
           </div>
         </div>
@@ -150,7 +150,7 @@ export function PrepClient({ recipeId }: { recipeId: string | null }) {
             <h2 className="text-xl font-extrabold text-foreground">Honk! Something went wrong</h2>
             <p className="mt-2 max-w-sm text-sm text-muted">{errorMsg}</p>
           </div>
-          <Link href="/" className="mt-2 rounded-2xl border-2 border-accent bg-accent px-6 py-3 text-sm font-extrabold text-white shadow-[0_4px_0_rgba(124,92,252,0.5)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none">
+          <Link href="/" className="mt-2 rounded-2xl border-2 border-primary-dark bg-primary px-6 py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none">
             Back to recipes
           </Link>
         </div>
@@ -167,7 +167,7 @@ export function PrepClient({ recipeId }: { recipeId: string | null }) {
             <Link href="/" className="inline-flex items-center gap-1 rounded-xl border-2 border-edge bg-card px-3 py-1.5 text-xs font-extrabold text-foreground shadow-[0_2px_0_var(--edge)] transition-all hover:border-edge-hover active:translate-y-0.5 active:shadow-none">
               <ChevronLeft size={13} /> Back
             </Link>
-            <span className="rounded-xl border-2 border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-extrabold text-accent">
+            <span className="rounded-xl border-2 border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-extrabold text-primary">
               Virtual Kitchen
             </span>
           </div>
@@ -181,7 +181,7 @@ export function PrepClient({ recipeId }: { recipeId: string | null }) {
 
             <div className="text-center">
               <h1 className="text-2xl font-black text-foreground sm:text-3xl">{recipe.title}</h1>
-              <p className="mt-1 text-sm font-bold text-accent">Virtual Kitchen · {totalSteps} steps</p>
+              <p className="mt-1 text-sm font-bold text-primary">Virtual Kitchen · {totalSteps} steps</p>
             </div>
 
             <div className="flex w-full max-w-md items-start gap-3">
@@ -204,7 +204,7 @@ export function PrepClient({ recipeId }: { recipeId: string | null }) {
               ))}
             </div>
 
-            <button onClick={startPrep} className="mt-2 rounded-2xl border-2 border-accent bg-accent px-8 py-4 text-base font-black text-white shadow-[0_4px_0_rgba(124,92,252,0.5)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none">
+            <button onClick={startPrep} className="mt-2 rounded-2xl border-2 border-primary-dark bg-primary px-8 py-4 text-base font-black text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none">
               🧑‍🍳 Enter the Kitchen
             </button>
           </div>
@@ -235,7 +235,7 @@ export function PrepClient({ recipeId }: { recipeId: string | null }) {
                 <div
                   key={i}
                   className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
-                    i < stepIndex ? "bg-accent" : i === stepIndex ? "bg-accent/60" : "bg-surface"
+                    i < stepIndex ? "bg-primary" : i === stepIndex ? "bg-primary/60" : "bg-surface"
                   }`}
                 />
               ))}
@@ -292,17 +292,17 @@ export function PrepClient({ recipeId }: { recipeId: string | null }) {
 
           <div className="text-center">
             <h1 className="text-3xl font-black text-foreground sm:text-4xl">You Made It! 🎓</h1>
-            <p className="mt-2 text-lg font-bold text-accent">{recipe.title}</p>
+            <p className="mt-2 text-lg font-bold text-primary">{recipe.title}</p>
           </div>
 
           {/* Stats */}
           <div className="flex gap-4">
             <div className="flex flex-col items-center gap-1 rounded-3xl border-2 border-edge bg-card px-6 py-4 shadow-[0_4px_0_var(--edge)]">
-              <span className="text-2xl font-black text-accent">{perfectCount}/{totalSteps}</span>
+              <span className="text-2xl font-black text-primary">{perfectCount}/{totalSteps}</span>
               <span className="text-xs font-extrabold text-muted">Perfect</span>
             </div>
             <div className="flex flex-col items-center gap-1 rounded-3xl border-2 border-edge bg-card px-6 py-4 shadow-[0_4px_0_var(--edge)]">
-              <span className="text-2xl font-black text-accent">{totalSteps}</span>
+              <span className="text-2xl font-black text-primary">{totalSteps}</span>
               <span className="text-xs font-extrabold text-muted">Steps</span>
             </div>
           </div>

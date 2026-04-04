@@ -549,7 +549,7 @@ export function DiscoveryClient() {
                   Explore
                 </span>
               </div>
-              <section className="flex flex-1 flex-col overflow-hidden rounded-3xl border-2 border-edge bg-card p-4 shadow-[0_4px_0_var(--edge)]">
+              <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border-2 border-edge bg-card p-3 shadow-[0_4px_0_var(--edge)]">
                 {loadingCats ? (
                   <ExploreSidebarSkeleton />
                 ) : (

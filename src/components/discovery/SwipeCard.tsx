@@ -119,7 +119,7 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
         </div>
         <button
           type="button"
-          className="pointer-events-auto absolute right-4 bottom-24 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white shadow-lg backdrop-blur-md transition hover:bg-black/55 hover:border-white/50 md:bottom-28"
+          className="pointer-events-auto absolute right-4 bottom-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white shadow-lg backdrop-blur-md transition hover:bg-black/55 hover:border-white/50"
           style={{ touchAction: "manipulation" }}
           aria-label="Recipe details and ingredients"
           onPointerDown={(e) => e.stopPropagation()}
@@ -138,7 +138,7 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
           </svg>
         </button>
-        <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-6 pr-16 text-white">
+        <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-6 pr-16 pb-16 text-white">
           <p className="text-xs font-medium text-white/70">
             {recipe.tagline}
             {recipe.timeMinutes

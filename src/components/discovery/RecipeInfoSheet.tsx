@@ -70,20 +70,23 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
         className="flex max-h-[min(85vh,720px)] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-2xl sm:max-h-[min(90vh,800px)] sm:rounded-3xl dark:bg-zinc-900"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+        <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
           <h2
             id="recipe-info-title"
-            className="pr-4 font-serif text-lg font-semibold text-zinc-900 dark:text-zinc-50"
+            className="min-w-0 flex-1 break-words font-serif text-lg font-semibold text-zinc-900 dark:text-zinc-50"
           >
             {recipe.title}
           </h2>
           <button
             type="button"
-            className="touch-manipulation rounded-full p-2 text-xl leading-none text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 active:bg-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+            className="relative z-10 shrink-0 touch-manipulation rounded-full p-2 text-xl leading-none text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 active:bg-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
             aria-label="Close"
             onClick={(e) => {
               e.stopPropagation();
               requestClose();
+            }}
+            onPointerDown={(e) => {
+              e.stopPropagation();
             }}
           >
             ×

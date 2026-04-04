@@ -6,24 +6,29 @@ export function useLocalStorageState<T>(
   key: string,
   initial: T,
 ): [T, (value: T | ((prev: T) => T)) => void] {
-  const [state, setState] = useState<T>(() => {
-    if (typeof window === "undefined") return initial;
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (raw == null) return initial;
-      return JSON.parse(raw) as T;
-    } catch {
-      return initial;
-    }
-  });
+  const [state, setState] = useState<T>(initial);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw != null) {
+        setState(JSON.parse(raw) as T);
+      }
+    } catch {
+      /* ignore */
+    }
+    setHydrated(true);
+  }, [key]);
+
+  useEffect(() => {
+    if (!hydrated) return;
     try {
       window.localStorage.setItem(key, JSON.stringify(state));
     } catch {
       /* quota */
     }
-  }, [key, state]);
+  }, [key, state, hydrated]);
 
   return [state, setState];
 }
@@ -32,24 +37,29 @@ export function useSessionStorageState<T>(
   key: string,
   initial: T,
 ): [T, (value: T | ((prev: T) => T)) => void] {
-  const [state, setState] = useState<T>(() => {
-    if (typeof window === "undefined") return initial;
-    try {
-      const raw = window.sessionStorage.getItem(key);
-      if (raw == null) return initial;
-      return JSON.parse(raw) as T;
-    } catch {
-      return initial;
-    }
-  });
+  const [state, setState] = useState<T>(initial);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    try {
+      const raw = window.sessionStorage.getItem(key);
+      if (raw != null) {
+        setState(JSON.parse(raw) as T);
+      }
+    } catch {
+      /* ignore */
+    }
+    setHydrated(true);
+  }, [key]);
+
+  useEffect(() => {
+    if (!hydrated) return;
     try {
       window.sessionStorage.setItem(key, JSON.stringify(state));
     } catch {
       /* */
     }
-  }, [key, state]);
+  }, [key, state, hydrated]);
 
   return [state, setState];
 }

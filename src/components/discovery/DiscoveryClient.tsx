@@ -15,6 +15,9 @@ import { ExploreSection, type ExploreCategory } from "./ExploreSection";
 import { KitchenMatchDialog } from "./KitchenMatchDialog";
 import { RecipeSearchBar } from "./RecipeSearchBar";
 import { SwipeDeck } from "./SwipeDeck";
+import { RecipeInfoPanel } from "./RecipeInfoPanel";
+import Lottie from "lottie-react";
+import gooseAnimation from "../../../public/animations/goose.json";
 
 const defaultFilters: SmartFilters = {
   under30: false,
@@ -48,6 +51,22 @@ function CategoriesSkeleton() {
   );
 }
 
+function ExploreSidebarSkeleton() {
+  return (
+    <div className="flex flex-col gap-2">
+      {Array.from({ length: 10 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex animate-pulse items-center gap-3 rounded-xl bg-surface p-2"
+        >
+          <div className="h-9 w-9 shrink-0 rounded-lg bg-edge" />
+          <div className="h-3 w-24 rounded-full bg-edge" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function DiscoveryClient() {
   const [smart, setSmart] = useState<SmartFilters>(defaultFilters);
   const [pantryMode, setPantryMode] = useState(false);
@@ -57,6 +76,7 @@ export function DiscoveryClient() {
   );
   const { savedIds, add: saveRecipe } = useRecipeBox();
   const { skippedIds, skip } = useSkippedRecipes();
+  const [currentRecipe, setCurrentRecipe] = useState<Recipe | null>(null);
 
   const [categories, setCategories] = useState<ExploreCategory[]>([]);
   const [category, setCategory] = useState<string | null>(null);
@@ -202,6 +222,11 @@ export function DiscoveryClient() {
     [apiRecipes, smart, pantryMode, pantrySet, excludeIds],
   );
 
+  // Update current recipe when deck changes
+  useEffect(() => {
+    setCurrentRecipe(deck[0] ?? null);
+  }, [deck]);
+
   const anySmart =
     smart.under30 ||
     smart.highProtein ||
@@ -278,8 +303,27 @@ export function DiscoveryClient() {
         showPantryHint={pantryMode && pantrySet.size === 0}
       />
 
-      <div className="mx-auto w-full max-w-3xl px-4 pt-6 sm:px-6">
-        {/* ── Search ── */}
+      <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+        {/* ── Page Title with Walking Goose ── */}
+        <div className="mb-6">
+          <div className="relative">
+            <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl inline">
+              Explore Gordon's Recipes
+            </h1>
+            <div className="absolute top-0 left-0 right-0 overflow-visible pointer-events-none">
+              <div className="absolute top-0 animate-walk-goose-from-title">
+                <div className="w-10 h-10">
+                  <Lottie animationData={gooseAnimation} loop={true} />
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="mt-2 text-base text-muted sm:text-lg">
+            Swipe through delicious recipes and find your next meal
+          </p>
+        </div>
+
+        {/* ── Search + action strip (full width) ── */}
         <RecipeSearchBar
           value={searchDraft}
           onChange={setSearchDraft}
@@ -289,7 +333,6 @@ export function DiscoveryClient() {
           disabled={loadingMeals}
         />
 
-        {/* ── Action strip ── */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -300,7 +343,6 @@ export function DiscoveryClient() {
                 : "border-edge bg-card text-foreground shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
             }`}
           >
-            <span aria-hidden>✨</span>
             Kitchen Match
             {kitchenMatchActive && kitchenMatchBadgeCount > 0 ? (
               <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-extrabold text-white tabular-nums">
@@ -326,7 +368,6 @@ export function DiscoveryClient() {
           ) : null}
         </div>
 
-        {/* ── Error ── */}
         {loadError ? (
           <div
             className="mt-4 rounded-2xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-800"
@@ -336,74 +377,145 @@ export function DiscoveryClient() {
           </div>
         ) : null}
 
-        {/* ── Explore categories ── */}
-        <div className="mt-6">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="text-lg" aria-hidden>🗺️</span>
-            <span className="text-xs font-extrabold uppercase tracking-widest text-muted">
-              Explore
-            </span>
-          </div>
-          <section
-            className="rounded-3xl border-2 border-edge bg-card p-4 shadow-[0_4px_0_var(--edge)] sm:p-5"
-          >
-            {loadingCats ? (
-              <CategoriesSkeleton />
-            ) : (
-              <ExploreSection
-                categories={categories}
-                selected={category}
-                onSelect={handleCategorySelect}
-                disabled={loadingMeals}
-                embedded
-              />
-            )}
-          </section>
-        </div>
-
-        {/* ── Swipe Deck ── */}
-        <div className="mt-8">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="text-lg" aria-hidden>🍳</span>
-            <span className="text-xs font-extrabold uppercase tracking-widest text-muted">
-              Swipe Deck
-            </span>
-          </div>
-          <section className="rounded-3xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)]">
-            <div className="flex items-center justify-between border-b-2 border-edge px-5 py-3.5 sm:px-6">
-              <h2 className="text-sm font-extrabold text-foreground">
-                Your Deck
-              </h2>
-              <div className="flex gap-2 text-[11px]">
-                <span className="rounded-xl border-2 border-edge bg-surface px-2.5 py-1 font-extrabold text-muted">
-                  &larr; Pass
-                </span>
-                <span className="rounded-xl border-2 border-primary bg-primary-light px-2.5 py-1 font-extrabold text-primary-dark">
-                  Save &rarr;
-                </span>
-              </div>
+        {/* ── Mobile: stacked (explore above deck) ── */}
+        <div className="lg:hidden">
+          <div className="mt-6">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-xs font-extrabold uppercase tracking-widest text-muted">
+                Explore
+              </span>
             </div>
-            <div className="p-5 sm:p-6">
-              {loadingMeals ? (
-                <div className="flex min-h-[min(52vh,400px)] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-edge bg-surface px-6 py-12">
-                  <div
-                    className="h-10 w-10 animate-spin rounded-full border-4 border-surface border-t-primary"
-                    aria-hidden
-                  />
-                  <p className="text-sm font-extrabold text-muted">
-                    {activeQuery ? "Searching\u2026" : "Loading recipes\u2026"}
-                  </p>
-                </div>
+            <section className="rounded-3xl border-2 border-edge bg-card p-4 shadow-[0_4px_0_var(--edge)] sm:p-5">
+              {loadingCats ? (
+                <CategoriesSkeleton />
               ) : (
-                <SwipeDeck
-                  recipes={deck}
-                  onPass={(r) => skip(r.id)}
-                  onSave={(r) => saveRecipe(r.id)}
-                  emptyDetail={emptyDetailText}
+                <ExploreSection
+                  categories={categories}
+                  selected={category}
+                  onSelect={handleCategorySelect}
+                  disabled={loadingMeals}
+                  embedded
                 />
               )}
+            </section>
+          </div>
+
+          <div className="mt-8">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-xs font-extrabold uppercase tracking-widest text-muted">
+                Swipe Deck
+              </span>
             </div>
-          </section>
+            <section className="rounded-3xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)]">
+              <div className="flex items-center justify-between border-b-2 border-edge px-5 py-3.5 sm:px-6">
+                <h2 className="text-sm font-extrabold text-foreground">Your Deck</h2>
+                <div className="flex gap-2 text-[11px]">
+                  <span className="rounded-xl border-2 border-edge bg-surface px-2.5 py-1 font-extrabold text-muted">
+                    &larr; Pass
+                  </span>
+                  <span className="rounded-xl border-2 border-primary bg-primary-light px-2.5 py-1 font-extrabold text-primary-dark">
+                    Save &rarr;
+                  </span>
+                </div>
+              </div>
+              <div className="p-5 sm:p-6">
+                {loadingMeals ? (
+                  <div className="flex min-h-[min(52vh,400px)] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-edge bg-surface px-6 py-12">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-surface border-t-primary" aria-hidden />
+                    <p className="text-sm font-extrabold text-muted">
+                      {activeQuery ? "Searching\u2026" : "Loading recipes\u2026"}
+                    </p>
+                  </div>
+                ) : (
+                  <SwipeDeck
+                    recipes={deck}
+                    onPass={(r) => skip(r.id)}
+                    onSave={(r) => saveRecipe(r.id)}
+                    emptyDetail={emptyDetailText}
+                  />
+                )}
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {/* ── Desktop: 3-column layout (explore, swipe deck, ingredient info) ── */}
+        <div className="mt-6 hidden lg:block">
+          <div className="flex h-[600px] items-stretch gap-5">
+            {/* Explore sidebar (left) */}
+            <div className="flex w-56 shrink-0 flex-col xl:w-64">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-xs font-extrabold uppercase tracking-widest text-muted">
+                  Explore
+                </span>
+              </div>
+              <section className="flex flex-1 flex-col overflow-hidden rounded-3xl border-2 border-edge bg-card p-4 shadow-[0_4px_0_var(--edge)]">
+                {loadingCats ? (
+                  <ExploreSidebarSkeleton />
+                ) : (
+                  <ExploreSection
+                    categories={categories}
+                    selected={category}
+                    onSelect={handleCategorySelect}
+                    disabled={loadingMeals}
+                    embedded
+                    sidebar
+                  />
+                )}
+              </section>
+            </div>
+
+            {/* Swipe Deck (middle) */}
+            <div className="flex min-w-0 flex-1 flex-col">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-xs font-extrabold uppercase tracking-widest text-muted">
+                  Swipe Deck
+                </span>
+              </div>
+              <section className="flex flex-1 flex-col rounded-3xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)]">
+                <div className="flex shrink-0 items-center justify-between border-b-2 border-edge px-5 py-3.5">
+                  <h2 className="text-sm font-extrabold text-foreground">Your Deck</h2>
+                  <div className="flex gap-2 text-[11px]">
+                    <span className="rounded-xl border-2 border-edge bg-surface px-2.5 py-1 font-extrabold text-muted">
+                      &larr; Pass
+                    </span>
+                    <span className="rounded-xl border-2 border-primary bg-primary-light px-2.5 py-1 font-extrabold text-primary-dark">
+                      Save &rarr;
+                    </span>
+                  </div>
+                </div>
+                <div className="p-5">
+                  {loadingMeals ? (
+                    <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-edge bg-surface px-6 py-12">
+                      <div className="h-10 w-10 animate-spin rounded-full border-4 border-surface border-t-primary" aria-hidden />
+                      <p className="text-sm font-extrabold text-muted">
+                        {activeQuery ? "Searching\u2026" : "Loading recipes\u2026"}
+                      </p>
+                    </div>
+                  ) : (
+                    <SwipeDeck
+                      recipes={deck}
+                      onPass={(r) => skip(r.id)}
+                      onSave={(r) => saveRecipe(r.id)}
+                      emptyDetail={emptyDetailText}
+                    />
+                  )}
+                </div>
+              </section>
+            </div>
+
+            {/* Ingredient Info Panel (right) */}
+            <div className="flex w-56 shrink-0 flex-col xl:w-64">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-xs font-extrabold uppercase tracking-widest text-muted">
+                  Recipe Info
+                </span>
+              </div>
+              <section className="flex flex-1 flex-col overflow-hidden">
+                <RecipeInfoPanel recipe={currentRecipe} />
+              </section>
+            </div>
+          </div>
         </div>
 
         <p className="mt-10 text-[11px] text-muted">

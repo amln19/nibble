@@ -88,6 +88,39 @@ dialog.kitchen-match-dialog::backdrop {
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+@keyframes walk-goose-title {
+  0% {
+    transform: scaleX(-1) translateX(0);
+  }
+  100% {
+    transform: scaleX(-1) translateX(-100vw);
+  }
+}
+
+@keyframes walk-goose-from-title {
+  0% {
+    left: 480px;
+    transform: scaleX(-1) translateX(0);
+  }
+  100% {
+    left: 480px;
+    transform: scaleX(-1) translateX(-150vw);
+  }
+}
+
+@media (max-width: 640px) {
+  @keyframes walk-goose-from-title {
+    0% {
+      left: 340px;
+      transform: scaleX(-1) translateX(0);
+    }
+    100% {
+      left: 340px;
+      transform: scaleX(-1) translateX(-150vw);
+    }
+  }
+}
+
 .animate-mascot-bob {
   animation: mascot-bob 2.8s ease-in-out infinite;
 }
@@ -100,10 +133,20 @@ dialog.kitchen-match-dialog::backdrop {
   animation: card-pop-in 0.38s cubic-bezier(0.34, 1.45, 0.64, 1) both;
 }
 
+.animate-walk-goose-title {
+  animation: walk-goose-title 15s linear infinite;
+}
+
+.animate-walk-goose-from-title {
+  animation: walk-goose-from-title 15s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-mascot-bob,
   .animate-mascot-ring,
-  .animate-card-pop-in {
+  .animate-card-pop-in,
+  .animate-walk-goose-title,
+  .animate-walk-goose-from-title {
     animation: none !important;
   }
 }
@@ -130,8 +173,8 @@ dialog.kitchen-match-dialog::backdrop {
   z-index: 9999;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: linear-gradient(165deg, #1c1917 0%, #0c0a09 50%, #1a1520 100%);
-  color: #f5f5f4;
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-nunito), system-ui, sans-serif;
 }
 

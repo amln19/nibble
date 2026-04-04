@@ -37,7 +37,7 @@ export function BrandMascot({
       className={`relative shrink-0 overflow-hidden rounded-full bg-primary shadow-[0_6px_24px_rgba(255,75,140,0.3)] ring-[3px] ring-primary/30 ${dim} ${className}`.trim()}
     >
       <Image
-        src="/goose-cooks-logo.png"
+        src="/nibble-logo.png"
         alt={alt}
         fill
         priority={priority}

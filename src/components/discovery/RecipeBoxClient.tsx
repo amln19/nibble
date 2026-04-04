@@ -13,8 +13,18 @@ export function RecipeBoxClient() {
   const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const idsKey = useMemo(() => savedIds.join(","), [savedIds]);
+
+  const filteredIds = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return savedIds;
+    return savedIds.filter((id) => {
+      const title = byId.get(id)?.title?.toLowerCase() ?? "";
+      return title.includes(q);
+    });
+  }, [savedIds, byId, searchQuery]);
 
   useEffect(() => {
     if (!idsKey) {
@@ -58,7 +68,7 @@ export function RecipeBoxClient() {
   }, [idsKey]);
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-12">
+    <div className="mx-auto w-full max-w-6xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
       {selectedRecipe && (
         <RecipeInfoSheet
           recipe={selectedRecipe}
@@ -66,7 +76,7 @@ export function RecipeBoxClient() {
         />
       )}
 
-      <header className="mb-8">
+      <header className="mb-6">
         <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
           Recipe Box
         </h1>
@@ -74,6 +84,37 @@ export function RecipeBoxClient() {
           Your saved recipes. Tap any card to cook with Gordon.
         </p>
       </header>
+
+      {recipeBoxReady && savedIds.length > 0 ? (
+        <div className="mb-6 flex gap-2">
+          <div className="relative min-w-0 flex-1">
+            <div className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search your saved recipes"
+              autoComplete="off"
+              autoCapitalize="off"
+              className="w-full rounded-2xl border-2 border-edge bg-card py-3 pr-9 pl-11 text-sm font-bold text-foreground placeholder:font-normal placeholder:text-muted shadow-[0_3px_0_var(--edge)] transition-all focus:border-primary focus:shadow-[0_3px_0_var(--primary)] focus:outline-none"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-0.5 text-muted transition hover:text-foreground"
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       {!recipeBoxReady ? (
         <p className="mb-6 text-center text-sm font-bold text-muted">
@@ -107,9 +148,14 @@ export function RecipeBoxClient() {
             Start swiping
           </Link>
         </div>
+      ) : recipeBoxReady && filteredIds.length === 0 && searchQuery.trim() ? (
+        <div className="rounded-3xl border-2 border-dashed border-edge bg-surface p-10 text-center shadow-[0_4px_0_var(--edge)]">
+          <p className="font-extrabold text-foreground">No matches for &ldquo;{searchQuery.trim()}&rdquo;</p>
+          <p className="mt-1 text-sm text-muted">Try a different word or clear the search.</p>
+        </div>
       ) : recipeBoxReady ? (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {savedIds.map((id) => {
+          {filteredIds.map((id) => {
             const r = byId.get(id);
             return (
               <li
@@ -156,7 +202,7 @@ export function RecipeBoxClient() {
                     {r?.instructions ? (
                       <Link
                         href={`/cook?id=${encodeURIComponent(id)}`}
-                        className="tap-3d flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-amber-400 bg-linear-to-r from-amber-500 to-orange-500 py-2 text-xs font-black text-stone-900 shadow-[0_3px_0_rgba(180,83,9,0.5)] transition-all hover:brightness-105"
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-primary bg-primary-light py-2 text-xs font-extrabold text-primary-dark shadow-[0_3px_0_var(--primary)] transition-all hover:bg-primary hover:text-white hover:shadow-[0_3px_0_var(--primary-dark)] active:translate-y-0.5 active:shadow-none"
                       >
                         <span>🪿</span> Cook with Gordon
                       </Link>

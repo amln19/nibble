@@ -2,11 +2,11 @@
 
 import type { SmartFilters } from "@/lib/recipes";
 
-const FILTERS: { key: keyof SmartFilters; label: string; emoji: string }[] = [
-  { key: "under30", label: "Under 30 min", emoji: "⚡" },
-  { key: "highProtein", label: "High protein", emoji: "💪" },
-  { key: "vegan", label: "Vegan", emoji: "🌱" },
-  { key: "beginnerFriendly", label: "Beginner", emoji: "⭐" },
+const FILTERS: { key: keyof SmartFilters; label: string }[] = [
+  { key: "under30", label: "Under 30 min" },
+  { key: "highProtein", label: "High protein" },
+  { key: "vegan", label: "Vegan" },
+  { key: "beginnerFriendly", label: "Beginner" },
 ];
 
 type Props = {
@@ -19,14 +19,14 @@ export function FilterChips({ value, onChange }: Props) {
     <div className="flex flex-col gap-3">
       <div>
         <span className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-muted">
-          <span aria-hidden>🎯</span> Smart filters
+          Smart filters
         </span>
         <p className="mt-1 text-xs text-muted leading-snug">
           Times &amp; tags are inferred — use as a guide.
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
-        {FILTERS.map(({ key, label, emoji }) => {
+        {FILTERS.map(({ key, label }) => {
           const active = value[key];
           return (
             <button
@@ -39,7 +39,6 @@ export function FilterChips({ value, onChange }: Props) {
                   : "border-edge bg-card text-foreground shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
               }`}
             >
-              <span aria-hidden>{emoji}</span>
               {label}
             </button>
           );

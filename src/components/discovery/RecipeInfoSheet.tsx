@@ -4,6 +4,7 @@ import type { Recipe } from "@/lib/recipes";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
+import { ChefHat, FileText, Leaf, Dumbbell, Star, X } from "lucide-react";
 
 function formatIngredientLine(raw: string): string {
   if (!raw) return "";
@@ -81,7 +82,7 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
           </h2>
           <button
             type="button"
-            className="relative z-10 shrink-0 touch-manipulation flex h-8 w-8 items-center justify-center rounded-xl border-2 border-edge bg-card text-sm font-extrabold text-muted transition-all hover:text-foreground active:translate-y-0.5"
+            className="relative z-10 shrink-0 touch-manipulation flex h-8 w-8 items-center justify-center rounded-xl border-2 border-edge bg-card transition-all hover:bg-surface active:translate-y-0.5"
             aria-label="Close"
             onClick={(e) => {
               e.stopPropagation();
@@ -91,7 +92,7 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
               e.stopPropagation();
             }}
           >
-            ✕
+            <X className="h-4 w-4 text-muted" />
           </button>
         </div>
 
@@ -105,18 +106,18 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
 
           <div className="mt-3 flex flex-wrap gap-2">
             {recipe.tags.vegan && (
-              <span className="rounded-full border-2 border-green-300 bg-green-50 px-2.5 py-0.5 text-xs font-extrabold text-green-800">
-                🌱 Vegan
+              <span className="flex items-center gap-1 rounded-full border-2 border-green-300 bg-green-50 px-2.5 py-0.5 text-xs font-extrabold text-green-800">
+                <Leaf className="h-3.5 w-3.5" /> Vegan
               </span>
             )}
             {recipe.tags.highProtein && (
-              <span className="rounded-full border-2 border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-extrabold text-amber-800">
-                💪 High protein
+              <span className="flex items-center gap-1 rounded-full border-2 border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-extrabold text-amber-800">
+                <Dumbbell className="h-3.5 w-3.5" /> High protein
               </span>
             )}
             {recipe.tags.beginnerFriendly && (
-              <span className="rounded-full border-2 border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-extrabold text-blue-800">
-                ⭐ Beginner friendly
+              <span className="flex items-center gap-1 rounded-full border-2 border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-extrabold text-blue-800">
+                <Star className="h-3.5 w-3.5" /> Beginner friendly
               </span>
             )}
           </div>
@@ -124,7 +125,7 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
           {/* Ingredients */}
           <div className="mt-6">
             <h3 className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-muted">
-              <span aria-hidden>🥘</span> Ingredients
+              <ChefHat className="h-4 w-4" /> Ingredients
             </h3>
             {recipe.ingredients.length > 0 ? (
               <ul className="mt-3 space-y-2">
@@ -146,7 +147,7 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
           {recipe.instructions ? (
             <div className="mt-6">
               <h3 className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-muted">
-                <span aria-hidden>📝</span> Instructions
+                <FileText className="h-4 w-4" /> Instructions
               </h3>
               <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">
                 {recipe.instructions}
@@ -166,7 +167,7 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
                 }}
                 className="tap-3d flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-amber-400 bg-linear-to-r from-amber-500 to-orange-500 px-6 py-4 text-sm font-black text-stone-900 shadow-[0_4px_16px_rgba(251,191,36,0.35)] transition-all hover:shadow-[0_6px_24px_rgba(251,191,36,0.45)]"
               >
-                <span className="text-lg">🪿</span>
+                <ChefHat className="h-5 w-5" />
                 Cook with Gordon
                 <span className="rounded-lg bg-stone-900/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
                   Voice AI

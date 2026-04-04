@@ -6,7 +6,7 @@ import { incrementCookSessions } from "@/lib/achievements";
 import { ActionAnimation } from "./ActionAnimations";
 import { GordonAvatar } from "./GordonAvatar";
 import { TimerRing } from "./TimerRing";
-import { Volume2, VolumeX, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Volume2, VolumeX, ChevronLeft, ChevronRight, RotateCcw, Mic, MicOff, ChefHat, X, HelpCircle } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -18,6 +18,18 @@ import Link from "next/link";
 import Image from "next/image";
 
 type Phase = "loading" | "intro" | "cooking" | "complete" | "error";
+
+function useWideCookLayout() {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const apply = () => setWide(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+  return wide;
+}
 
 export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   const [phase, setPhase] = useState<Phase>("loading");
@@ -31,11 +43,26 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   const [timerDone, setTimerDone] = useState(false);
   const [startTime] = useState(Date.now());
   const [showIngredients, setShowIngredients] = useState(false);
+  const [showIngredientsPanel, setShowIngredientsPanel] = useState(false);
+  const [showHelpPanel, setShowHelpPanel] = useState(false);
+  const [showAskModal, setShowAskModal] = useState(false);
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
+  const wideCookLayout = useWideCookLayout();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
   const mutedRef = useRef(muted);
   mutedRef.current = muted;
+
+  // ── Speech-to-text + Gordon Q&A (state only — callbacks defined after speak) ─
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState<string | null>(null);
+  const [gordonAnswer, setGordonAnswer] = useState<string | null>(null);
+  const [isAnswering, setIsAnswering] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
+  const sttSupported = typeof window !== "undefined" &&
+    ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
   // Keep screen on while cooking
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
@@ -116,8 +143,95 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   }, []);
 
   const stopAudio = useCallback(() => {
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.removeAttribute("src");
+      audioRef.current.load();
+    }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
     setIsSpeaking(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      try {
+        recognitionRef.current?.stop?.();
+      } catch {
+        /* noop */
+      }
+      recognitionRef.current = null;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current.removeAttribute("src");
+        audioRef.current.load();
+      }
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+        audioUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  // ── STT callbacks (declared after speak/stopAudio) ──────────────────────────
+  const askGordon = useCallback(async (
+    question: string,
+    context: { recipeTitle: string; currentStep: string; stepNumber: number; totalSteps: number },
+  ) => {
+    setIsAnswering(true);
+    setGordonAnswer(null);
+    try {
+      const res = await fetch("/api/gordon/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, ...context }),
+      });
+      const data = (await res.json()) as { answer?: string };
+      const answer = data.answer ?? "Honk! Something went wrong, chef.";
+      setGordonAnswer(answer);
+      void speak(answer);
+    } catch {
+      const fallback = "Honk! Something went wrong, chef. Try again!";
+      setGordonAnswer(fallback);
+      void speak(fallback);
+    } finally {
+      setIsAnswering(false);
+    }
+  }, [speak]);
+
+  const startListening = useCallback((
+    context: { recipeTitle: string; currentStep: string; stepNumber: number; totalSteps: number },
+  ) => {
+    if (!sttSupported) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rec: any = new SR();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rec.onresult = (e: any) => {
+      const text: string = e.results[0]?.[0]?.transcript ?? "";
+      setTranscript(text);
+      if (text) void askGordon(text, context);
+    };
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    recognitionRef.current = rec;
+    rec.start();
+    setIsListening(true);
+    setTranscript(null);
+    setGordonAnswer(null);
+  }, [sttSupported, askGordon]);
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
   }, []);
 
   // Speak intro when entering intro phase
@@ -199,30 +313,94 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
     : isSpeaking ? "speaking"
     : "idle";
 
+  function toggleIngredient(index: number) {
+    setCheckedIngredients((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  }
+
   // ── Shared top bar ─────────────────────────────────────────────────────────
-  function TopBar({ center, backLabel = "Back", backHref = "/" }: { center?: React.ReactNode; backLabel?: string; backHref?: string }) {
+  function TopBar({
+    center,
+    backLabel = "Back",
+    backHref = "/",
+    showIngredientsButton = false,
+    showHelpButton = false,
+    helpButtonClassName = "",
+  }: {
+    center?: React.ReactNode;
+    backLabel?: string;
+    backHref?: string;
+    showIngredientsButton?: boolean;
+    showHelpButton?: boolean;
+    helpButtonClassName?: string;
+  }) {
     return (
       <div className="flex shrink-0 items-center justify-between border-b-2 border-edge bg-background px-4 py-3">
         <Link
           href={backHref}
+          onClick={() => stopAudio()}
           className="inline-flex items-center gap-1 rounded-xl border-2 border-edge bg-card px-3 py-1.5 text-xs font-extrabold text-foreground shadow-[0_2px_0_var(--edge)] transition-all hover:border-edge-hover active:translate-y-0.5 active:shadow-none"
         >
           <ChevronLeft size={13} />
           {backLabel}
         </Link>
         {center ?? <span />}
-        <button
-          onClick={toggleMute}
-          className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-extrabold shadow-[0_2px_0_var(--edge)] transition-all active:translate-y-0.5 active:shadow-none ${
-            muted
-              ? "border-edge bg-card text-muted"
-              : "border-primary bg-primary-light text-primary-dark shadow-[0_2px_0_var(--primary)]"
-          }`}
-          aria-label={muted ? "Unmute Gordon" : "Mute Gordon"}
-        >
-          {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
-          {muted ? "Muted" : "Voice on"}
-        </button>
+        <div className="flex items-center gap-2">
+          {showIngredientsButton && (
+            <button
+              onClick={() => {
+                setShowIngredientsPanel(!showIngredientsPanel);
+                if (!showIngredientsPanel) setShowHelpPanel(false);
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-extrabold shadow-[0_2px_0_var(--edge)] transition-all active:translate-y-0.5 active:shadow-none ${
+                showIngredientsPanel
+                  ? "border-primary bg-primary-light text-primary-dark shadow-[0_2px_0_var(--primary)]"
+                  : "border-edge bg-card text-muted"
+              }`}
+              aria-label={showIngredientsPanel ? "Hide ingredients" : "Show ingredients"}
+            >
+              <ChefHat size={13} />
+              {showIngredientsPanel ? "Hide" : "List"}
+            </button>
+          )}
+          {showHelpButton && sttSupported && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowHelpPanel(!showHelpPanel);
+                if (!showHelpPanel) setShowIngredientsPanel(false);
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-extrabold shadow-[0_2px_0_var(--edge)] transition-all active:translate-y-0.5 active:shadow-none ${
+                showHelpPanel
+                  ? "border-primary bg-primary-light text-primary-dark shadow-[0_2px_0_var(--primary)]"
+                  : "border-edge bg-card text-muted"
+              } ${helpButtonClassName}`}
+              aria-label={showHelpPanel ? "Close help" : "Open help"}
+            >
+              <HelpCircle size={13} />
+              Help
+            </button>
+          )}
+          <button
+            onClick={toggleMute}
+            className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-extrabold shadow-[0_2px_0_var(--edge)] transition-all active:translate-y-0.5 active:shadow-none ${
+              muted
+                ? "border-edge bg-card text-muted"
+                : "border-primary bg-primary-light text-primary-dark shadow-[0_2px_0_var(--primary)]"
+            }`}
+            aria-label={muted ? "Unmute Gordon" : "Mute Gordon"}
+          >
+            {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+            {muted ? "Muted" : "Voice"}
+          </button>
+        </div>
       </div>
     );
   }
@@ -267,6 +445,7 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
           </div>
           <Link
             href="/"
+            onClick={() => stopAudio()}
             className="mt-2 rounded-2xl border-2 border-primary-dark bg-primary px-6 py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
           >
             Back to recipes
@@ -344,6 +523,134 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   if (phase === "cooking" && guide && step) {
     const hasTimer = step.timerSeconds > 0;
 
+    const timerBlock = hasTimer ? (
+      <div className="flex flex-col items-center gap-3">
+        <TimerRing
+          totalSeconds={step.timerSeconds}
+          label={step.timerLabel}
+          onComplete={handleTimerComplete}
+          running={timerRunning}
+        />
+        {timerRunning ? (
+          <button
+            type="button"
+            onClick={() => setTimerRunning(false)}
+            className="rounded-xl border-2 border-edge bg-card px-5 py-2 text-sm font-extrabold text-muted shadow-[0_2px_0_var(--edge)] transition-all hover:border-red-300 hover:text-red-600 active:translate-y-0.5 active:shadow-none"
+          >
+            Stop timer
+          </button>
+        ) : !timerDone ? (
+          <button
+            type="button"
+            onClick={() => setTimerRunning(true)}
+            className="rounded-xl border-2 border-primary bg-primary-light px-5 py-2 text-sm font-extrabold text-primary-dark shadow-[0_2px_0_var(--primary)] transition-all hover:bg-primary hover:text-white active:translate-y-0.5 active:shadow-none"
+          >
+            Start Timer
+          </button>
+        ) : null}
+        {timerDone && (
+          <span className="flex items-center gap-1.5 rounded-xl border-2 border-edge bg-surface px-3 py-1.5 text-sm font-extrabold text-foreground">
+            ✓ Timer complete
+          </span>
+        )}
+      </div>
+    ) : null;
+
+    const askModalMicSection = (
+      <div className="space-y-3">
+        <div className="flex justify-center">
+          {isListening ? (
+            <button
+              type="button"
+              onClick={stopListening}
+              className="flex items-center gap-2 rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-2.5 text-sm font-extrabold text-red-600 shadow-[0_3px_0_#fca5a5] transition-all active:translate-y-0.5 active:shadow-none dark:border-red-800 dark:bg-red-950/60 dark:text-red-400"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+              </span>
+              Listening… tap to stop
+              <MicOff size={14} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => startListening({
+                recipeTitle: recipe?.title ?? "this recipe",
+                currentStep: step.instruction ?? "",
+                stepNumber: currentStep + 1,
+                totalSteps,
+              })}
+              disabled={isAnswering}
+              className="flex items-center gap-2 rounded-2xl border-2 border-primary bg-primary-light px-4 py-2.5 text-sm font-extrabold text-primary-dark shadow-[0_3px_0_var(--primary)] transition-all hover:bg-primary hover:text-white active:translate-y-0.5 active:shadow-none disabled:opacity-50"
+            >
+              <Mic size={14} />
+              Ask a question
+            </button>
+          )}
+        </div>
+        {transcript && (
+          <div className="rounded-2xl border-2 border-edge bg-surface px-4 py-3 shadow-[0_2px_0_var(--edge)]">
+            <p className="mb-1 text-[10px] font-extrabold uppercase tracking-widest text-muted">You asked</p>
+            <p className="text-sm leading-relaxed text-foreground">{transcript}</p>
+          </div>
+        )}
+        {isAnswering && (
+          <div className="flex items-start gap-3 rounded-2xl border-2 border-primary bg-primary-light px-4 py-3 shadow-[0_2px_0_var(--primary)]">
+            <GordonAvatar mood="thinking" size={32} className="mt-0.5 shrink-0" />
+            <div className="flex items-center gap-2">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="h-2 w-2 rounded-full bg-primary loading-bounce"
+                  style={{ animationDelay: `${i * 0.15}s` }}
+                />
+              ))}
+              <span className="text-xs font-extrabold text-primary-dark">Gordon is thinking…</span>
+            </div>
+          </div>
+        )}
+        {gordonAnswer && !isAnswering && (
+          <div className="flex items-start gap-3 rounded-2xl border-2 border-primary bg-primary-light px-4 py-3 shadow-[0_2px_0_var(--primary)]">
+            <GordonAvatar mood={isSpeaking ? "speaking" : "idle"} size={32} className="mt-0.5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="mb-1 text-[10px] font-extrabold uppercase tracking-widest text-primary-dark/60">Gordon</p>
+              <p className="text-sm leading-relaxed text-primary-dark">{gordonAnswer}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+
+    const helpVoiceRow = !muted ? (
+      <div className="flex flex-col gap-2">
+        {isSpeaking ? (
+          <button
+            type="button"
+            onClick={stopAudio}
+            className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-edge bg-card px-3 py-2 text-xs font-extrabold text-muted shadow-[0_2px_0_var(--edge)] transition-all hover:border-red-300 hover:text-red-600 active:translate-y-0.5 active:shadow-none"
+          >
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+            Stop speaking
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => { stopAudio(); void speak(stepText(step)); }}
+            className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-edge bg-surface px-3 py-2 text-xs font-extrabold text-foreground shadow-[0_2px_0_var(--edge)] transition-all hover:border-primary active:translate-y-0.5 active:shadow-none"
+          >
+            <RotateCcw size={12} />
+            Replay this step
+          </button>
+        )}
+      </div>
+    ) : (
+      <p className="text-xs text-muted">Unmute to replay Gordon&apos;s voice.</p>
+    );
+
     return (
       <div className="cook-mode-root">
         <div className="flex min-h-dvh flex-col">
@@ -354,7 +661,58 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               </span>
             }
             backLabel="Exit"
+            showIngredientsButton={true}
+            showHelpButton={sttSupported}
+            helpButtonClassName="lg:hidden"
           />
+
+          {/* Ingredients panel */}
+          {showIngredientsPanel && recipe && (
+            <div className="fixed left-4 top-20 z-50 w-72 max-h-[60vh] overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-2xl shadow-edge/20">
+              <div className="flex items-center justify-between border-b-2 border-edge bg-primary-light px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <ChefHat size={16} className="text-primary-dark" />
+                  <h3 className="text-sm font-extrabold text-primary-dark">Ingredients</h3>
+                </div>
+                <button
+                  onClick={() => setShowIngredientsPanel(false)}
+                  className="flex h-6 w-6 items-center justify-center rounded-lg border-2 border-edge bg-card text-xs font-extrabold text-muted transition-all hover:text-foreground active:translate-y-0.5"
+                  aria-label="Close ingredients"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+              <div className="overflow-y-auto overscroll-contain p-4" style={{ maxHeight: "calc(60vh - 60px)" }}>
+                <ul className="space-y-2">
+                  {recipe.ingredients.map((ing, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <button
+                        onClick={() => toggleIngredient(i)}
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+                          checkedIngredients.has(i)
+                            ? "border-primary bg-primary text-white"
+                            : "border-edge bg-card hover:border-primary/50"
+                        }`}
+                      >
+                        {checkedIngredients.has(i) && (
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                      <span className={`text-sm leading-snug transition-all ${
+                        checkedIngredients.has(i)
+                          ? "text-muted line-through"
+                          : "text-foreground"
+                      }`}>
+                        {ing}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
 
           {/* Progress bar */}
           <div className="shrink-0 px-5 pt-3">
@@ -366,75 +724,152 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
             </div>
           </div>
 
-          {/* Step content */}
-          <div
-            className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-6 step-transition"
-            key={currentStep}
-          >
-            {/* Step badge */}
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-primary bg-primary-light text-lg font-black text-primary-dark shadow-[0_3px_0_var(--primary)]">
-              {currentStep + 1}
-            </div>
+          {/* Step + right rail (timer / help / ask) */}
+          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+            <div
+              className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5 overflow-y-auto px-6 py-6 step-transition lg:min-w-0"
+              key={currentStep}
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-primary bg-primary-light text-lg font-black text-primary-dark shadow-[0_3px_0_var(--primary)]">
+                {currentStep + 1}
+              </div>
 
-            {/* Action animation */}
-            <div className="relative flex items-center justify-center">
-              <div
-                className="absolute inset-0 scale-150 rounded-full blur-2xl opacity-10"
-                style={{ backgroundColor: step.accentColor || "var(--primary)" }}
-              />
-              <ActionAnimation action={step.action ?? "plate"} accentColor={step.accentColor} size={96} />
-            </div>
-
-            {/* Instruction */}
-            <p className="max-w-lg text-center text-xl font-bold leading-relaxed text-foreground sm:text-2xl">
-              {step.instruction}
-            </p>
-
-            {/* Timer */}
-            {hasTimer && (
-              <div className="flex flex-col items-center gap-3">
-                <TimerRing
-                  totalSeconds={step.timerSeconds}
-                  label={step.timerLabel}
-                  onComplete={handleTimerComplete}
-                  running={timerRunning}
+              <div className="relative flex items-center justify-center">
+                <div
+                  className="absolute inset-0 scale-150 rounded-full blur-2xl opacity-10"
+                  style={{ backgroundColor: step.accentColor || "var(--primary)" }}
                 />
-                {!timerRunning && !timerDone && (
-                  <button
-                    onClick={() => setTimerRunning(true)}
-                    className="rounded-xl border-2 border-primary bg-primary-light px-5 py-2 text-sm font-extrabold text-primary-dark shadow-[0_2px_0_var(--primary)] transition-all hover:bg-primary hover:text-white active:translate-y-0.5 active:shadow-none"
-                  >
-                    Start Timer
-                  </button>
-                )}
-                {timerDone && (
-                  <span className="flex items-center gap-1.5 rounded-xl border-2 border-edge bg-surface px-3 py-1.5 text-sm font-extrabold text-foreground">
-                    ✓ Timer complete
-                  </span>
-                )}
+                <ActionAnimation action={step.action ?? "plate"} accentColor={step.accentColor} size={96} />
               </div>
-            )}
 
-            {/* Gordon's tip bubble */}
-            <div className="flex w-full max-w-md items-start gap-3">
-              <GordonAvatar mood={gordonMood} size={40} className="mt-0.5 shrink-0" />
-              <div className="gordon-bubble flex-1 rounded-3xl rounded-tl-md border-2 border-edge bg-card px-4 py-3 text-sm leading-relaxed text-muted shadow-[0_3px_0_var(--edge)]">
-                {step.tip}
+              <p className="max-w-lg text-center text-xl font-bold leading-relaxed text-foreground sm:text-2xl">
+                {step.instruction}
+              </p>
+
+              {!wideCookLayout && timerBlock}
+
+              <div className="flex w-full max-w-md items-start gap-3">
+                <GordonAvatar mood={gordonMood} size={40} className="mt-0.5 shrink-0" />
+                <div className="gordon-bubble flex-1 rounded-3xl rounded-tl-md border-2 border-edge bg-card px-4 py-3 text-sm leading-relaxed text-muted shadow-[0_3px_0_var(--edge)]">
+                  {step.tip}
+                </div>
               </div>
+
+              {!wideCookLayout && helpVoiceRow}
             </div>
 
-            {/* Replay voice */}
-            {!muted && (
-              <button
-                onClick={() => { stopAudio(); void speak(stepText(step)); }}
-                disabled={isSpeaking}
-                className="flex items-center gap-1.5 text-xs font-extrabold text-muted transition-colors hover:text-foreground disabled:opacity-40"
-              >
-                <RotateCcw size={12} />
-                {isSpeaking ? "Gordon is speaking…" : "Replay"}
-              </button>
-            )}
+            {/* Desktop: fixed right column — timer, help, ask */}
+            <aside className="hidden lg:flex lg:w-80 lg:shrink-0 lg:flex-col lg:gap-4 lg:border-l-2 lg:border-edge lg:bg-card/40 lg:p-5 lg:overflow-y-auto">
+              {hasTimer && (
+                <div className="rounded-2xl border-2 border-edge bg-card p-4 shadow-[0_3px_0_var(--edge)]">
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="text-xs font-extrabold uppercase tracking-widest text-muted">Timer</span>
+                  </div>
+                  {timerBlock}
+                </div>
+              )}
+              <div className="rounded-2xl border-2 border-edge bg-card p-4 shadow-[0_3px_0_var(--edge)]">
+                <div className="mb-3 flex items-center gap-2">
+                  <HelpCircle size={18} className="text-primary-dark" />
+                  <h3 className="text-sm font-extrabold text-foreground">Help</h3>
+                </div>
+                {helpVoiceRow}
+              </div>
+              {sttSupported && (
+                <button
+                  type="button"
+                  onClick={() => setShowAskModal(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary-dark bg-primary py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
+                >
+                  <Mic size={16} />
+                  Ask a question
+                </button>
+              )}
+            </aside>
           </div>
+
+          {/* Mobile / tablet: Help sheet (voice + opens ask modal) */}
+          {!wideCookLayout && showHelpPanel && sttSupported && (
+            <div
+              className="fixed inset-0 z-[55] flex items-end justify-center bg-black/50 backdrop-blur-sm lg:hidden"
+              onClick={() => setShowHelpPanel(false)}
+              role="presentation"
+            >
+              <div
+                className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-t-3xl border-2 border-b-0 border-edge bg-card shadow-[0_-6px_0_var(--edge)]"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-labelledby="help-sheet-title"
+              >
+                <div className="flex items-center justify-between border-b-2 border-edge bg-primary-light px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <HelpCircle size={18} className="text-primary-dark" />
+                    <h2 id="help-sheet-title" className="text-sm font-extrabold text-primary-dark">
+                      Help
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowHelpPanel(false)}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border-2 border-edge bg-card text-muted transition-all hover:text-foreground"
+                    aria-label="Close"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="space-y-4 overflow-y-auto overscroll-contain p-5 pb-8">
+                  <p className="text-sm text-muted">
+                    Voice replay for this step is on the screen above. Tap below to ask Gordon a question.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowHelpPanel(false);
+                      setShowAskModal(true);
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary-dark bg-primary py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
+                  >
+                    <Mic size={16} />
+                    Ask a question
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Ask Gordon — modal */}
+          {showAskModal && sttSupported && (
+            <div
+              className="fixed inset-0 z-[60] flex items-end justify-center bg-black/55 backdrop-blur-sm sm:items-center sm:p-4"
+              onClick={() => setShowAskModal(false)}
+              role="presentation"
+            >
+              <div
+                className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border-2 border-edge bg-card shadow-[0_8px_0_var(--edge)] sm:rounded-3xl"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-labelledby="ask-modal-title"
+              >
+                <div className="flex shrink-0 items-center justify-between border-b-2 border-edge bg-primary-light px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <Mic size={18} className="text-primary-dark" />
+                    <h2 id="ask-modal-title" className="text-sm font-extrabold text-primary-dark">
+                      Ask Gordon
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAskModal(false)}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border-2 border-edge bg-card text-muted transition-all hover:text-foreground"
+                    aria-label="Close"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="overflow-y-auto overscroll-contain p-5">{askModalMicSection}</div>
+              </div>
+            </div>
+          )}
 
           {/* Bottom nav */}
           <div className="safe-bottom shrink-0 border-t-2 border-edge bg-card px-5 py-4">
@@ -528,6 +963,7 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
             </button>
             <Link
               href="/"
+              onClick={() => stopAudio()}
               className="rounded-2xl border-2 border-primary-dark bg-primary px-6 py-3 text-center text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
             >
               Back to Recipes

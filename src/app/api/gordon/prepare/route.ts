@@ -3,9 +3,10 @@ import { COOKING_ACTIONS, type GordonGuide, type CookingAction } from "@/lib/gor
 import { NextResponse } from "next/server";
 
 const MODELS = [
-  "gemini-2.0-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
   "gemini-2.0-flash",
-  "gemini-1.5-flash-8b",
+  "gemini-2.0-flash-lite",
   "gemini-1.5-flash",
 ];
 
@@ -94,12 +95,6 @@ function buildFallbackGuide(
   };
 }
 
-function isRateLimitError(e: unknown): boolean {
-  if (!e || typeof e !== "object") return false;
-  const msg = String((e as { message?: string }).message ?? "");
-  return msg.includes("429") || msg.includes("Too Many Requests") || msg.includes("quota");
-}
-
 async function tryGemini(
   apiKey: string,
   prompt: string,
@@ -134,15 +129,13 @@ async function tryGemini(
       console.log(`Gordon: succeeded with model ${modelName}`);
       return { guide, model: modelName };
     } catch (e) {
-      if (isRateLimitError(e)) {
-        console.warn(`Gordon: ${modelName} rate-limited, trying next...`);
-        continue;
-      }
-      throw e;
+      const msg = String((e as { message?: string }).message ?? e);
+      console.warn(`Gordon: ${modelName} failed, trying next...`, msg.slice(0, 200));
+      continue;
     }
   }
 
-  throw new Error("All Gemini models rate-limited");
+  throw new Error("All Gemini models failed or were unavailable");
 }
 
 export async function POST(req: Request) {

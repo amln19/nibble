@@ -1,6 +1,7 @@
 "use client";
 
 import type { Recipe } from "@/lib/recipes";
+import Link from "next/link";
 import { SwipeCard } from "./SwipeCard";
 
 type Props = {
@@ -16,17 +17,17 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
 
   if (!current) {
     return (
-      <div className="flex min-h-[min(64vh,520px)] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-zinc-200 bg-zinc-50 px-6 py-12 text-center">
+      <div className="flex min-h-[min(50vh,380px)] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-edge bg-surface px-6 py-12 text-center">
         <div
-          className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-pink-200 bg-pink-50 text-3xl shadow-[0_4px_0_#fce7f3]"
+          className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-primary bg-primary-light text-3xl shadow-[0_4px_0_var(--primary)]"
           aria-hidden
         >
-          {emptyDetail ? "◇" : "✓"}
+          {emptyDetail ? "🔍" : "✓"}
         </div>
-        <p className="text-lg font-extrabold text-zinc-800">
-          {emptyDetail ? "No matches right now" : "You're all caught up!"}
+        <p className="text-lg font-extrabold text-foreground">
+          {emptyDetail ? "No matches right now" : "You\u2019re all caught up!"}
         </p>
-        <p className="mt-2 max-w-sm text-sm text-zinc-500 leading-relaxed">
+        <p className="mt-2 max-w-sm text-sm text-muted leading-relaxed">
           {emptyDetail ??
             "Try another category, add pantry items, or clear filters."}
         </p>
@@ -36,18 +37,18 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
 
   return (
     <div className="relative w-full pb-24 md:pb-10">
-      <div className="relative min-h-[min(68vh,540px)]">
+      <div className="relative min-h-[min(56vh,440px)]">
         {next ? (
           <div
             className="pointer-events-none absolute inset-0 flex justify-center opacity-50"
             aria-hidden
           >
             <div className="w-full scale-[0.94]">
-              <div className="overflow-hidden rounded-3xl border-2 border-zinc-200 shadow-[0_4px_0_#e4e4e7]">
+              <div className="overflow-hidden rounded-3xl border-2 border-edge shadow-[0_4px_0_var(--edge)]">
                 <img
                   src={next.imageUrl}
                   alt=""
-                  className="aspect-[4/5] w-full object-cover"
+                  className="aspect-3/4 w-full object-cover"
                 />
               </div>
             </div>
@@ -62,29 +63,43 @@ export function SwipeDeck({ recipes, onPass, onSave, emptyDetail }: Props) {
         </div>
       </div>
 
-      {/* Duolingo-style action buttons */}
-      <div className="mt-8 flex items-start justify-center gap-12 sm:gap-16">
+      {/* Action buttons */}
+      <div className="mt-5 flex items-start justify-center gap-6 sm:gap-10">
         <div className="flex flex-col items-center gap-2">
           <button
             type="button"
             onClick={() => onPass(current)}
-            className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-zinc-300 bg-white text-2xl text-zinc-500 shadow-[0_4px_0_#d4d4d8] transition-all hover:border-zinc-400 hover:text-zinc-700 active:translate-y-1 active:shadow-none"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-edge bg-card text-2xl text-muted shadow-[0_4px_0_var(--edge)] transition-all hover:border-edge-hover hover:text-foreground active:translate-y-1 active:shadow-none"
             aria-label="Pass"
           >
             ✕
           </button>
-          <span className="text-xs font-bold text-zinc-400">Pass</span>
+          <span className="text-xs font-extrabold text-muted">Pass</span>
         </div>
+
+        {current.instructions && (
+          <div className="flex flex-col items-center gap-2">
+            <Link
+              href={`/cook?id=${encodeURIComponent(current.id)}`}
+              className="tap-3d flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-amber-400 bg-linear-to-b from-amber-400 to-orange-500 text-2xl shadow-[0_4px_0_rgba(180,83,9,0.5)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
+              aria-label="Cook this recipe with Gordon"
+            >
+              🪿
+            </Link>
+            <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400">Cook</span>
+          </div>
+        )}
+
         <div className="flex flex-col items-center gap-2">
           <button
             type="button"
             onClick={() => onSave(current)}
-            className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-pink-600 bg-pink-500 text-2xl text-white shadow-[0_4px_0_#be185d] transition-all hover:bg-pink-400 active:translate-y-1 active:shadow-none"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-primary-dark bg-primary text-2xl text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
             aria-label="Save to recipe box"
           >
-            ♥
+            ❤️
           </button>
-          <span className="text-xs font-bold text-pink-600">Save</span>
+          <span className="text-xs font-extrabold text-primary-dark">Save</span>
         </div>
       </div>
     </div>

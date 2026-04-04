@@ -63,7 +63,7 @@ export function KitchenMatchDialog({
   const sheet = (
     <dialog
       ref={dialogRef}
-      className="kitchen-match-dialog fixed inset-0 z-[9998] m-0 flex max-h-none min-h-full w-full max-w-none min-w-full flex-col items-stretch justify-end bg-transparent p-0 sm:items-center sm:justify-center sm:p-4"
+      className="kitchen-match-dialog fixed inset-0 z-9998 m-0 flex max-h-none min-h-full w-full max-w-none min-w-full flex-col items-stretch justify-end bg-transparent p-0 sm:items-center sm:justify-center sm:p-4"
       onClick={handleDialogClick}
       onCancel={(e) => {
         e.preventDefault();
@@ -74,28 +74,30 @@ export function KitchenMatchDialog({
     >
       <div
         data-kitchen-sheet
-        className="flex max-h-[min(88vh,760px)] w-full max-w-lg flex-col rounded-t-3xl border-2 border-zinc-200 bg-white shadow-xl sm:max-h-[min(92vh,820px)] sm:rounded-3xl"
+        className="flex max-h-[min(88vh,760px)] w-full max-w-lg flex-col rounded-t-3xl border-2 border-edge bg-card shadow-xl sm:max-h-[min(92vh,820px)] sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 border-b-2 border-zinc-100 bg-pink-50 px-5 py-4 rounded-t-3xl sm:rounded-t-3xl">
+        <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 border-b-2 border-edge bg-primary-light px-5 py-4 rounded-t-3xl sm:rounded-t-3xl">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="text-2xl" aria-hidden>✳</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-primary bg-card text-xl shadow-[0_2px_0_var(--primary)]">
+              ✨
+            </span>
             <div className="min-w-0">
               <h2
                 id="kitchen-match-title"
-                className="text-base font-extrabold text-zinc-900"
+                className="text-base font-extrabold text-foreground"
               >
-                Match your kitchen
+                Kitchen Match
               </h2>
-              <p className="text-xs font-medium text-zinc-500">
-                Pantry + smart filters shape your swipe deck.
+              <p className="text-xs font-bold text-muted">
+                Pantry + smart filters shape your deck.
               </p>
             </div>
           </div>
           <button
             type="button"
-            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-zinc-200 bg-white text-lg font-bold text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-900"
+            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-edge bg-card text-sm font-extrabold text-muted transition-all hover:text-foreground active:translate-y-0.5"
             aria-label="Close"
             onClick={(e) => {
               e.stopPropagation();
@@ -103,14 +105,14 @@ export function KitchenMatchDialog({
             }}
             onPointerDown={(e) => e.stopPropagation()}
           >
-            ×
+            ✕
           </button>
         </div>
 
         {/* Body */}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5">
-          <div className="space-y-5">
-            <div className="rounded-2xl border-2 border-zinc-200 bg-white p-4 shadow-[0_3px_0_#e4e4e7]">
+          <div className="space-y-4">
+            <div className="rounded-2xl border-2 border-edge bg-elevated p-4 shadow-[0_3px_0_var(--edge)]">
               <PantryPanel
                 pantryMode={pantryMode}
                 onPantryModeChange={onPantryModeChange}
@@ -122,27 +124,27 @@ export function KitchenMatchDialog({
             </div>
 
             {showPantryHint ? (
-              <div className="rounded-2xl border-2 border-pink-200 bg-pink-50 px-4 py-3">
-                <p className="text-xs font-bold text-pink-800">
+              <div className="rounded-2xl border-2 border-primary bg-primary-light px-4 py-3 shadow-[0_2px_0_var(--primary)]">
+                <p className="text-xs font-extrabold text-primary-dark">
                   💡 Add ingredients above so we can match what you have!
                 </p>
               </div>
             ) : null}
 
-            <div className="rounded-2xl border-2 border-zinc-200 bg-white p-4 shadow-[0_3px_0_#e4e4e7]">
+            <div className="rounded-2xl border-2 border-edge bg-elevated p-4 shadow-[0_3px_0_var(--edge)]">
               <FilterChips value={smart} onChange={onSmartChange} />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 border-t-2 border-zinc-100 bg-white px-5 py-4">
+        <div className="shrink-0 border-t-2 border-edge bg-card px-5 py-4 rounded-b-3xl">
           <button
             type="button"
             onClick={requestClose}
-            className="w-full rounded-2xl border-2 border-pink-600 bg-pink-500 py-3 text-sm font-extrabold text-white shadow-[0_4px_0_#be185d] transition-all hover:bg-pink-400 active:translate-y-1 active:shadow-none"
+            className="w-full rounded-2xl border-2 border-primary-dark bg-primary py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
           >
-            Done
+            Done ✓
           </button>
         </div>
       </div>

@@ -62,7 +62,7 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
 
   return (
     <article
-      className="relative w-full touch-none select-none rounded-3xl bg-white shadow-xl border-2 border-zinc-200"
+      className="relative w-full touch-none select-none overflow-hidden rounded-3xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)]"
       style={{
         transform: `translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg)`,
         transition: dragging ? "none" : "transform 0.22s ease-out",
@@ -79,7 +79,7 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
           onClose={() => setInfoOpen(false)}
         />
       ) : null}
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl">
+      <div className="relative aspect-3/4 w-full overflow-hidden">
         {recipe.videoUrl ? (
           <video
             className="h-full w-full object-cover"
@@ -102,24 +102,28 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
           />
         )}
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"
+          className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-transparent"
           aria-hidden
         />
+
+        {/* Swipe indicators */}
         <div
-          className="pointer-events-none absolute top-6 left-6 rounded-xl border-2 border-green-400 bg-green-500/20 px-3 py-1 text-sm font-black tracking-widest text-white uppercase opacity-90 backdrop-blur-sm"
+          className="pointer-events-none absolute top-6 left-6 rounded-xl border-2 border-white/60 bg-white/20 px-3 py-1.5 text-sm font-black tracking-widest text-white uppercase backdrop-blur-sm"
           style={{ opacity: passOpacity }}
         >
           Pass
         </div>
         <div
-          className="pointer-events-none absolute top-6 right-6 rounded-xl border-2 border-pink-400 bg-pink-500/20 px-3 py-1 text-sm font-black tracking-widest text-white uppercase opacity-90 backdrop-blur-sm"
+          className="pointer-events-none absolute top-6 right-6 rounded-xl border-2 border-primary bg-primary/30 px-3 py-1.5 text-sm font-black tracking-widest text-white uppercase backdrop-blur-sm"
           style={{ opacity: saveOpacity }}
         >
-          Save
+          Save ❤️
         </div>
+
+        {/* Info button */}
         <button
           type="button"
-          className="pointer-events-auto absolute right-4 bottom-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/20 text-white shadow-lg backdrop-blur-sm transition hover:bg-white/30"
+          className="pointer-events-auto absolute right-4 bottom-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/20 text-lg text-white shadow-lg backdrop-blur-sm transition-all hover:bg-white/30 active:scale-95"
           style={{ touchAction: "manipulation" }}
           aria-label="Recipe details and ingredients"
           onPointerDown={(e) => e.stopPropagation()}
@@ -128,28 +132,34 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
             setInfoOpen(true);
           }}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="h-6 w-6"
-            aria-hidden
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-          </svg>
+          ℹ️
         </button>
-        <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-6 pr-16 pb-16 text-white">
-          <p className="text-xs font-medium text-white/70">
-            {recipe.tagline}
-            {recipe.timeMinutes
-              ? ` · ${recipe.timeIsEstimate ? "~" : ""}${recipe.timeMinutes} min`
-              : ""}
-            {recipe.tags.vegan && " · Vegan"}
-            {recipe.tags.highProtein && " · High protein"}
-          </p>
-          <h2 className="mt-1 font-serif text-2xl leading-tight font-semibold tracking-tight md:text-3xl">
+
+        {/* Recipe info overlay */}
+        <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-5 pr-16 pb-16">
+          <div className="flex flex-wrap gap-1.5">
+            {recipe.timeMinutes ? (
+              <span className="rounded-lg bg-white/20 px-2 py-0.5 text-[11px] font-extrabold text-white backdrop-blur-sm">
+                ⏱️ {recipe.timeIsEstimate ? "~" : ""}{recipe.timeMinutes} min
+              </span>
+            ) : null}
+            {recipe.tags.vegan && (
+              <span className="rounded-lg bg-white/20 px-2 py-0.5 text-[11px] font-extrabold text-white backdrop-blur-sm">
+                🌱 Vegan
+              </span>
+            )}
+            {recipe.tags.highProtein && (
+              <span className="rounded-lg bg-white/20 px-2 py-0.5 text-[11px] font-extrabold text-white backdrop-blur-sm">
+                💪 Protein
+              </span>
+            )}
+          </div>
+          <h2 className="mt-2 text-2xl leading-tight font-extrabold tracking-tight text-white md:text-3xl">
             {recipe.title}
           </h2>
+          <p className="mt-1 text-xs font-bold text-white/70">
+            {recipe.tagline}
+          </p>
         </div>
       </div>
     </article>

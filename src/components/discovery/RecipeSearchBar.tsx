@@ -19,7 +19,6 @@ export function RecipeSearchBar({
   onClear,
   activeQuery,
   disabled,
-  showSectionLabel = false,
 }: Props) {
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -31,52 +30,52 @@ export function RecipeSearchBar({
 
   return (
     <form onSubmit={handleSubmit} className="w-full" role="search">
-      {showSectionLabel ? (
-        <p className="mb-2 text-xs font-extrabold uppercase tracking-widest text-zinc-400">
-          Search by name
-        </p>
-      ) : null}
       <label htmlFor="recipe-search" className="sr-only">
         Search recipes by name
       </label>
       <div className="flex gap-2">
         <div className="relative min-w-0 flex-1">
+          <div className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+            </svg>
+          </div>
           <input
             id="recipe-search"
             type="search"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Search recipes…"
+            placeholder="Search recipes\u2026"
             disabled={disabled}
             autoComplete="off"
             autoCapitalize="off"
             enterKeyHint="search"
-            className="w-full rounded-2xl border-2 border-zinc-300 bg-white py-3 pr-9 pl-4 text-sm font-medium text-zinc-900 placeholder:font-normal placeholder:text-zinc-400 focus:border-pink-400 focus:outline-none disabled:opacity-60"
+            className="w-full rounded-2xl border-2 border-edge bg-card py-3 pr-9 pl-11 text-sm font-bold text-foreground placeholder:font-normal placeholder:text-muted shadow-[0_3px_0_var(--edge)] transition-all focus:border-primary focus:shadow-[0_3px_0_var(--primary)] focus:outline-none disabled:opacity-50"
           />
           {value ? (
             <button
               type="button"
               onClick={onClear}
-              className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-0.5 text-zinc-400 transition hover:text-zinc-700"
+              className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-0.5 text-muted transition hover:text-foreground"
               aria-label="Clear search"
             >
-              ×
+              ✕
             </button>
           ) : null}
         </div>
         <button
           type="submit"
           disabled={disabled || value.trim().length < 2}
-          className="shrink-0 rounded-2xl border-2 border-green-600 bg-green-500 px-4 py-3 text-sm font-bold text-white shadow-[0_4px_0_#15803d] transition-all hover:bg-green-400 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+          className="shrink-0 rounded-2xl border-2 border-primary-dark bg-primary px-5 py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         >
           Search
         </button>
       </div>
-      <p className="mt-2 text-xs text-zinc-500">
-        {activeQuery
-          ? `Showing results for "${activeQuery}" — pick a category to browse instead`
-          : "At least 2 characters to search."}
-      </p>
+      {activeQuery ? (
+        <p className="mt-2 text-xs font-bold text-muted">
+          Showing results for &ldquo;{activeQuery}&rdquo; &mdash; pick a category to browse instead
+        </p>
+      ) : null}
     </form>
   );
 }

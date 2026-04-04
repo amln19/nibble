@@ -1,10 +1,8 @@
 import Image from "next/image";
 
 const variantClasses = {
-  /** Compact header mark */
   header:
     "h-9 w-9 min-[400px]:h-10 min-[400px]:w-10 sm:h-11 sm:w-11",
-  /** Sign-in hero */
   hero:
     "h-40 w-40 min-[400px]:h-44 min-[400px]:w-44 sm:h-52 sm:w-52",
   welcome: "h-36 w-36 sm:h-44 sm:w-44",
@@ -18,9 +16,6 @@ type BrandMascotProps = {
   alt?: string;
 };
 
-/**
- * Circular mark: green disc + mascot from Goose Cooks asset.
- */
 export function BrandMascot({
   variant = "hero",
   className = "",
@@ -39,7 +34,7 @@ export function BrandMascot({
 
   return (
     <div
-      className={`relative shrink-0 overflow-hidden rounded-full bg-green-600 shadow-[0_8px_28px_rgba(22,163,74,0.35)] ring-2 ring-green-500/50 ${dim} ${className}`.trim()}
+      className={`relative shrink-0 overflow-hidden rounded-full bg-primary shadow-[0_6px_24px_rgba(255,75,140,0.3)] ring-[3px] ring-primary/30 ${dim} ${className}`.trim()}
     >
       <Image
         src="/goose-cooks-logo.png"

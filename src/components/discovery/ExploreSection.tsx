@@ -24,23 +24,16 @@ export function ExploreSection({
 }: Props) {
   return (
     <section className="w-full" aria-labelledby="explore-heading">
-      <div className="mb-3">
-        {embedded ? (
-          <h3
-            id="explore-heading"
-            className="text-xs font-extrabold uppercase tracking-widest text-zinc-400"
-          >
-            Categories
-          </h3>
-        ) : (
+      {!embedded && (
+        <div className="mb-3">
           <h2
             id="explore-heading"
-            className="text-xs font-extrabold uppercase tracking-widest text-zinc-400"
+            className="text-xs font-extrabold uppercase tracking-widest text-muted"
           >
             Browse by category
           </h2>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Mobile / tablet: horizontal scroll */}
       <div className="-mx-1 lg:hidden">
@@ -57,23 +50,23 @@ export function ExploreSection({
                 role="listitem"
                 disabled={disabled}
                 onClick={() => onSelect(c.strCategory)}
-                className={`flex w-[6.5rem] shrink-0 snap-center flex-col gap-1.5 rounded-2xl border-2 p-2 text-left transition-all ${
+                className={`flex w-24 shrink-0 snap-center flex-col items-center gap-1.5 rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
                   active
-                    ? "border-pink-400 bg-pink-50 shadow-[0_3px_0_#f9a8d4]"
-                    : "border-zinc-200 bg-white shadow-[0_3px_0_#e4e4e7] hover:border-pink-300 active:translate-y-[3px] active:shadow-none"
+                    ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
+                    : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
                 } ${disabled ? "opacity-50" : ""}`}
               >
-                <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100">
+                <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface">
                   <Image
                     src={c.strCategoryThumb}
                     alt=""
                     fill
                     className="object-cover"
-                    sizes="100px"
+                    sizes="80px"
                     draggable={false}
                   />
                 </div>
-                <span className={`line-clamp-2 text-center text-[11px] font-bold ${active ? "text-pink-700" : "text-zinc-700"}`}>
+                <span className={`line-clamp-1 text-center text-[11px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
                   {c.strCategory}
                 </span>
               </button>
@@ -82,9 +75,9 @@ export function ExploreSection({
         </div>
       </div>
 
-      {/* Desktop: full-width grid */}
+      {/* Desktop: grid */}
       <div
-        className="hidden gap-2.5 lg:grid lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10"
+        className="hidden gap-2.5 lg:grid lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10"
         role="list"
       >
         {categories.map((c) => {
@@ -96,23 +89,23 @@ export function ExploreSection({
               role="listitem"
               disabled={disabled}
               onClick={() => onSelect(c.strCategory)}
-              className={`group flex flex-col gap-1.5 rounded-2xl border-2 p-2 text-left transition-all ${
+              className={`group flex flex-col items-center gap-1.5 rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
                 active
-                  ? "border-pink-400 bg-pink-50 shadow-[0_3px_0_#f9a8d4]"
-                  : "border-zinc-200 bg-white shadow-[0_3px_0_#e4e4e7] hover:border-pink-300 active:translate-y-[3px] active:shadow-none"
+                  ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
+                  : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
               } ${disabled ? "opacity-50" : ""}`}
             >
-              <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-100">
+              <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface">
                 <Image
                   src={c.strCategoryThumb}
                   alt=""
                   fill
-                  className="object-cover transition group-hover:scale-[1.03]"
-                  sizes="(min-width: 1536px) 10vw, (min-width: 1280px) 12vw, 16vw"
+                  className="object-cover transition-transform group-hover:scale-105"
+                  sizes="(min-width: 1536px) 10vw, (min-width: 1280px) 12vw, 14vw"
                   draggable={false}
                 />
               </div>
-              <span className={`line-clamp-2 text-center text-[11px] font-bold ${active ? "text-pink-700" : "text-zinc-700"}`}>
+              <span className={`line-clamp-1 text-center text-[11px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
                 {c.strCategory}
               </span>
             </button>

@@ -657,7 +657,7 @@ export function DiscoveryClient() {
           >
             <h3 className="text-lg font-extrabold text-foreground">Reset Skipped Recipes?</h3>
             <p className="mt-2 text-sm text-muted">
-              This will bring back all <strong className="text-foreground">{skippedIds.length}</strong> recipes you previously swiped left on. They&apos;ll appear in your deck again.
+              This will bring back all <strong className="text-foreground">{skippedIds.length}</strong>{" "}recipes you previously swiped left on. They&apos;ll appear in your deck again.
             </p>
             <div className="mt-6 flex gap-3">
               <button

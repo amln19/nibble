@@ -128,9 +128,7 @@ export function RecipeSearchBar({
                         onRecipeSelect?.(r.id);
                         setIsFocused(false);
                       }}
-                      className={`flex w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-surface ${
-                        i !== results.length - 1 ? "border-b-2 border-edge" : ""
-                      }`}
+                      className="dropdown-item flex w-full items-center gap-3 px-3 py-2 text-left transition-colors mx-1 my-0.5"
                     >
                       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-surface flex items-center justify-center border-2 border-edge">
                         {r.imageUrl ? (

@@ -63,6 +63,16 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+/* ── Dropdown item hover (works in both light & dark via CSS vars) ── */
+.dropdown-item {
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+}
+.dropdown-item:hover {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+}
+
 /* ── Dialog backdrop ── */
 dialog.recipe-info-dialog::backdrop,
 dialog.kitchen-match-dialog::backdrop {

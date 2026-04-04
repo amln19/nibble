@@ -118,9 +118,7 @@ export function PantryPanel({
                           setDraft("");
                           setIsFocused(false);
                         }}
-                        className={`flex w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-surface ${
-                          i !== suggestions.length - 1 ? "border-b-2 border-edge" : ""
-                        }`}
+                        className="dropdown-item flex w-full items-center gap-3 px-3 py-2 text-left transition-colors mx-1 my-0.5"
                       >
                         <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-surface flex items-center justify-center border-2 border-edge">
                           <Image

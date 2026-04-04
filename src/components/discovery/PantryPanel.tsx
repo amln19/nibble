@@ -34,7 +34,7 @@ export function PantryPanel({
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-1.5 text-sm font-extrabold text-foreground">
-            <span aria-hidden>🥦</span> Pantry mode
+            {pantryMode ? "Pantry mode" : "Kitchen mode"}
           </h2>
           <p className="mt-0.5 text-xs text-muted">
             Matches meals with your ingredients.

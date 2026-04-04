@@ -4,6 +4,7 @@ import type { Recipe } from "@/lib/recipes";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { RecipeInfoSheet } from "./RecipeInfoSheet";
+import { Clock, Leaf, Dumbbell, Info } from "lucide-react";
 
 type Props = {
   recipe: Recipe;
@@ -79,7 +80,7 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
           onClose={() => setInfoOpen(false)}
         />
       ) : null}
-      <div className="relative aspect-3/4 w-full overflow-hidden">
+      <div className="relative aspect-3/4 w-full overflow-hidden lg:max-h-[320px]">
         {recipe.videoUrl ? (
           <video
             className="h-full w-full object-cover"
@@ -123,7 +124,7 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
         {/* Info button */}
         <button
           type="button"
-          className="pointer-events-auto absolute right-4 bottom-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/20 text-lg text-white shadow-lg backdrop-blur-sm transition-all hover:bg-white/30 active:scale-95"
+          className="pointer-events-auto absolute right-4 bottom-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/20 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-white/30 active:scale-95"
           style={{ touchAction: "manipulation" }}
           aria-label="Recipe details and ingredients"
           onPointerDown={(e) => e.stopPropagation()}
@@ -132,25 +133,25 @@ export function SwipeCard({ recipe, onSwipeLeft, onSwipeRight }: Props) {
             setInfoOpen(true);
           }}
         >
-          ℹ️
+          <Info className="h-5 w-5" />
         </button>
 
         {/* Recipe info overlay */}
         <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-5 pr-16 pb-16">
           <div className="flex flex-wrap gap-1.5">
             {recipe.timeMinutes ? (
-              <span className="rounded-lg bg-white/20 px-2 py-0.5 text-[11px] font-extrabold text-white backdrop-blur-sm">
-                ⏱️ {recipe.timeIsEstimate ? "~" : ""}{recipe.timeMinutes} min
+              <span className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-0.5 text-[11px] font-extrabold text-white backdrop-blur-sm">
+                <Clock className="h-3 w-3" /> {recipe.timeIsEstimate ? "~" : ""}{recipe.timeMinutes} min
               </span>
             ) : null}
             {recipe.tags.vegan && (
-              <span className="rounded-lg bg-white/20 px-2 py-0.5 text-[11px] font-extrabold text-white backdrop-blur-sm">
-                🌱 Vegan
+              <span className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-0.5 text-[11px] font-extrabold text-white backdrop-blur-sm">
+                <Leaf className="h-3 w-3" /> Vegan
               </span>
             )}
             {recipe.tags.highProtein && (
-              <span className="rounded-lg bg-white/20 px-2 py-0.5 text-[11px] font-extrabold text-white backdrop-blur-sm">
-                💪 Protein
+              <span className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-0.5 text-[11px] font-extrabold text-white backdrop-blur-sm">
+                <Dumbbell className="h-3 w-3" /> Protein
               </span>
             )}
           </div>

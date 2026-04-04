@@ -106,10 +106,13 @@ export function useRecipeCache() {
   /** Add recipes to the pool */
   const cacheRecipes = useCallback((recipes: readonly Recipe[]) => {
     const cache = cacheRef.current;
+    let added = false;
     for (const r of recipes) {
+      if (!cache.pool.has(r.id)) added = true;
       cache.pool.set(r.id, r);
     }
     persistPool(cache.pool);
+    if (added) setRevision((v) => v + 1);
   }, []);
 
   /** Record a liked recipe and trigger background prefetch if patterns emerge */
@@ -124,6 +127,9 @@ export function useRecipeCache() {
     // Persist to sessionStorage so other pages can access
     persistLiked(cache.liked);
     persistPool(cache.pool);
+
+    // Bump revision so downstream memos re-evaluate
+    setRevision((v) => v + 1);
 
     // Check if we should prefetch based on emerging preferences
     const prefs = detectPreferences(cache.liked);
@@ -207,7 +213,10 @@ export function useRecipeCache() {
     [revision],
   );
 
-  const getLikedCount = useCallback(() => cacheRef.current.liked.length, []);
+  const getLikedCount = useCallback(() => {
+    void revision;
+    return cacheRef.current.liked.length;
+  }, [revision]);
 
   return {
     cacheRecipes,

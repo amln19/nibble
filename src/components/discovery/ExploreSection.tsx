@@ -13,6 +13,7 @@ type Props = {
   onSelect: (name: string) => void;
   disabled?: boolean;
   embedded?: boolean;
+  sidebar?: boolean;
 };
 
 export function ExploreSection({
@@ -21,6 +22,7 @@ export function ExploreSection({
   onSelect,
   disabled,
   embedded = false,
+  sidebar = false,
 }: Props) {
   return (
     <section className="w-full" aria-labelledby="explore-heading">
@@ -35,10 +37,10 @@ export function ExploreSection({
         </div>
       )}
 
-      {/* Mobile / tablet: horizontal scroll */}
-      <div className="-mx-1 lg:hidden">
+      {/* Sidebar: vertical scrollable list */}
+      {sidebar ? (
         <div
-          className="flex gap-2.5 overflow-x-auto px-1 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+          className="flex h-full flex-col gap-1.5 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="list"
         >
           {categories.map((c) => {
@@ -50,68 +52,110 @@ export function ExploreSection({
                 role="listitem"
                 disabled={disabled}
                 onClick={() => onSelect(c.strCategory)}
-                className={`flex w-24 shrink-0 snap-center flex-col items-center gap-1.5 rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
+                className={`group flex w-full items-center gap-3 rounded-xl border-2 p-2 text-left transition-all active:translate-y-[2px] active:shadow-none ${
                   active
-                    ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
-                    : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
+                    ? "border-primary bg-primary-light shadow-[0_2px_0_var(--primary)]"
+                    : "border-transparent hover:border-edge hover:bg-surface"
                 } ${disabled ? "opacity-50" : ""}`}
               >
-                <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface">
+                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-surface">
                   <Image
                     src={c.strCategoryThumb}
                     alt=""
                     fill
-                    className="object-cover"
-                    sizes="80px"
+                    className="object-cover transition-transform group-hover:scale-105"
+                    sizes="36px"
                     draggable={false}
                   />
                 </div>
-                <span className={`line-clamp-1 text-center text-[11px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
+                <span className={`line-clamp-1 text-[12px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
                   {c.strCategory}
                 </span>
               </button>
             );
           })}
         </div>
-      </div>
-
-      {/* Desktop: grid */}
-      <div
-        className="hidden gap-2.5 lg:grid lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10"
-        role="list"
-      >
-        {categories.map((c) => {
-          const active = selected === c.strCategory;
-          return (
-            <button
-              key={c.strCategory}
-              type="button"
-              role="listitem"
-              disabled={disabled}
-              onClick={() => onSelect(c.strCategory)}
-              className={`group flex flex-col items-center gap-1.5 rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
-                active
-                  ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
-                  : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
-              } ${disabled ? "opacity-50" : ""}`}
+      ) : (
+        <>
+          {/* Mobile / tablet: horizontal scroll */}
+          <div className="-mx-1 lg:hidden">
+            <div
+              className="flex gap-2.5 overflow-x-auto px-1 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+              role="list"
             >
-              <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface">
-                <Image
-                  src={c.strCategoryThumb}
-                  alt=""
-                  fill
-                  className="object-cover transition-transform group-hover:scale-105"
-                  sizes="(min-width: 1536px) 10vw, (min-width: 1280px) 12vw, 14vw"
-                  draggable={false}
-                />
-              </div>
-              <span className={`line-clamp-1 text-center text-[11px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
-                {c.strCategory}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+              {categories.map((c) => {
+                const active = selected === c.strCategory;
+                return (
+                  <button
+                    key={c.strCategory}
+                    type="button"
+                    role="listitem"
+                    disabled={disabled}
+                    onClick={() => onSelect(c.strCategory)}
+                    className={`flex w-24 shrink-0 snap-center flex-col items-center gap-1.5 rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
+                      active
+                        ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
+                        : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
+                    } ${disabled ? "opacity-50" : ""}`}
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface">
+                      <Image
+                        src={c.strCategoryThumb}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                        draggable={false}
+                      />
+                    </div>
+                    <span className={`line-clamp-1 text-center text-[11px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
+                      {c.strCategory}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop: grid (only used when not sidebar) */}
+          <div
+            className="hidden gap-2.5 lg:grid lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10"
+            role="list"
+          >
+            {categories.map((c) => {
+              const active = selected === c.strCategory;
+              return (
+                <button
+                  key={c.strCategory}
+                  type="button"
+                  role="listitem"
+                  disabled={disabled}
+                  onClick={() => onSelect(c.strCategory)}
+                  className={`group flex flex-col items-center gap-1.5 rounded-2xl border-2 p-2 transition-all active:translate-y-[3px] active:shadow-none ${
+                    active
+                      ? "border-primary bg-primary-light shadow-[0_3px_0_var(--primary)]"
+                      : "border-edge bg-card shadow-[0_3px_0_var(--edge)] hover:border-edge-hover"
+                  } ${disabled ? "opacity-50" : ""}`}
+                >
+                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface">
+                    <Image
+                      src={c.strCategoryThumb}
+                      alt=""
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                      sizes="(min-width: 1536px) 10vw, (min-width: 1280px) 12vw, 14vw"
+                      draggable={false}
+                    />
+                  </div>
+                  <span className={`line-clamp-1 text-center text-[11px] font-extrabold ${active ? "text-primary-dark" : "text-foreground"}`}>
+                    {c.strCategory}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </section>
   );
 }

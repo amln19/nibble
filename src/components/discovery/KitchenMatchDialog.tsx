@@ -3,6 +3,7 @@
 import type { SmartFilters } from "@/lib/recipes";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { Sparkles } from "lucide-react";
 import { FilterChips } from "./FilterChips";
 import { PantryPanel } from "./PantryPanel";
 
@@ -80,8 +81,8 @@ export function KitchenMatchDialog({
         {/* Header */}
         <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 border-b-2 border-edge bg-primary-light px-5 py-4 rounded-t-3xl sm:rounded-t-3xl">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-primary bg-card text-xl shadow-[0_2px_0_var(--primary)]">
-              ✨
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-primary bg-card shadow-[0_2px_0_var(--primary)]">
+              <Sparkles className="h-5 w-5 text-primary" />
             </span>
             <div className="min-w-0">
               <h2
@@ -105,7 +106,7 @@ export function KitchenMatchDialog({
             }}
             onPointerDown={(e) => e.stopPropagation()}
           >
-            ✕
+            X
           </button>
         </div>
 
@@ -126,7 +127,7 @@ export function KitchenMatchDialog({
             {showPantryHint ? (
               <div className="rounded-2xl border-2 border-primary bg-primary-light px-4 py-3 shadow-[0_2px_0_var(--primary)]">
                 <p className="text-xs font-extrabold text-primary-dark">
-                  💡 Add ingredients above so we can match what you have!
+                  Add ingredients above so we can match what you have!
                 </p>
               </div>
             ) : null}
@@ -144,7 +145,7 @@ export function KitchenMatchDialog({
             onClick={requestClose}
             className="w-full rounded-2xl border-2 border-primary-dark bg-primary py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
           >
-            Done ✓
+            Done
           </button>
         </div>
       </div>

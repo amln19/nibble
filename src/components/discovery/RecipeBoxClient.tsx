@@ -7,125 +7,46 @@ import type { ScoredRecipe } from "@/lib/recommend";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-
-function RecipeCard({
-  recipe,
-  action,
-}: {
-  recipe: Recipe & { score?: number };
-  action: { label: string; onClick: () => void };
-}) {
-  return (
-    <div className="group flex w-44 shrink-0 flex-col overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm transition hover:shadow-md sm:w-48">
-      <div className="relative aspect-square w-full overflow-hidden bg-rose-50">
-        {recipe.imageUrl ? (
-          <Image
-            src={recipe.imageUrl}
-            alt={recipe.title}
-            fill
-            sizes="192px"
-            className="object-cover transition group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-xs text-zinc-400">
-            No image
-          </div>
-        )}
-        {"score" in recipe && typeof recipe.score === "number" && (
-          <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-rose-600 shadow-sm">
-            {Math.round(recipe.score * 100)}% match
-          </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col p-2.5">
-        <p className="line-clamp-2 text-sm font-medium leading-tight text-zinc-800">
-          {recipe.title}
-        </p>
-        <p className="mt-1 text-[11px] text-zinc-500">
-          {recipe.category}{recipe.area ? ` · ${recipe.area}` : ""}
-        </p>
-        <button
-          type="button"
-          onClick={action.onClick}
-          className="mt-2 w-full rounded-lg bg-rose-500 py-1.5 text-xs font-medium text-white transition hover:bg-rose-600 active:scale-95"
-        >
-          {action.label}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ScrollRow({
-  title,
-  subtitle,
-  onRefresh,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  onRefresh?: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mb-8">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-lg font-semibold text-zinc-900">
-            {title}
-          </h2>
-          {subtitle && (
-            <p className="text-xs text-zinc-500">{subtitle}</p>
-          )}
-        </div>
-        {onRefresh && (
-          <button
-            type="button"
-            onClick={onRefresh}
-            className="flex items-center gap-1.5 rounded-full border border-rose-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-rose-600 shadow-sm transition hover:bg-rose-50 active:scale-95"
-          >
-            <svg
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"
-              />
-            </svg>
-            Refresh
-          </button>
-        )}
-      </div>
-      <div className="flex gap-3 overflow-x-auto pb-3">{children}</div>
-    </section>
-  );
-}
+import { RecipeInfoSheet } from "./RecipeInfoSheet";
 
 export function RecipeBoxClient() {
-  const { savedIds, remove, add: saveRecipe, ready: recipeBoxReady } =
-    useRecipeBox();
-  const { getOverallRecommendations, cacheRecipes, recordLike } = useRecipeCache();
+  const { savedIds, add: saveRecipe, remove, ready: recipeBoxReady } = useRecipeBox();
+  const { getOverallRecommendations } = useRecipeCache();
   const [byId, setById] = useState<Map<string, Recipe>>(new Map());
   const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [recsReady, setRecsReady] = useState(false);
 
   const idsKey = useMemo(() => savedIds.join(","), [savedIds]);
+
+  const filteredIds = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return savedIds;
+    return savedIds.filter((id) => {
+      const title = byId.get(id)?.title?.toLowerCase() ?? "";
+      return title.includes(q);
+    });
+  }, [savedIds, byId, searchQuery]);
+
+  // Show recs after initial load
+  useEffect(() => {
+    if (recipeBoxReady && !loading) setRecsReady(true);
+  }, [recipeBoxReady, loading]);
+
+  const excludeSet = useMemo(() => new Set(savedIds), [savedIds]);
+  const overallRecs: ScoredRecipe[] = useMemo(() => {
+    if (!recsReady) return [];
+    return getOverallRecommendations(excludeSet, 10);
+  }, [recsReady, getOverallRecommendations, excludeSet]);
 
   useEffect(() => {
     if (!idsKey) {
       setById(new Map());
       setLoadError(false);
-      setRecsReady(true);
       return;
     }
-    // Derive IDs from idsKey (not savedIds) to avoid stale closure
-    const currentIds = idsKey.split(",").filter(Boolean);
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -138,23 +59,13 @@ export function RecipeBoxClient() {
         const data = (await r.json()) as { recipes?: Recipe[] };
         if (cancelled) return;
         const list = data.recipes ?? [];
-        setById((prev) => {
-          const merged = new Map<string, Recipe>();
-          for (const recipe of list) {
-            merged.set(recipe.id, recipe);
-          }
-          const next = new Map<string, Recipe>();
-          for (const id of currentIds) {
-            const r = merged.get(id) ?? prev.get(id);
-            if (r) next.set(id, r);
-          }
-          return next;
-        });
-        // Feed saved recipes into the cache pool so the recommendation
-        // engine has candidates to score against on this page
-        cacheRecipes(list);
-        setRecsReady(true);
-        if (list.length < currentIds.length) {
+        const map = new Map<string, Recipe>();
+        for (const recipe of list) {
+          map.set(recipe.id, recipe);
+        }
+        setById(map);
+        const expected = idsKey.split(",").filter(Boolean).length;
+        if (list.length < expected) {
           setLoadError(true);
         }
       } catch {
@@ -169,114 +80,209 @@ export function RecipeBoxClient() {
     return () => {
       cancelled = true;
     };
-  }, [idsKey, cacheRecipes]);
-
-  // Split saved recipes into 2 rows
-  const savedRecipes = savedIds
-    .map((id) => byId.get(id))
-    .filter((r): r is Recipe => !!r);
-  const mid = Math.ceil(savedRecipes.length / 2);
-  const row1 = savedRecipes.slice(0, mid);
-  const row2 = savedRecipes.slice(mid);
-
-  // Overarching recommendations — wait until saved recipes are loaded into pool
-  const excludeIds = useMemo(() => new Set(savedIds), [savedIds]);
-  const [boxRecsPage, setBoxRecsPage] = useState(0);
-  const overallRecs: ScoredRecipe[] = useMemo(
-    () => recsReady ? getOverallRecommendations(excludeIds, 12, boxRecsPage * 12) : [],
-    [recsReady, getOverallRecommendations, excludeIds, boxRecsPage],
-  );
+  }, [idsKey]);
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-28 sm:px-6 lg:px-8 md:pb-12">
-      <header className="mb-8 text-center md:text-left">
-        <h1 className="font-serif text-2xl font-semibold text-zinc-900 md:text-3xl">
-          Recipe box
+    <div className="mx-auto w-full max-w-6xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
+      {selectedRecipe && (
+        <RecipeInfoSheet
+          recipe={selectedRecipe}
+          onClose={() => setSelectedRecipe(null)}
+        />
+      )}
+
+      <header className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
+          Recipe Box
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Your saved recipes and personalized recommendations
+        <p className="mt-1 text-sm text-muted">
+          Your saved recipes. Tap any card to cook with Gordon.
         </p>
       </header>
 
+      {recipeBoxReady && savedIds.length > 0 ? (
+        <div className="mb-6 flex gap-2">
+          <div className="relative min-w-0 flex-1">
+            <div className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search your saved recipes"
+              autoComplete="off"
+              autoCapitalize="off"
+              className="w-full rounded-2xl border-2 border-edge bg-card py-3 pr-9 pl-11 text-sm font-bold text-foreground placeholder:font-normal placeholder:text-muted shadow-[0_3px_0_var(--edge)] transition-all focus:border-primary focus:shadow-[0_3px_0_var(--primary)] focus:outline-none"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-0.5 text-muted transition hover:text-foreground"
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       {!recipeBoxReady ? (
-        <p className="mb-6 text-center text-sm text-zinc-500">
-          Loading your recipe box…
+        <p className="mb-6 text-center text-sm font-bold text-muted">
+          Loading your recipe box\u2026
         </p>
       ) : null}
 
       {recipeBoxReady && loading && savedIds.length > 0 ? (
-        <p className="mb-6 text-center text-sm text-zinc-500">
-          Loading saved recipes…
-        </p>
+        <div className="mb-6 flex justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-surface border-t-primary" />
+        </div>
       ) : null}
 
       {recipeBoxReady && loadError && savedIds.length > 0 ? (
-        <p className="mb-4 rounded-xl border border-amber-200/90 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
-          Some recipes could not be loaded from the API. You can still remove
-          any card below.
+        <p className="mb-4 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 shadow-[0_3px_0_#fcd34d]">
+          ⚠️ Some recipes could not be loaded. You can remove them below.
         </p>
       ) : null}
 
       {recipeBoxReady && savedIds.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-green-200 bg-white p-10 text-center shadow-inner">
-          <p className="text-zinc-700">Nothing saved yet.</p>
+        <div className="rounded-3xl border-2 border-dashed border-edge bg-surface p-12 text-center shadow-[0_4px_0_var(--edge)]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-primary bg-primary-light text-3xl shadow-[0_4px_0_var(--primary)]">
+            🍳
+          </div>
+          <p className="text-lg font-extrabold text-foreground">Nothing saved yet!</p>
+          <p className="mt-1 text-sm text-muted">Start swiping to find recipes you love.</p>
           <Link
             href="/"
-            className="mt-4 inline-block rounded-full bg-green-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700"
+            className="mt-6 inline-block rounded-2xl border-2 border-primary-dark bg-primary px-6 py-2.5 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
           >
             Start swiping
           </Link>
         </div>
-      ) : (
-        <>
-          <ScrollRow title="Saved recipes" subtitle={`${savedRecipes.length} recipe${savedRecipes.length === 1 ? "" : "s"} in your box`}>
-            <div className="flex flex-col gap-3">
-              <div className="flex gap-3">
-                {row1.map((r) => (
-                  <RecipeCard
-                    key={r.id}
-                    recipe={r}
-                    action={{ label: "Remove", onClick: () => remove(r.id) }}
-                  />
-                ))}
-              </div>
-              {row2.length > 0 && (
-                <div className="flex gap-3">
-                  {row2.map((r) => (
-                    <RecipeCard
-                      key={r.id}
-                      recipe={r}
-                      action={{ label: "Remove", onClick: () => remove(r.id) }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </ScrollRow>
-        </>
-      )}
+      ) : recipeBoxReady && filteredIds.length === 0 && searchQuery.trim() ? (
+        <div className="rounded-3xl border-2 border-dashed border-edge bg-surface p-10 text-center shadow-[0_4px_0_var(--edge)]">
+          <p className="font-extrabold text-foreground">No matches for &ldquo;{searchQuery.trim()}&rdquo;</p>
+          <p className="mt-1 text-sm text-muted">Try a different word or clear the search.</p>
+        </div>
+      ) : recipeBoxReady ? (
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredIds.map((id) => {
+            const r = byId.get(id);
+            return (
+              <li
+                key={id}
+                className="group overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)] transition-all hover:shadow-[0_6px_0_var(--edge)] hover:-translate-y-0.5"
+              >
+                {/* Clickable image area */}
+                <button
+                  type="button"
+                  className="relative w-full text-left"
+                  onClick={() => r && setSelectedRecipe(r)}
+                  disabled={!r}
+                  aria-label={r ? `View details for ${r.title}` : undefined}
+                >
+                  {r?.imageUrl ? (
+                    <div className="relative aspect-4/3 bg-surface overflow-hidden">
+                      <Image
+                        src={r.imageUrl}
+                        alt=""
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-4/3 items-center justify-center bg-surface text-sm text-muted">
+                      Couldn&apos;t load preview
+                    </div>
+                  )}
+                </button>
 
+                <div className="p-4">
+                  <h2 className="font-extrabold text-foreground">
+                    {r?.title ?? "Recipe"}
+                  </h2>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted">
+                    {r?.tagline ??
+                      (id.startsWith("r") && /^r\d+$/.test(id)
+                        ? "Saved before live recipes — remove or save again."
+                        : "Not found — remove to clear.")}
+                  </p>
+
+                  <div className="mt-3 flex items-center gap-2">
+                    {r?.instructions ? (
+                      <Link
+                        href={`/cook?id=${encodeURIComponent(id)}`}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-primary bg-primary-light py-2 text-xs font-extrabold text-primary-dark shadow-[0_3px_0_var(--primary)] transition-all hover:bg-primary hover:text-white hover:shadow-[0_3px_0_var(--primary-dark)] active:translate-y-0.5 active:shadow-none"
+                      >
+                        <span>🪿</span> Cook with Gordon
+                      </Link>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => remove(id)}
+                      className="shrink-0 rounded-xl border-2 border-edge px-3 py-2 text-xs font-extrabold text-muted transition-all hover:border-red-300 hover:text-red-600 active:translate-y-0.5"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+
+      {/* ── Recommendations ── */}
       {overallRecs.length > 0 && (
-        <ScrollRow
-          title="Recommended for you"
-          subtitle="Based on everything you've liked"
-          onRefresh={() => setBoxRecsPage((p) => p + 1)}
-        >
-          {overallRecs.map((r) => (
-            <RecipeCard
-              key={r.id}
-              recipe={r}
-              action={{
-                label: "Save ♥",
-                onClick: () => {
-                  saveRecipe(r.id);
-                  recordLike(r);
-                  setById((prev) => new Map(prev).set(r.id, r));
-                },
-              }}
-            />
-          ))}
-        </ScrollRow>
+        <section className="mt-10">
+          <h2 className="text-lg font-extrabold text-foreground">
+            Recommended for you
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            Based on what you liked this session
+          </p>
+          <div className="mt-4 flex gap-3 overflow-x-auto pb-3">
+            {overallRecs.map((r) => (
+              <div
+                key={r.id}
+                className="group relative flex w-40 shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)] transition-all hover:-translate-y-0.5"
+              >
+                <div className="relative aspect-square w-full overflow-hidden">
+                  <Image
+                    src={r.imageUrl}
+                    alt={r.title}
+                    fill
+                    sizes="160px"
+                    className="object-cover transition group-hover:scale-105"
+                  />
+                  <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-extrabold text-primary-dark shadow-sm">
+                    {Math.round(r.score * 100)}% match
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col p-2.5">
+                  <p className="line-clamp-2 text-sm font-extrabold leading-tight text-foreground">
+                    {r.title}
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted">
+                    {r.category}{r.area ? ` · ${r.area}` : ""}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => saveRecipe(r.id)}
+                    className="mt-2 w-full rounded-xl border-2 border-primary-dark bg-primary py-1.5 text-xs font-extrabold text-white shadow-[0_3px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-0.5 active:shadow-none"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );

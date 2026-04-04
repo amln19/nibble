@@ -45,7 +45,7 @@ export function RecipeSearchBar({
             type="search"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Search recipes\u2026"
+            placeholder="Search recipes"
             disabled={disabled}
             autoComplete="off"
             autoCapitalize="off"

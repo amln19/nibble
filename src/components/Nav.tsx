@@ -3,13 +3,15 @@
 import { BrandMascot } from "@/components/BrandMascot";
 import { NavAuth } from "@/components/NavAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BookmarkCheck, Compass, LayoutGrid, Trophy, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { href: "/", label: "Discover", emoji: "🍳" },
-  { href: "/box", label: "Recipe Box", emoji: "❤️" },
-  { href: "/creations", label: "Posts", emoji: "✨" },
+  { href: "/", label: "Discover", Icon: Compass },
+  { href: "/box", label: "Recipe Box", Icon: BookmarkCheck },
+  { href: "/creations", label: "Posts", Icon: LayoutGrid },
+  { href: "/points", label: "Points", Icon: Trophy },
 ] as const;
 
 export function Nav() {
@@ -31,7 +33,7 @@ export function Nav() {
           </Link>
 
           <ul className="flex items-center gap-1">
-            {links.map(({ href, label, emoji }) => {
+            {links.map(({ href, label, Icon }) => {
               const active = pathname === href;
               return (
                 <li key={href}>
@@ -43,7 +45,7 @@ export function Nav() {
                         : "border-transparent text-muted hover:border-edge hover:text-foreground"
                     }`}
                   >
-                    <span aria-hidden>{emoji}</span>
+                    <Icon size={15} aria-hidden />
                     {label}
                   </Link>
                 </li>
@@ -64,7 +66,7 @@ export function Nav() {
         aria-label="Main"
       >
         <ul className="mx-auto flex max-w-lg justify-around px-2 py-1">
-          {links.map(({ href, label, emoji }) => {
+          {links.map(({ href, label, Icon }) => {
             const active = pathname === href;
             return (
               <li key={href} className="min-w-0 flex-1">
@@ -73,14 +75,13 @@ export function Nav() {
                   className="flex flex-col items-center gap-0.5 py-1.5"
                 >
                   <span
-                    className={`flex h-9 w-14 items-center justify-center rounded-xl text-lg transition-all ${
+                    className={`flex h-9 w-14 items-center justify-center rounded-xl transition-all ${
                       active
-                        ? "scale-110 bg-primary-light"
-                        : "hover:bg-surface"
+                        ? "scale-110 bg-primary-light text-primary-dark"
+                        : "text-muted hover:bg-surface"
                     }`}
-                    aria-hidden
                   >
-                    {emoji}
+                    <Icon size={20} aria-hidden />
                   </span>
                   <span
                     className={`text-[10px] font-extrabold transition-colors ${
@@ -96,14 +97,13 @@ export function Nav() {
           <li className="min-w-0 flex-1">
             <Link href="/account" className="flex flex-col items-center gap-0.5 py-1.5">
               <span
-                className={`flex h-9 w-14 items-center justify-center rounded-xl text-lg transition-all ${
+                className={`flex h-9 w-14 items-center justify-center rounded-xl transition-all ${
                   pathname === "/account" || pathname === "/login"
-                    ? "scale-110 bg-primary-light"
-                    : "hover:bg-surface"
+                    ? "scale-110 bg-primary-light text-primary-dark"
+                    : "text-muted hover:bg-surface"
                 }`}
-                aria-hidden
               >
-                👤
+                <User size={20} aria-hidden />
               </span>
               <span
                 className={`text-[10px] font-extrabold transition-colors ${

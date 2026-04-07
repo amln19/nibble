@@ -1,23 +1,27 @@
 @import "tailwindcss";
 
-/* ── Light palette ── */
+/* App theme toggles `class="dark"` on <html> — align Tailwind `dark:` with that,
+ * not `prefers-color-scheme` (otherwise OS dark + in-app light yields wrong `dark:*`). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Light palette (warm paper-like base — avoids flat #fff chrome) ── */
 :root {
-  --background: #ffffff;
-  --foreground: #3c3c3c;
-  --surface: #f7f7f7;
-  --elevated: #efefef;
-  --edge: #e5e5e5;
-  --edge-hover: #d0d0d0;
+  --background: #f2f1ed;
+  --foreground: #2c2c2a;
+  --surface: #e9e8e4;
+  --elevated: #e1e0db;
+  --edge: #d4d3cd;
+  --edge-hover: #c4c3bd;
   --primary: #ff4b8c;
-  --primary-dark: #cc3570;
-  --primary-light: #fff0f5;
+  --primary-dark: #c43164;
+  --primary-light: #f5e8ee;
   --secondary: #ff8534;
   --secondary-dark: #e67022;
-  --secondary-light: #fff5ed;
+  --secondary-light: #faf3eb;
   --accent: #7c5cfc;
   --golden: #ffb800;
-  --muted: #afafaf;
-  --card: #ffffff;
+  --muted: #86847e;
+  --card: #fcfbfa;
   color-scheme: light;
 }
 

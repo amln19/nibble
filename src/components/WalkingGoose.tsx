@@ -1,46 +1,77 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import Lottie from "lottie-react";
 import gooseAnimation from "@/../public/animations/goose.json";
 
 const FADE_DISTANCE = 180;
-const RIGHT_DONUT_OFFSET = 72; // from right edge → pushes donut closer to right wall
-const LEFT_DONUT_X = 530;      // fixed px position for left donut, just right of title
+const RIGHT_DONUT_OFFSET = 80; // from right edge; larger = donut sits slightly left
+const LEFT_DONUT_X = 510; // fixed px position for left donut, just right of title
 // Where the goose turns around on the left — just past the title text
 const LEFT_BOUNDARY = 510;
 const INITIAL_POSITION = 560;
 
+type Direction = "right" | "left";
+
+type GooseState = { position: number; direction: Direction };
+
+function tickReducer(state: GooseState, width: number): GooseState {
+  const { position, direction } = state;
+  if (direction === "right") {
+    if (position >= width - 100) {
+      return { position: position - 2, direction: "left" };
+    }
+    return { position: position + 2, direction };
+  }
+  if (position <= LEFT_BOUNDARY) {
+    return { position: position + 2, direction: "right" };
+  }
+  return { position: position - 2, direction };
+}
+
 export function WalkingGoose() {
-  const [position, setPosition] = useState(INITIAL_POSITION);
-  const [direction, setDirection] = useState<"right" | "left">("right");
+  const [{ position, direction }, dispatchTick] = useReducer(
+    (s: GooseState, cw: number) => tickReducer(s, cw),
+    { position: INITIAL_POSITION, direction: "right" },
+  );
+  const [containerWidth, setContainerWidth] = useState(1000);
+  const containerWidthRef = useRef(containerWidth);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPosition((prev) => {
-        const containerWidth = containerRef.current?.offsetWidth || 1000;
+    containerWidthRef.current = containerWidth;
+  }, [containerWidth]);
 
-        if (direction === "right") {
-          if (prev >= containerWidth - 100) {
-            setDirection("left");
-            return prev - 2;
-          }
-          return prev + 2;
-        } else {
-          if (prev <= LEFT_BOUNDARY) {
-            setDirection("right");
-            return prev + 2;
-          }
-          return prev - 2;
-        }
-      });
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      setContainerWidth(node.offsetWidth || 1000);
+    });
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      setContainerWidth(
+        width ? Math.round(width) : node.offsetWidth || 1000,
+      );
+    });
+    observer.observe(node);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatchTick(containerWidthRef.current);
     }, 30);
 
     return () => clearInterval(interval);
-  }, [direction]);
+  }, []);
 
-  const containerWidth = containerRef.current?.offsetWidth || 1000;
   const rightEdge = containerWidth - RIGHT_DONUT_OFFSET;
   const leftTarget = LEFT_DONUT_X;
 
@@ -78,7 +109,10 @@ export function WalkingGoose() {
           className="h-9 w-9 sm:h-11 sm:w-11 drop-shadow-md"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          style={{ transform: direction === "left" ? "rotate(-15deg)" : "rotate(15deg)" }}
+          style={{
+            transform:
+              direction === "left" ? "rotate(-15deg)" : "rotate(15deg)",
+          }}
         >
           {/* Dark outline/shadow for depth */}
           <path
@@ -118,14 +152,78 @@ export function WalkingGoose() {
           <circle cx="50" cy="50" r="18" fill="#1A0D12" opacity="0.15" />
 
           {/* Sprinkles (bright colors, fun angles) */}
-          <rect x="35" y="24" width="8" height="3.5" rx="1.75" fill="#00E5FF" transform="rotate(30 35 24)" />
-          <rect x="62" y="28" width="8" height="3.5" rx="1.75" fill="#FFEB3B" transform="rotate(-45 62 28)" />
-          <rect x="76" y="44" width="8" height="3.5" rx="1.75" fill="#FFFFFF" transform="rotate(15 76 44)" />
-          <rect x="22" y="45" width="8" height="3.5" rx="1.75" fill="#00FF7F" transform="rotate(75 22 45)" />
-          <rect x="30" y="60" width="8" height="3.5" rx="1.75" fill="#FFFFFF" transform="rotate(-20 30 60)" />
-          <rect x="52" y="65" width="8" height="3.5" rx="1.75" fill="#00E5FF" transform="rotate(-60 52 65)" />
-          <rect x="70" y="58" width="8" height="3.5" rx="1.75" fill="#FFEB3B" transform="rotate(50 70 58)" />
-          <rect x="48" y="18" width="8" height="3.5" rx="1.75" fill="#00FF7F" transform="rotate(-10 48 18)" />
+          <rect
+            x="35"
+            y="24"
+            width="8"
+            height="3.5"
+            rx="1.75"
+            fill="#00E5FF"
+            transform="rotate(30 35 24)"
+          />
+          <rect
+            x="62"
+            y="28"
+            width="8"
+            height="3.5"
+            rx="1.75"
+            fill="#FFEB3B"
+            transform="rotate(-45 62 28)"
+          />
+          <rect
+            x="76"
+            y="44"
+            width="8"
+            height="3.5"
+            rx="1.75"
+            fill="#FFFFFF"
+            transform="rotate(15 76 44)"
+          />
+          <rect
+            x="22"
+            y="45"
+            width="8"
+            height="3.5"
+            rx="1.75"
+            fill="#00FF7F"
+            transform="rotate(75 22 45)"
+          />
+          <rect
+            x="30"
+            y="60"
+            width="8"
+            height="3.5"
+            rx="1.75"
+            fill="#FFFFFF"
+            transform="rotate(-20 30 60)"
+          />
+          <rect
+            x="52"
+            y="65"
+            width="8"
+            height="3.5"
+            rx="1.75"
+            fill="#00E5FF"
+            transform="rotate(-60 52 65)"
+          />
+          <rect
+            x="70"
+            y="58"
+            width="8"
+            height="3.5"
+            rx="1.75"
+            fill="#FFEB3B"
+            transform="rotate(50 70 58)"
+          />
+          <rect
+            x="48"
+            y="18"
+            width="8"
+            height="3.5"
+            rx="1.75"
+            fill="#00FF7F"
+            transform="rotate(-10 48 18)"
+          />
         </svg>
       </div>
 

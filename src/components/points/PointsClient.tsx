@@ -33,13 +33,26 @@ type CategoryMeta = {
 };
 
 const CATEGORY_META: Record<AchievementCategory, CategoryMeta> = {
-  saver:   { label: "Recipe Saver", Icon: BookmarkCheck, iconClass: "text-primary-dark" },
-  creator: { label: "Creator",      Icon: Camera,        iconClass: "text-primary-dark" },
-  chef:    { label: "Cook-Along",   Icon: ChefHat,       iconClass: "text-golden" },
-  social:  { label: "Social",       Icon: Heart,         iconClass: "text-sky-600 dark:text-sky-400" },
+  saver: {
+    label: "Recipe Saver",
+    Icon: BookmarkCheck,
+    iconClass: "text-primary-dark",
+  },
+  creator: { label: "Creator", Icon: Camera, iconClass: "text-primary-dark" },
+  chef: { label: "Cook-Along", Icon: ChefHat, iconClass: "text-golden" },
+  social: {
+    label: "Social",
+    Icon: Heart,
+    iconClass: "text-sky-600 dark:text-sky-400",
+  },
 };
 
-const CATEGORY_ORDER: AchievementCategory[] = ["saver", "creator", "chef", "social"];
+const CATEGORY_ORDER: AchievementCategory[] = [
+  "saver",
+  "creator",
+  "chef",
+  "social",
+];
 
 /** Per-category accent for unlocked achievements (spreads color beyond primary pink). */
 const CATEGORY_ACCENT: Record<
@@ -90,12 +103,15 @@ function AchievementCard({
 }) {
   const accent = CATEGORY_ACCENT[achievement.category];
   const statMap: Record<AchievementCategory, number> = {
-    saver:   stats.savedCount,
+    saver: stats.savedCount,
     creator: stats.postsCount,
-    chef:    stats.cookSessions,
-    social:  stats.likesReceived,
+    chef: stats.cookSessions,
+    social: stats.likesReceived,
   };
-  const current = Math.min(statMap[achievement.category], achievement.threshold);
+  const current = Math.min(
+    statMap[achievement.category],
+    achievement.threshold,
+  );
   const pct = Math.round((current / achievement.threshold) * 100);
 
   return (
@@ -113,11 +129,7 @@ function AchievementCard({
               : "border-edge bg-elevated text-muted"
           }`}
         >
-          {unlocked ? (
-            <Check size={18} strokeWidth={3} />
-          ) : (
-            <Lock size={15} />
-          )}
+          {unlocked ? <Check size={18} strokeWidth={3} /> : <Lock size={15} />}
         </div>
 
         <div className="min-w-0 flex-1">
@@ -166,57 +178,66 @@ export function PointsClient() {
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient();
-      if (!supabase) { setLoading(false); return; }
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      try {
+        const supabase = createClient();
+        if (!supabase) {
+          setLoggedIn(false);
+          return;
+        }
 
-      if (!user) {
-        setLoggedIn(false);
-        setLoading(false);
-        return;
-      }
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-      setLoggedIn(true);
+        if (!user) {
+          setLoggedIn(false);
+          return;
+        }
 
-      const [savedRes, postsRes, likesRes] = await Promise.all([
-        supabase
-          .from("saved_recipes")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id),
-        supabase
-          .from("creations")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id),
-        // Count likes received: find all creations by this user, then count their likes
-        (async () => {
-          const { data: userCreations } = await supabase
-            .from("creations")
-            .select("id")
-            .eq("user_id", user.id);
+        setLoggedIn(true);
 
-          if (!userCreations || userCreations.length === 0) {
-            return { count: 0 };
-          }
-
-          const creationIds = userCreations.map(c => c.id);
-          const { count } = await supabase
-            .from("creation_likes")
+        const [savedRes, postsRes, likesRes] = await Promise.all([
+          supabase
+            .from("saved_recipes")
             .select("id", { count: "exact", head: true })
-            .in("creation_id", creationIds);
+            .eq("user_id", user.id),
+          supabase
+            .from("creations")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", user.id),
+          // Count likes received: find all creations by this user, then count their likes
+          (async () => {
+            const { data: userCreations } = await supabase
+              .from("creations")
+              .select("id")
+              .eq("user_id", user.id);
 
-          return { count: count ?? 0 };
-        })(),
-      ]);
+            if (!userCreations || userCreations.length === 0) {
+              return { count: 0 };
+            }
 
-      setStats({
-        savedCount:    savedRes.count ?? 0,
-        postsCount:    postsRes.count ?? 0,
-        cookSessions:  getCookSessions(),
-        likesReceived: likesRes.count ?? 0,
-      });
-      setLoading(false);
+            const creationIds = userCreations.map((c) => c.id);
+            const { count } = await supabase
+              .from("creation_likes")
+              .select("id", { count: "exact", head: true })
+              .in("creation_id", creationIds);
+
+            return { count: count ?? 0 };
+          })(),
+        ]);
+
+        setStats({
+          savedCount: savedRes.count ?? 0,
+          postsCount: postsRes.count ?? 0,
+          cookSessions: getCookSessions(),
+          likesReceived: likesRes.count ?? 0,
+        });
+      } catch (e) {
+        console.error("Failed to load points:", e);
+        setLoggedIn(false);
+      } finally {
+        setLoading(false);
+      }
     }
 
     void load();
@@ -230,12 +251,18 @@ export function PointsClient() {
         <div className="mt-6 h-36 animate-pulse rounded-2xl bg-surface" />
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl bg-surface" />
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-2xl bg-surface"
+            />
           ))}
         </div>
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl bg-surface" />
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-2xl bg-surface"
+            />
           ))}
         </div>
       </div>
@@ -249,8 +276,12 @@ export function PointsClient() {
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-golden/50 bg-golden/15 shadow-[0_4px_0_rgba(255,184,0,0.35)]">
           <Trophy size={24} className="text-golden" />
         </div>
-        <h1 className="text-2xl font-extrabold text-foreground">Points &amp; Achievements</h1>
-        <p className="mt-2 text-sm text-muted">Sign in to track your progress and earn rewards.</p>
+        <h1 className="text-2xl font-extrabold text-foreground">
+          Points &amp; Achievements
+        </h1>
+        <p className="mt-2 text-sm text-muted">
+          Sign in to track your progress and earn rewards.
+        </p>
         <Link
           href="/login"
           className="mt-6 inline-flex rounded-2xl border-2 border-primary-dark bg-primary px-6 py-2.5 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
@@ -267,14 +298,14 @@ export function PointsClient() {
 
   return (
     <div className="mx-auto w-full max-w-8xl px-4 pt-6 pb-28 sm:px-6 lg:px-8 md:pb-8">
-
       {/* ── Page header ── */}
       <header className="mb-6 rounded-3xl border-2 border-primary/40 bg-primary/5 px-6 py-5 shadow-[0_4px_0_var(--primary)]">
         <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
           Points &amp; Achievements
         </h1>
         <p className="mt-1 text-sm text-foreground">
-          {unlocked.length} of {ACHIEVEMENTS.length} unlocked · {totalPoints} pts earned
+          {unlocked.length} of {ACHIEVEMENTS.length} unlocked · {totalPoints}{" "}
+          pts earned
         </p>
       </header>
 
@@ -290,7 +321,9 @@ export function PointsClient() {
             <p className="text-xs font-extrabold uppercase tracking-widest text-muted">
               Current rank
             </p>
-            <p className="mt-0.5 text-xl font-extrabold text-foreground">{tier.label}</p>
+            <p className="mt-0.5 text-xl font-extrabold text-foreground">
+              {tier.label}
+            </p>
             <p className="text-sm text-muted">{tier.tagline}</p>
           </div>
 
@@ -299,7 +332,9 @@ export function PointsClient() {
               {totalPoints}
               <span className="ml-1 text-base font-bold text-golden">pts</span>
             </p>
-            <p className="text-xs font-bold text-muted">{totalPossible} pts possible</p>
+            <p className="text-xs font-bold text-muted">
+              {totalPossible} pts possible
+            </p>
           </div>
         </div>
 
@@ -334,8 +369,8 @@ export function PointsClient() {
                 isCurrent
                   ? "border-golden/55 bg-golden/10 shadow-[0_2px_0_rgba(255,184,0,0.4)]"
                   : reached
-                  ? "border-edge bg-card"
-                  : "border-edge bg-card opacity-40"
+                    ? "border-edge bg-card"
+                    : "border-edge bg-card opacity-40"
               }`}
             >
               <span className="text-[10px] font-extrabold leading-tight text-foreground">
@@ -388,8 +423,12 @@ export function PointsClient() {
             className="flex flex-col items-center gap-1.5 rounded-2xl border-2 border-edge bg-card py-4 shadow-[0_3px_0_var(--edge)]"
           >
             <Icon size={16} className={iconClass} />
-            <span className="text-xl font-extrabold tabular-nums text-foreground">{value}</span>
-            <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted">{label}</span>
+            <span className="text-xl font-extrabold tabular-nums text-foreground">
+              {value}
+            </span>
+            <span className="text-[10px] font-extrabold uppercase tracking-wide text-muted">
+              {label}
+            </span>
           </div>
         ))}
       </div>

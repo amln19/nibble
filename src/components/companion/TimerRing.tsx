@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   totalSeconds: number;
@@ -12,7 +12,10 @@ type Props = {
 export function TimerRing({ totalSeconds, label, onComplete, running }: Props) {
   const [remaining, setRemaining] = useState(totalSeconds);
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     setRemaining(totalSeconds);
@@ -47,7 +50,10 @@ export function TimerRing({ totalSeconds, label, onComplete, running }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative flex items-center justify-center" style={{ width: 148, height: 148 }}>
+      <div
+        className="relative flex items-center justify-center"
+        style={{ width: 148, height: 148 }}
+      >
         {/* Glow */}
         <div
           className="absolute inset-0 rounded-full transition-opacity duration-500"
@@ -82,7 +88,9 @@ export function TimerRing({ totalSeconds, label, onComplete, running }: Props) {
             strokeDashoffset={dashOffset}
             transform="rotate(-90 64 64)"
             className="transition-[stroke-dashoffset] duration-1000 linear"
-            style={{ filter: `drop-shadow(0 0 6px ${urgent ? "rgba(239,68,68,0.6)" : "rgba(251,191,36,0.5)"})` }}
+            style={{
+              filter: `drop-shadow(0 0 6px ${urgent ? "rgba(239,68,68,0.6)" : "rgba(251,191,36,0.5)"})`,
+            }}
           />
         </svg>
 
@@ -96,7 +104,9 @@ export function TimerRing({ totalSeconds, label, onComplete, running }: Props) {
             {display}
           </span>
           {remaining === 0 && (
-            <span className="mt-1 text-xs font-bold text-emerald-400">Done!</span>
+            <span className="mt-1 text-xs font-bold text-emerald-400">
+              Done!
+            </span>
           )}
         </div>
       </div>

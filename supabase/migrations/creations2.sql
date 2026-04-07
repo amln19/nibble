@@ -11,13 +11,22 @@ create table if not exists public.creations (
   details      text        check (char_length(details) <= 2000),
   image_url    text        not null,
   author_label text,
+  recipe_id    text,
+  recipe_title text,
   created_at   timestamptz not null default now()
 );
+
+alter table public.creations
+  add column if not exists is_public boolean not null default true;
+alter table public.creations
+  add column if not exists recipe_id text;
+alter table public.creations
+  add column if not exists recipe_title text;
 
 alter table public.creations enable row level security;
 
 create policy "creations_select" on public.creations
-  for select using (true);
+  for select using (is_public = true or auth.uid() = user_id);
 create policy "creations_insert" on public.creations
   for insert with check (auth.uid() = user_id);
 create policy "creations_delete" on public.creations
@@ -38,8 +47,16 @@ create table if not exists public.creation_likes (
 
 alter table public.creation_likes enable row level security;
 
+drop policy if exists "likes_select" on public.creation_likes;
 create policy "likes_select" on public.creation_likes
-  for select using (true);
+  for select using (
+    exists (
+      select 1
+      from public.creations c
+      where c.id = creation_id
+        and (c.is_public = true or c.user_id = auth.uid())
+    )
+  );
 create policy "likes_insert" on public.creation_likes
   for insert with check (auth.uid() = user_id);
 create policy "likes_delete" on public.creation_likes
@@ -61,8 +78,16 @@ create table if not exists public.creation_comments (
 
 alter table public.creation_comments enable row level security;
 
+drop policy if exists "comments_select" on public.creation_comments;
 create policy "comments_select" on public.creation_comments
-  for select using (true);
+  for select using (
+    exists (
+      select 1
+      from public.creations c
+      where c.id = creation_id
+        and (c.is_public = true or c.user_id = auth.uid())
+    )
+  );
 create policy "comments_insert" on public.creation_comments
   for insert with check (auth.uid() = user_id);
 create policy "comments_delete" on public.creation_comments

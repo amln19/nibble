@@ -32,13 +32,19 @@ function writeLocalIds(ids: string[]) {
 }
 
 export function useRecipeBox() {
-  const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [ready, setReady] = useState(false);
+  const [savedIds, setSavedIds] = useState<string[]>(() =>
+    createClient() ? [] : readLocalIds(),
+  );
+  const [ready, setReady] = useState(() => createClient() === null);
   const userIdRef = useRef<string | null>(null);
 
   const syncFromCloud = useCallback(async (userId: string) => {
     const supabase = createClient();
-    if (!supabase) { setSavedIds(readLocalIds()); setReady(true); return; }
+    if (!supabase) {
+      setSavedIds(readLocalIds());
+      setReady(true);
+      return;
+    }
     const { data, error } = await supabase
       .from("saved_recipes")
       .select("recipe_id")
@@ -62,7 +68,9 @@ export function useRecipeBox() {
         user_id: userId,
         recipe_id,
       }));
-      const { error: upErr } = await supabase.from("saved_recipes").insert(rows);
+      const { error: upErr } = await supabase
+        .from("saved_recipes")
+        .insert(rows);
       if (upErr && upErr.code !== "23505") {
         console.error("saved_recipes merge insert:", upErr.message);
       }
@@ -78,18 +86,7 @@ export function useRecipeBox() {
 
   useEffect(() => {
     const supabase = createClient();
-    if (!supabase) {
-      setSavedIds((prev) => {
-        const local = readLocalIds();
-        if (prev.length === 0) return local;
-        // Merge: keep anything already added via add() that isn't in local
-        const set = new Set(local);
-        const extra = prev.filter((id) => !set.has(id));
-        return [...local, ...extra];
-      });
-      setReady(true);
-      return;
-    }
+    if (!supabase) return;
 
     const bootstrap = async () => {
       const {
@@ -134,18 +131,22 @@ export function useRecipeBox() {
     setSavedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
 
     void (async () => {
-      const supabase = createClient();
-      if (!supabase) return;
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { error } = await supabase.from("saved_recipes").insert({
-        user_id: user.id,
-        recipe_id: id,
-      });
-      if (error && error.code !== "23505") {
-        console.error("saved_recipes insert:", error.message);
+      try {
+        const supabase = createClient();
+        if (!supabase) return;
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+        const { error } = await supabase.from("saved_recipes").insert({
+          user_id: user.id,
+          recipe_id: id,
+        });
+        if (error && error.code !== "23505") {
+          console.error("saved_recipes insert:", error.message);
+        }
+      } catch (e) {
+        console.error("saved_recipes insert failed:", e);
       }
     })();
   }, []);
@@ -154,19 +155,23 @@ export function useRecipeBox() {
     setSavedIds((prev) => prev.filter((x) => x !== id));
 
     void (async () => {
-      const supabase = createClient();
-      if (!supabase) return;
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { error } = await supabase
-        .from("saved_recipes")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("recipe_id", id);
-      if (error) {
-        console.error("saved_recipes delete:", error.message);
+      try {
+        const supabase = createClient();
+        if (!supabase) return;
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+        const { error } = await supabase
+          .from("saved_recipes")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("recipe_id", id);
+        if (error) {
+          console.error("saved_recipes delete:", error.message);
+        }
+      } catch (e) {
+        console.error("saved_recipes delete failed:", e);
       }
     })();
   }, []);

@@ -6,13 +6,14 @@ import { createPortal } from "react-dom";
 import { useRecipeCache } from "@/hooks/useRecipeCache";
 import { useSkippedRecipes } from "@/hooks/useLocalStorageState";
 import { normalizeIngredient } from "@/lib/ingredients";
+import { type Recipe, type SmartFilters, filterRecipes } from "@/lib/recipes";
 import {
-  type Recipe,
-  type SmartFilters,
-  filterRecipes,
-} from "@/lib/recipes";
+  ALL_CATEGORY,
+  buildOrderedExploreList,
+} from "@/lib/exploreCategories";
 import { shuffle } from "@/lib/shuffle";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Info } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ExploreSection, type ExploreCategory } from "./ExploreSection";
 import { KitchenMatchDialog } from "./KitchenMatchDialog";
 import { RecommendationBar } from "./RecommendationBar";
@@ -79,7 +80,13 @@ export function DiscoveryClient() {
   );
   const { savedIds, add: saveRecipe, remove: unsaveRecipe } = useRecipeBox();
   const { skippedIds, skip, clearSession } = useSkippedRecipes();
-  const { cacheRecipes, recordLike, recordPass, getRecommendations, getLikedCount } = useRecipeCache();
+  const {
+    cacheRecipes,
+    recordLike,
+    recordPass,
+    getRecommendations,
+    getLikedCount,
+  } = useRecipeCache();
   const [currentRecipe, setCurrentRecipe] = useState<Recipe | null>(null);
   const [recsOffset, setRecsOffset] = useState(0);
   const [savedRecipeData, setSavedRecipeData] = useState<Recipe[]>([]);
@@ -94,6 +101,8 @@ export function DiscoveryClient() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [kitchenMatchOpen, setKitchenMatchOpen] = useState(false);
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [dataSourceInfoOpen, setDataSourceInfoOpen] = useState(false);
+  const loadRequestSeqRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,13 +115,8 @@ export function DiscoveryClient() {
         };
         if (cancelled) return;
         const list = data.categories ?? [];
-        setCategories(list);
-        const preferred =
-          list.find((c) => c.strCategory === "Dessert")?.strCategory ??
-          list.find((c) => c.strCategory === "Chicken")?.strCategory ??
-          list[0]?.strCategory ??
-          null;
-        setCategory(preferred);
+        setCategories(buildOrderedExploreList(list));
+        setCategory(ALL_CATEGORY);
       } catch {
         if (!cancelled) {
           setLoadError("Could not load categories. Check your connection.");
@@ -127,32 +131,41 @@ export function DiscoveryClient() {
   }, []);
 
   const loadMeals = useCallback(async (c: string) => {
+    const requestSeq = ++loadRequestSeqRef.current;
     setLoadingMeals(true);
     setLoadError(null);
     setApiRecipes([]);
     try {
-      const r = await fetch(`/api/recipes/filter?c=${encodeURIComponent(c)}`);
+      const r =
+        c === ALL_CATEGORY
+          ? await fetch("/api/recipes/all")
+          : await fetch(`/api/recipes/filter?c=${encodeURIComponent(c)}`);
       if (!r.ok) throw new Error("filter");
       const data = (await r.json()) as {
         meals?: { idMeal: string }[] | null;
       };
       const meals = data.meals;
       if (!meals || !Array.isArray(meals) || meals.length === 0) {
+        if (loadRequestSeqRef.current !== requestSeq) return;
         setApiRecipes([]);
         return;
       }
       const ids = meals.map((m) => m.idMeal).slice(0, 40);
       const recipes = await fetchRecipeDetails(ids);
+      if (loadRequestSeqRef.current !== requestSeq) return;
       setApiRecipes(shuffle(recipes));
     } catch {
+      if (loadRequestSeqRef.current !== requestSeq) return;
       setLoadError("Could not load recipes. Try another category.");
       setApiRecipes([]);
     } finally {
+      if (loadRequestSeqRef.current !== requestSeq) return;
       setLoadingMeals(false);
     }
   }, []);
 
   const loadSearch = useCallback(async (q: string) => {
+    const requestSeq = ++loadRequestSeqRef.current;
     setLoadingMeals(true);
     setLoadError(null);
     setApiRecipes([]);
@@ -166,26 +179,32 @@ export function DiscoveryClient() {
       };
       const meals = data.meals;
       if (!meals || !Array.isArray(meals) || meals.length === 0) {
+        if (loadRequestSeqRef.current !== requestSeq) return;
         setApiRecipes([]);
         return;
       }
       const ids = meals.map((m) => m.idMeal).slice(0, 40);
       const recipes = await fetchRecipeDetails(ids);
+      if (loadRequestSeqRef.current !== requestSeq) return;
       setApiRecipes(shuffle(recipes));
     } catch {
+      if (loadRequestSeqRef.current !== requestSeq) return;
       setLoadError("Search failed. Try again.");
       setApiRecipes([]);
     } finally {
+      if (loadRequestSeqRef.current !== requestSeq) return;
       setLoadingMeals(false);
     }
   }, []);
 
   const loadSpecificRecipe = useCallback(async (id: string) => {
+    const requestSeq = ++loadRequestSeqRef.current;
     setLoadingMeals(true);
     setLoadError(null);
     setApiRecipes([]);
     try {
       const recipes = await fetchRecipeDetails([id]);
+      if (loadRequestSeqRef.current !== requestSeq) return;
       if (recipes.length > 0) {
         setApiRecipes(recipes);
         const recipeTitle = recipes[0].title;
@@ -193,12 +212,13 @@ export function DiscoveryClient() {
         setActiveQuery(recipeTitle);
       }
     } catch {
+      if (loadRequestSeqRef.current !== requestSeq) return;
       setLoadError("Failed to load recipe.");
     } finally {
+      if (loadRequestSeqRef.current !== requestSeq) return;
       setLoadingMeals(false);
     }
   }, []);
-
 
   useEffect(() => {
     if (!category || activeQuery) return;
@@ -245,14 +265,11 @@ export function DiscoveryClient() {
     [pantryItems],
   );
 
-  const excludeIds = useMemo(
-    () => {
-      // When searching, don't exclude saved recipes so they still appear
-      const base = activeQuery ? [] : [...savedIds];
-      return new Set<string>([...base, ...skippedIds]);
-    },
-    [savedIds, skippedIds, activeQuery],
-  );
+  const excludeIds = useMemo(() => {
+    // When searching, don't exclude saved recipes so they still appear
+    const base = activeQuery ? [] : [...savedIds];
+    return new Set<string>([...base, ...skippedIds]);
+  }, [savedIds, skippedIds, activeQuery]);
 
   const deck = useMemo(
     () =>
@@ -277,28 +294,43 @@ export function DiscoveryClient() {
 
   // Fetch saved recipe data for the strip
   useEffect(() => {
-    if (savedIds.length === 0) { setSavedRecipeData([]); return; }
+    if (savedIds.length === 0) {
+      setSavedRecipeData([]);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
-        const r = await fetch(`/api/recipes/details?ids=${encodeURIComponent(savedIds.slice(0, 10).join(","))}`);
+        const r = await fetch(
+          `/api/recipes/details?ids=${encodeURIComponent(savedIds.slice(0, 10).join(","))}`,
+        );
         if (!r.ok || cancelled) return;
         const data = (await r.json()) as { recipes?: Recipe[] };
         if (!cancelled) setSavedRecipeData(data.recipes ?? []);
-      } catch { /* best effort */ }
+      } catch {
+        /* best effort */
+      }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [savedIds]);
 
-  const handleSave = useCallback((r: Recipe) => {
-    saveRecipe(r.id);
-    recordLike(r);
-  }, [saveRecipe, recordLike]);
+  const handleSave = useCallback(
+    (r: Recipe) => {
+      saveRecipe(r.id);
+      recordLike(r);
+    },
+    [saveRecipe, recordLike],
+  );
 
-  const handlePass = useCallback((r: Recipe) => {
-    skip(r.id);
-    recordPass(r);
-  }, [skip, recordPass]);
+  const handlePass = useCallback(
+    (r: Recipe) => {
+      skip(r.id);
+      recordPass(r);
+    },
+    [skip, recordPass],
+  );
 
   // Recommendations — auto-show when user has liked 3+ recipes
   const hasEnoughLikes = getLikedCount() >= 3;
@@ -312,13 +344,11 @@ export function DiscoveryClient() {
   }, []);
 
   const anySmart =
-    smart.under30 ||
-    smart.highProtein ||
-    smart.vegan ||
-    smart.beginnerFriendly;
+    smart.under30 || smart.highProtein || smart.vegan || smart.beginnerFriendly;
 
   const someRecipesFilteredOut = useMemo(() => {
-    if (loadingMeals || apiRecipes.length === 0 || deck.length > 0) return false;
+    if (loadingMeals || apiRecipes.length === 0 || deck.length > 0)
+      return false;
     return apiRecipes.some((r) => !excludeIds.has(r.id));
   }, [loadingMeals, apiRecipes, deck.length, excludeIds]);
 
@@ -354,11 +384,10 @@ export function DiscoveryClient() {
   const deckCount = deck.length;
   const sourceLabel = activeQuery?.trim()
     ? `"${activeQuery.trim()}"`
-    : category ?? null;
+    : (category ?? null);
 
   const smartFilterCount = useMemo(
-    () =>
-      Object.values(smart).filter(Boolean).length,
+    () => Object.values(smart).filter(Boolean).length,
     [smart],
   );
 
@@ -391,7 +420,7 @@ export function DiscoveryClient() {
         {/* ── Page Title ── */}
         <div className="relative mb-6 overflow-hidden rounded-3xl border-2 border-primary/40 bg-primary/5 px-6 py-5 shadow-[0_4px_0_var(--primary)]">
           <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl">
-            Explore Gordon's Recipes
+            Explore Gordon&apos;s Recipes
           </h1>
           <WalkingGoose />
           <p className="mt-2 text-base text-foreground sm:text-lg">
@@ -428,7 +457,7 @@ export function DiscoveryClient() {
             ) : null}
           </button>
 
-          {(activeQuery || kitchenMatchActive) ? (
+          {activeQuery || kitchenMatchActive ? (
             <button
               type="button"
               onClick={resetFilters}
@@ -453,10 +482,16 @@ export function DiscoveryClient() {
 
           {!loadingMeals && apiRecipes.length > 0 ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-edge bg-card px-3 py-1.5 text-[11px] font-bold text-muted">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-primary"
+                aria-hidden
+              />
               {deckCount} in deck
               {apiRecipes.length !== deckCount ? (
-                <span className="text-muted/60"> · {apiRecipes.length - deckCount} filtered</span>
+                <span className="text-muted/60">
+                  {" "}
+                  · {apiRecipes.length - deckCount} filtered
+                </span>
               ) : null}
             </span>
           ) : null}
@@ -508,7 +543,9 @@ export function DiscoveryClient() {
             </div>
             <section className="rounded-3xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)]">
               <div className="flex items-center justify-between border-b-2 border-edge px-5 py-3.5 sm:px-6">
-                <h2 className="text-sm font-extrabold text-foreground">Your Deck</h2>
+                <h2 className="text-sm font-extrabold text-foreground">
+                  Your Deck
+                </h2>
                 <div className="flex gap-2 text-[11px]">
                   <span className="rounded-xl border-2 border-edge bg-surface px-2.5 py-1 font-extrabold text-muted">
                     &larr; Pass
@@ -521,9 +558,14 @@ export function DiscoveryClient() {
               <div className="p-5 sm:p-6">
                 {loadingMeals ? (
                   <div className="flex min-h-[min(52vh,400px)] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-edge bg-surface px-6 py-12">
-                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-surface border-t-primary" aria-hidden />
+                    <div
+                      className="h-10 w-10 animate-spin rounded-full border-4 border-surface border-t-primary"
+                      aria-hidden
+                    />
                     <p className="text-sm font-extrabold text-muted">
-                      {activeQuery ? "Searching\u2026" : "Loading recipes\u2026"}
+                      {activeQuery
+                        ? "Searching…"
+                        : "Loading recipes…"}
                     </p>
                   </div>
                 ) : (
@@ -574,7 +616,9 @@ export function DiscoveryClient() {
               </div>
               <section className="flex flex-1 flex-col rounded-3xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)]">
                 <div className="flex shrink-0 items-center justify-between border-b-2 border-edge px-5 py-3.5">
-                  <h2 className="text-sm font-extrabold text-foreground">Your Deck</h2>
+                  <h2 className="text-sm font-extrabold text-foreground">
+                    Your Deck
+                  </h2>
                   <div className="flex gap-2 text-[11px]">
                     <span className="rounded-xl border-2 border-edge bg-surface px-2.5 py-1 font-extrabold text-muted">
                       &larr; Pass
@@ -587,9 +631,14 @@ export function DiscoveryClient() {
                 <div className="p-5">
                   {loadingMeals ? (
                     <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-edge bg-surface px-6 py-12">
-                      <div className="h-10 w-10 animate-spin rounded-full border-4 border-surface border-t-primary" aria-hidden />
+                      <div
+                        className="h-10 w-10 animate-spin rounded-full border-4 border-surface border-t-primary"
+                        aria-hidden
+                      />
                       <p className="text-sm font-extrabold text-muted">
-                        {activeQuery ? "Searching\u2026" : "Loading recipes\u2026"}
+                        {activeQuery
+                          ? "Searching…"
+                          : "Loading recipes…"}
                       </p>
                     </div>
                   ) : (
@@ -630,55 +679,99 @@ export function DiscoveryClient() {
           />
         )}
 
-        <p className="mt-10 text-[11px] text-muted">
-          Recipe data from{" "}
-          <a
-            href="https://www.themealdb.com/"
-            className="font-bold text-primary-dark underline-offset-2 hover:underline"
-            target="_blank"
-            rel="noreferrer"
-          >
-            TheMealDB
-          </a>
-          . Times &amp; tags are estimated.
-        </p>
       </div>
 
+      {/* Subtle data attribution — fixed corner so it stays out of the main layout */}
+      <button
+        type="button"
+        aria-label="About recipe data source"
+        title="Recipe data source"
+        onClick={() => setDataSourceInfoOpen(true)}
+        className="fixed bottom-20 left-3 z-40 flex h-9 w-9 items-center justify-center rounded-full border border-edge/50 bg-card/70 text-muted opacity-35 shadow-sm backdrop-blur-sm transition hover:opacity-90 hover:border-edge md:bottom-6 md:left-6"
+      >
+        <Info className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+      </button>
+
       {/* ── Reset Skipped Confirmation Dialog ── */}
-      {confirmResetOpen && createPortal(
-        <dialog
-          open
-          className="fixed inset-0 z-[10000] m-0 flex max-h-none min-h-full w-full max-w-none min-w-full items-center justify-center bg-black/50 p-4"
-          onClick={() => setConfirmResetOpen(false)}
-        >
-          <div
-            className="w-full max-w-sm rounded-3xl border-2 border-edge bg-card p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+      {dataSourceInfoOpen &&
+        createPortal(
+          <dialog
+            open
+            className="fixed inset-0 z-10000 m-0 flex max-h-none min-h-full w-full max-w-none min-w-full items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+            onClick={() => setDataSourceInfoOpen(false)}
           >
-            <h3 className="text-lg font-extrabold text-foreground">Reset Skipped Recipes?</h3>
-            <p className="mt-2 text-sm text-muted">
-              This will bring back all <strong className="text-foreground">{skippedIds.length}</strong>{" "}recipes you previously swiped left on. They&apos;ll appear in your deck again.
-            </p>
-            <div className="mt-6 flex gap-3">
+            <div
+              className="w-full max-w-sm rounded-3xl border-2 border-edge bg-card p-5 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-sm font-extrabold text-foreground">
+                Recipe data
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-muted">
+                Foods and recipes are loaded from{" "}
+                <a
+                  href="https://www.themealdb.com/"
+                  className="font-bold text-primary hover:underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  TheMealDB
+                </a>
+                . Cooking times and tags shown in Nibble are estimated, not
+                official MealDB fields.
+              </p>
               <button
                 type="button"
-                onClick={() => setConfirmResetOpen(false)}
-                className="flex-1 rounded-2xl border-2 border-edge bg-card px-4 py-3 text-sm font-extrabold text-foreground shadow-[0_3px_0_var(--edge)] transition-all hover:bg-surface active:translate-y-0.5 active:shadow-none"
+                onClick={() => setDataSourceInfoOpen(false)}
+                className="mt-4 w-full rounded-2xl border-2 border-edge bg-surface py-2.5 text-xs font-extrabold text-foreground shadow-[0_2px_0_var(--edge)] transition hover:bg-elevated active:translate-y-0.5 active:shadow-none"
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleResetSkipped}
-                className="flex-1 rounded-2xl border-2 border-primary-dark bg-primary px-4 py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
-              >
-                Reset All
+                Got it
               </button>
             </div>
-          </div>
-        </dialog>,
-        document.body,
-      )}
+          </dialog>,
+          document.body,
+        )}
+
+      {confirmResetOpen &&
+        createPortal(
+          <dialog
+            open
+            className="fixed inset-0 z-10000 m-0 flex max-h-none min-h-full w-full max-w-none min-w-full items-center justify-center bg-black/50 p-4"
+            onClick={() => setConfirmResetOpen(false)}
+          >
+            <div
+              className="w-full max-w-sm rounded-3xl border-2 border-edge bg-card p-6 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-extrabold text-foreground">
+                Reset Skipped Recipes?
+              </h3>
+              <p className="mt-2 text-sm text-muted">
+                This will bring back all{" "}
+                <strong className="text-foreground">{skippedIds.length}</strong>{" "}
+                recipes you previously swiped left on. They&apos;ll appear in
+                your deck again.
+              </p>
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmResetOpen(false)}
+                  className="flex-1 rounded-2xl border-2 border-edge bg-card px-4 py-3 text-sm font-extrabold text-foreground shadow-[0_3px_0_var(--edge)] transition-all hover:bg-surface active:translate-y-0.5 active:shadow-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetSkipped}
+                  className="flex-1 rounded-2xl border-2 border-primary-dark bg-primary px-4 py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
+                >
+                  Reset All
+                </button>
+              </div>
+            </div>
+          </dialog>,
+          document.body,
+        )}
     </div>
   );
 }

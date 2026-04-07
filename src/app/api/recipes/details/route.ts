@@ -7,6 +7,7 @@ const LOOKUP = "https://www.themealdb.com/api/json/v1/1/lookup.php";
 
 /** Parallel lookups per chunk — avoids hammering TheMealDB with hundreds at once */
 const CHUNK_SIZE = 40;
+const MAX_IDS = 100;
 
 /** Batch lookup by comma-separated idMeal values (chunks of 40; order preserved) */
 export async function GET(req: Request) {
@@ -16,13 +17,24 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing ids" }, { status: 400 });
   }
 
-  const ids = idsParam
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const ids = [
+    ...new Set(
+      idsParam
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ];
 
   if (ids.length === 0) {
     return NextResponse.json({ recipes: [] });
+  }
+
+  if (ids.length > MAX_IDS) {
+    return NextResponse.json(
+      { error: `Too many ids. Maximum ${MAX_IDS}.` },
+      { status: 400 },
+    );
   }
 
   try {
@@ -36,7 +48,9 @@ export async function GET(req: Request) {
             next: { revalidate: 3600 },
           });
           if (!res.ok) return null;
-          const data = (await res.json()) as { meals?: MealDbMealDetail[] | null };
+          const data = (await res.json()) as {
+            meals?: MealDbMealDetail[] | null;
+          };
           const m = data.meals?.[0];
           return m ?? null;
         }),

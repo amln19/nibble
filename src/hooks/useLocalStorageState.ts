@@ -1,6 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+
+function readStorageValue<T>(storage: Storage, key: string, fallback: T): T {
+  try {
+    const raw = storage.getItem(key);
+    if (raw == null) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
 
 export function useLocalStorageState<T>(
   key: string,
@@ -8,17 +18,18 @@ export function useLocalStorageState<T>(
 ): [T, (value: T | ((prev: T) => T)) => void] {
   const [state, setState] = useState<T>(initial);
   const [hydrated, setHydrated] = useState(false);
+  const fallbackRef = useRef(initial);
+  useLayoutEffect(() => {
+    fallbackRef.current = initial;
+  }, [initial]);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (raw != null) {
-        setState(JSON.parse(raw) as T);
-      }
-    } catch {
-      /* ignore */
-    }
-    setHydrated(true);
+    if (typeof window === "undefined") return;
+    const timer = window.setTimeout(() => {
+      setState(readStorageValue(window.localStorage, key, fallbackRef.current));
+      setHydrated(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [key]);
 
   useEffect(() => {
@@ -39,17 +50,20 @@ export function useSessionStorageState<T>(
 ): [T, (value: T | ((prev: T) => T)) => void] {
   const [state, setState] = useState<T>(initial);
   const [hydrated, setHydrated] = useState(false);
+  const fallbackRef = useRef(initial);
+  useLayoutEffect(() => {
+    fallbackRef.current = initial;
+  }, [initial]);
 
   useEffect(() => {
-    try {
-      const raw = window.sessionStorage.getItem(key);
-      if (raw != null) {
-        setState(JSON.parse(raw) as T);
-      }
-    } catch {
-      /* ignore */
-    }
-    setHydrated(true);
+    if (typeof window === "undefined") return;
+    const timer = window.setTimeout(() => {
+      setState(
+        readStorageValue(window.sessionStorage, key, fallbackRef.current),
+      );
+      setHydrated(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [key]);
 
   useEffect(() => {
@@ -70,9 +84,12 @@ export function useSkippedRecipes() {
     [],
   );
 
-  const skip = useCallback((id: string) => {
-    setSkippedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-  }, [setSkippedIds]);
+  const skip = useCallback(
+    (id: string) => {
+      setSkippedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    },
+    [setSkippedIds],
+  );
 
   const clearSession = useCallback(() => {
     setSkippedIds([]);

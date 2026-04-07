@@ -51,7 +51,13 @@ export function PantryPanel({
   const showDropdown = isFocused && suggestions.length > 0;
 
   return (
-    <div className={embedded ? "" : "rounded-2xl border-2 border-edge bg-card p-4 shadow-[0_3px_0_var(--edge)]"}>
+    <div
+      className={
+        embedded
+          ? ""
+          : "rounded-2xl border-2 border-edge bg-card p-4 shadow-[0_3px_0_var(--edge)]"
+      }
+    >
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-1.5 text-sm font-extrabold text-foreground">
@@ -98,16 +104,16 @@ export function PantryPanel({
                   submit();
                 }
               }}
-              placeholder="e.g. eggs, tomato, rice\u2026"
+              placeholder="e.g. eggs, tomato, rice…"
               className="w-full rounded-2xl border-2 border-edge bg-card px-3 py-2 text-sm font-bold text-foreground placeholder:font-normal placeholder:text-muted shadow-[0_2px_0_var(--edge)] transition-all focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
               autoComplete="off"
               autoCapitalize="off"
             />
-            
+
             {showDropdown && (
-              <div className="absolute left-0 top-full z-[100] mt-2 w-full overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-xl">
+              <div className="absolute left-0 top-full z-100 mt-2 w-full overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-xl">
                 <ul className="max-h-60 overflow-y-auto overscroll-contain">
-                  {suggestions.map((item, i) => (
+                  {suggestions.map((item) => (
                     <li key={item}>
                       <button
                         type="button"
@@ -139,7 +145,7 @@ export function PantryPanel({
               </div>
             )}
           </div>
-          
+
           <button
             type="button"
             onClick={submit}
@@ -148,7 +154,7 @@ export function PantryPanel({
             Add
           </button>
         </div>
-        
+
         {pantryItems.length > 0 ? (
           <ul className="mt-3 flex flex-wrap gap-2">
             {pantryItems.map((item) => (
@@ -159,7 +165,9 @@ export function PantryPanel({
                   className="inline-flex items-center gap-1.5 rounded-full border-2 border-primary bg-primary-light px-3 py-1 text-xs font-extrabold text-primary-dark transition-all hover:bg-primary/20 active:scale-95"
                 >
                   {item}
-                  <span className="text-primary/60" aria-hidden>✕</span>
+                  <span className="text-primary/60" aria-hidden>
+                    ✕
+                  </span>
                 </button>
               </li>
             ))}

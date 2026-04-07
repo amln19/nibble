@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { ChefHat, FileText, Leaf, Dumbbell, Star, X } from "lucide-react";
+import { RecipeInstructionsBlock } from "./RecipeInstructionsBlock";
 
 function formatIngredientLine(raw: string): string {
   if (!raw) return "";
@@ -31,7 +32,9 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
   useLayoutEffect(() => {
     const d = dialogRef.current;
     if (!d) return;
-    d.showModal();
+    // show() instead of showModal() — modal dialogs use the browser top layer,
+    // which paints above any z-index and hides the custom cursor halo.
+    d.show();
     return () => {
       if (d.open) d.close();
     };
@@ -50,26 +53,26 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
     );
   }
 
-  function handleDialogClick(e: React.MouseEvent<HTMLDialogElement>) {
-    const t = e.target as HTMLElement;
-    if (t.closest("[data-recipe-sheet]")) return;
-    requestClose();
-  }
-
   const sheet = (
     <dialog
       ref={dialogRef}
-      className="recipe-info-dialog fixed inset-0 z-9999 m-0 flex max-h-none min-h-full w-full max-w-none min-w-full flex-col items-stretch justify-end bg-transparent p-0 sm:items-center sm:justify-center sm:p-4"
-      onClick={handleDialogClick}
+      className="recipe-info-dialog fixed inset-0 z-9999 m-0 flex max-h-none min-h-full w-full max-w-none min-w-full flex-col items-stretch justify-end border-0 bg-transparent p-0 sm:items-center sm:justify-center sm:p-4"
       onCancel={(e) => {
         e.preventDefault();
         requestClose();
       }}
       aria-labelledby="recipe-info-title"
+      aria-modal="true"
     >
+      {/* Inline scrim — non-modal &lt;dialog&gt; has no ::backdrop */}
+      <div
+        className="absolute inset-0 z-0 bg-black/45 backdrop-blur-sm dark:bg-black/70"
+        aria-hidden
+        onClick={requestClose}
+      />
       <div
         data-recipe-sheet
-        className="flex max-h-[min(85vh,720px)] w-full max-w-lg flex-col rounded-t-3xl border-2 border-edge bg-card shadow-xl sm:max-h-[min(90vh,800px)] sm:rounded-3xl"
+        className="relative z-10 flex max-h-[min(85vh,720px)] w-full max-w-lg flex-col rounded-t-3xl border-2 border-edge bg-card shadow-xl sm:max-h-[min(90vh,800px)] sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -96,12 +99,54 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
           </button>
         </div>
 
+        {/* Primary actions — compact row so recipe body stays visible */}
+        {recipe.instructions ? (
+          <div className="flex shrink-0 flex-row gap-2 border-b-2 border-edge bg-card px-4 py-3">
+            <button
+              type="button"
+              title="Practice in Virtual Kitchen"
+              onClick={(e) => {
+                e.stopPropagation();
+                requestClose();
+                router.push(`/prep?id=${encodeURIComponent(recipe.id)}`);
+              }}
+              className="tap-3d group flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-primary/60 bg-primary/10 px-2 py-2 text-center shadow-[0_2px_0_var(--primary-dark)] transition-all hover:bg-primary hover:shadow-[0_3px_10px_rgba(255,75,140,0.35)] active:translate-y-px active:shadow-none"
+            >
+              <span className="text-sm leading-none" aria-hidden>
+                🧪
+              </span>
+              <span className="text-[11px] font-black leading-tight text-primary group-hover:text-white">
+                Practice
+              </span>
+              <span className="rounded-md bg-primary/15 px-1.5 py-px text-[8px] font-extrabold uppercase tracking-wide text-primary-dark group-hover:bg-white/20 group-hover:text-white">
+                Simulation
+              </span>
+            </button>
+            <button
+              type="button"
+              title="Cook with Gordon — live help while you cook"
+              onClick={(e) => {
+                e.stopPropagation();
+                requestClose();
+                router.push(`/cook?id=${encodeURIComponent(recipe.id)}`);
+              }}
+              className="tap-3d group flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-orange-300 bg-orange-300 px-2 py-2 text-center shadow-[0_2px_0_rgba(180,120,60,0.35)] transition-all hover:bg-orange-400 hover:border-orange-400 hover:shadow-[0_3px_12px_rgba(251,146,60,0.35)] active:translate-y-px active:shadow-none"
+            >
+              <ChefHat className="h-4 w-4 shrink-0 text-stone-900" aria-hidden />
+              <span className="text-[11px] font-black leading-tight text-stone-900">
+                Gordon
+              </span>
+              <span className="rounded-md bg-stone-900/15 px-1.5 py-px text-[8px] font-extrabold uppercase tracking-wide text-stone-900">
+                Live
+              </span>
+            </button>
+          </div>
+        ) : null}
+
         {/* Body */}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
           {meta.length > 0 ? (
-            <p className="text-sm font-bold text-muted">
-              {meta.join(" · ")}
-            </p>
+            <p className="text-sm font-bold text-muted">{meta.join(" · ")}</p>
           ) : null}
 
           <div className="mt-3 flex flex-wrap gap-2">
@@ -122,47 +167,6 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
             )}
           </div>
 
-          {/* Practice in Virtual Kitchen */}
-          {recipe.instructions ? (
-            <div className="mt-8">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  requestClose();
-                  router.push(`/prep?id=${encodeURIComponent(recipe.id)}`);
-                }}
-                className="tap-3d flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-accent/60 bg-accent/10 px-6 py-3.5 text-sm font-black text-accent shadow-[0_3px_0_rgba(124,92,252,0.3)] transition-all hover:bg-accent hover:text-white hover:shadow-[0_4px_12px_rgba(124,92,252,0.35)]"
-              >
-                🧪 Practice in Virtual Kitchen
-                <span className="rounded-lg bg-accent/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-                  AI Sim
-                </span>
-              </button>
-            </div>
-          ) : null}
-
-          {/* Cook with Gordon */}
-          {recipe.instructions ? (
-            <div className="mt-3 mb-8">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  requestClose();
-                  router.push(`/cook?id=${encodeURIComponent(recipe.id)}`);
-                }}
-                className="tap-3d flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-orange-300 bg-orange-300 px-6 py-4 text-sm font-black text-stone-900 shadow-[0_4px_0_rgba(180,120,60,0.3)] transition-all hover:bg-orange-400 hover:border-orange-400 hover:shadow-[0_6px_20px_rgba(251,146,60,0.35)] active:translate-y-[2px] active:shadow-none"
-              >
-                <ChefHat className="h-5 w-5" />
-                Cook with Gordon
-                <span className="rounded-lg bg-stone-900/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-                  Voice AI
-                </span>
-              </button>
-            </div>
-          ) : null}
-
           {/* Ingredients */}
           <div className="mt-6">
             <h3 className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-muted">
@@ -171,8 +175,14 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
             {recipe.ingredients.length > 0 ? (
               <ul className="mt-3 space-y-2">
                 {recipe.ingredients.map((ing, i) => (
-                  <li key={`${ing}-${i}`} className="flex items-start gap-2.5 text-sm text-foreground">
-                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary/40" aria-hidden />
+                  <li
+                    key={`${ing}-${i}`}
+                    className="flex items-start gap-2.5 text-sm text-foreground"
+                  >
+                    <span
+                      className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary/40"
+                      aria-hidden
+                    />
                     {formatIngredientLine(ing)}
                   </li>
                 ))}
@@ -190,47 +200,7 @@ export function RecipeInfoSheet({ recipe, onClose }: Props) {
               <h3 className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-muted">
                 <FileText className="h-4 w-4" /> Instructions
               </h3>
-              <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">
-                {recipe.instructions}
-              </div>
-            </div>
-          ) : null}
-
-          {/* Practice in Virtual Kitchen */}
-          {recipe.instructions ? (
-            <div className="mt-8">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  requestClose();
-                  router.push(`/prep?id=${encodeURIComponent(recipe.id)}`);
-                }}
-                className="tap-3d flex w-full items-center justify-center rounded-2xl border-2 border-primary/60 bg-primary/10 px-6 py-3.5 text-sm font-black text-primary shadow-[0_3px_0_var(--primary-dark)] transition-all hover:bg-primary hover:text-white hover:shadow-[0_4px_12px_rgba(255,75,140,0.35)]"
-              >
-                Practice in Virtual Kitchen
-              </button>
-            </div>
-          ) : null}
-
-          {/* Cook with Gordon */}
-          {recipe.instructions ? (
-            <div className="mt-3 mb-2">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  requestClose();
-                  router.push(`/cook?id=${encodeURIComponent(recipe.id)}`);
-                }}
-                className="tap-3d flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-orange-300 bg-orange-300 px-6 py-4 text-sm font-black text-stone-900 shadow-[0_4px_0_rgba(180,120,60,0.3)] transition-all hover:bg-orange-400 hover:border-orange-400 hover:shadow-[0_6px_20px_rgba(251,146,60,0.35)] active:translate-y-[2px] active:shadow-none"
-              >
-                <ChefHat className="h-5 w-5" />
-                Cook with Gordon
-                <span className="rounded-lg bg-stone-900/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-                  Voice AI
-                </span>
-              </button>
+              <RecipeInstructionsBlock instructions={recipe.instructions} />
             </div>
           ) : null}
         </div>

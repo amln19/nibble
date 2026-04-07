@@ -6,19 +6,26 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient();
   if (!supabase) return NextResponse.json({ error: "No DB" }, { status: 500 });
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (q.length < 1) return NextResponse.json({ users: [] });
 
   // Search profiles by partial username match (case insensitive), exclude self
-  const { data: profiles } = await supabase
+  const { data: profiles, error: profilesErr } = await supabase
     .from("profiles")
     .select("id, username")
     .ilike("username", `%${q}%`)
     .neq("id", user.id)
     .limit(8);
+
+  if (profilesErr) {
+    return NextResponse.json({ error: profilesErr.message }, { status: 500 });
+  }
 
   return NextResponse.json({ users: profiles ?? [] });
 }

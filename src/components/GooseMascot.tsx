@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 type GooseState = "happy" | "excited";
@@ -15,35 +15,104 @@ const MESSAGES = [
   "Time to cook!",
 ];
 
-/** Shared animation hook */
-function useGooseAnimation() {
+type UseGooseOptions = {
+  /** Random speech bubbles + idle cycle. Off for login inline goose. */
+  autoBubble?: boolean;
+};
+
+/**
+ * Coordinates goose state, bounce, and speech bubbles.
+ * All delayed work goes through `after()` so rapid clicks / auto-cycle never
+ * stack conflicting timeouts (previously message vanished on fast clicks).
+ */
+function useGooseAnimation(options: UseGooseOptions = {}) {
+  const autoBubble = options.autoBubble !== false;
   const [state, setState] = useState<GooseState>("happy");
   const [bounce, setBounce] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    const cycle = () => {
-      const delay = 4000 + Math.random() * 4000;
-      timerRef.current = setTimeout(() => {
-        setBounce(true);
-        setTimeout(() => setBounce(false), 650);
-        setTimeout(() => {
-          setState("excited");
-          setMessage(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
-          setTimeout(() => {
-            setState("happy");
-            setTimeout(() => setMessage(null), 400);
-            cycle();
-          }, 1800);
-        }, 150);
-      }, delay);
-    };
-    cycle();
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  /** Bumped on manual click and unmount — stale callbacks no-op */
+  const epochRef = useRef(0);
+
+  const clearScheduled = useCallback(() => {
+    for (const id of timeoutsRef.current) {
+      clearTimeout(id);
+    }
+    timeoutsRef.current = [];
   }, []);
 
-  return { state, bounce, message, setState, setBounce, setMessage };
+  const after = useCallback((fn: () => void, ms: number) => {
+    const id = setTimeout(() => {
+      timeoutsRef.current = timeoutsRef.current.filter((t) => t !== id);
+      fn();
+    }, ms);
+    timeoutsRef.current.push(id);
+  }, []);
+
+  const scheduleAutoCycleRef = useRef<() => void>(() => {});
+
+  const scheduleAutoCycle = useCallback(() => {
+    if (!autoBubble) return;
+    const epoch = epochRef.current;
+    const delay = 4000 + Math.random() * 4000;
+    after(() => {
+      if (epochRef.current !== epoch) return;
+      setBounce(true);
+      after(() => setBounce(false), 650);
+      after(() => {
+        if (epochRef.current !== epoch) return;
+        setState("excited");
+        setMessage(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
+        after(() => {
+          if (epochRef.current !== epoch) return;
+          setState("happy");
+          after(() => {
+            if (epochRef.current !== epoch) return;
+            setMessage(null);
+            scheduleAutoCycleRef.current();
+          }, 400);
+        }, 1800);
+      }, 150);
+    }, delay);
+  }, [after, autoBubble]);
+
+  useLayoutEffect(() => {
+    scheduleAutoCycleRef.current = scheduleAutoCycle;
+  }, [scheduleAutoCycle]);
+
+  useEffect(() => {
+    if (!autoBubble) return;
+    scheduleAutoCycleRef.current();
+    return () => {
+      clearScheduled();
+      epochRef.current += 1;
+    };
+  }, [autoBubble, clearScheduled]);
+
+  const onGooseClick = useCallback(() => {
+    epochRef.current += 1;
+    const epoch = epochRef.current;
+    clearScheduled();
+    setBounce(false);
+    setBounce(true);
+    setState("excited");
+    setMessage(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
+
+    after(() => setBounce(false), 600);
+
+    after(() => {
+      if (epochRef.current !== epoch) return;
+      setState("happy");
+      after(() => {
+        if (epochRef.current !== epoch) return;
+        setMessage(null);
+        if (autoBubble) scheduleAutoCycleRef.current();
+      }, 400);
+    }, 2000);
+  }, [after, clearScheduled, autoBubble]);
+
+  return { state, bounce, message, onGooseClick };
 }
 
 /** Goose image pair — renders happy/excited with crossfade */
@@ -63,7 +132,7 @@ function GooseImages({ state, size }: { state: GooseState; size: string }) {
 /** Fixed bottom-right corner mascot — shown on all pages except /login */
 export function GooseMascot() {
   const pathname = usePathname();
-  const { state, bounce, message, setState, setBounce, setMessage } = useGooseAnimation();
+  const { state, bounce, message, onGooseClick } = useGooseAnimation();
   const [entered, setEntered] = useState(false);
   const [hidden, setHidden] = useState(false);
 
@@ -101,19 +170,19 @@ export function GooseMascot() {
 
   return (
     <div
-      className={`group fixed bottom-6 ${positionClasses} z-[10000] flex flex-col gap-3 transition-all duration-700 ease-out ${
+      className={`group fixed bottom-6 ${positionClasses} z-10000 flex flex-col gap-3 transition-all duration-700 ease-out ${
         entered ? "translate-y-0 opacity-100" : "translate-y-32 opacity-0"
       }`}
     >
       {/* Speech bubble */}
       <div
-        className={`relative max-w-[180px] rounded-2xl ${bubbleClasses} border-2 border-edge bg-card px-4 py-2.5 text-[14px] font-extrabold text-foreground shadow-xl transition-all duration-300 dark:border-stone-300 dark:bg-white dark:text-neutral-950 ${
+        className={`relative max-w-[180px] rounded-2xl ${bubbleClasses} border-2 border-edge bg-white px-4 py-2.5 text-[14px] font-extrabold text-neutral-950 shadow-xl transition-all duration-300 dark:border-neutral-600 dark:bg-neutral-950 dark:text-white ${
           message ? "scale-100 opacity-100" : "pointer-events-none scale-75 opacity-0"
         }`}
       >
         {message}
         <span
-          className={`absolute -bottom-2.5 ${bubbleTailClasses} h-0 w-0 border-t-[12px] border-solid border-l-transparent border-r-transparent border-t-card dark:border-t-white`}
+          className={`absolute -bottom-2.5 ${bubbleTailClasses} h-0 w-0 border-t-3 border-solid border-l-transparent border-r-transparent border-t-white dark:border-t-neutral-950`}
           aria-hidden
         />
       </div>
@@ -130,13 +199,7 @@ export function GooseMascot() {
 
       {/* Goose button */}
       <button type="button" aria-label="Goose mascot"
-        onClick={() => {
-          setBounce(true);
-          setTimeout(() => setBounce(false), 600);
-          setState("excited");
-          setMessage(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
-          setTimeout(() => { setState("happy"); setTimeout(() => setMessage(null), 400); }, 2000);
-        }}
+        onClick={onGooseClick}
         className={`relative cursor-pointer select-none ${
           bounce ? "animate-goose-bounce" : "animate-goose-idle"
         }`}

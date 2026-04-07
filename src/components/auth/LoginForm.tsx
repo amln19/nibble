@@ -8,6 +8,14 @@ import { useCallback, useEffect, useState } from "react";
 
 type Mode = "signin" | "signup";
 
+function safeDecodeParam(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -88,8 +96,8 @@ export function LoginForm() {
         </h1>
         <p className="mt-1 text-sm text-primary">
           {mode === "signin"
-            ? "Welcome back — use your Supabase account."
-            : "Sign up with email and password."}
+            ? "Welcome back — pick up your recipe box, simulations, and saves."
+            : "Join the flock — email and password keep your kitchen in sync."}
         </p>
 
         {(error || urlError) && (
@@ -97,7 +105,7 @@ export function LoginForm() {
             className="mt-4 rounded-xl border-2 border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-800 dark:border-red-900/80 dark:bg-red-950/45 dark:text-red-300"
             role="alert"
           >
-            {error ?? decodeURIComponent(urlError ?? "")}
+            {error ?? safeDecodeParam(urlError ?? "")}
           </p>
         )}
         {message && (

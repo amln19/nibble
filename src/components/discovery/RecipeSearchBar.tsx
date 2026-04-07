@@ -10,6 +10,13 @@ type SlimRecipe = {
   category: string;
 };
 
+type SearchApiMeal = {
+  idMeal: string;
+  strMeal: string;
+  strMealThumb?: string;
+  strCategory?: string;
+};
+
 type Props = {
   value: string;
   onChange: (value: string) => void;
@@ -43,27 +50,24 @@ export function RecipeSearchBar({
   );
 
   useEffect(() => {
-    if (value.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    if (value.trim().length < 2) return;
     let valid = true;
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
-          `/api/recipes/search?s=${encodeURIComponent(value.trim())}`
+          `/api/recipes/search?s=${encodeURIComponent(value.trim())}`,
         );
         if (!res.ok) return;
-        const data = await res.json();
+        const data = (await res.json()) as { meals?: SearchApiMeal[] | null };
         if (!valid) return;
-        const meals = (data.meals || []).slice(0, 5).map((m: any) => ({
+        const meals = (data.meals ?? []).slice(0, 5).map((m) => ({
           id: m.idMeal,
           title: m.strMeal,
           imageUrl: m.strMealThumb,
-          category: m.strCategory,
+          category: m.strCategory ?? "Unknown",
         }));
         setResults(meals);
-      } catch (err) {
+      } catch {
         // ignore
       }
     }, 300);
@@ -83,15 +87,30 @@ export function RecipeSearchBar({
       <div className="flex gap-2">
         <div className="relative min-w-0 flex-1">
           <div className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
-              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+            <svg
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <input
             id="recipe-search"
             type="search"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              onChange(next);
+              if (next.trim().length < 2) {
+                setResults([]);
+              }
+            }}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Search recipes"
@@ -119,7 +138,7 @@ export function RecipeSearchBar({
           {showDropdown && (
             <div className="absolute left-0 top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border-2 border-edge bg-card shadow-xl">
               <ul className="max-h-64 overflow-y-auto overscroll-contain">
-                {results.map((r, i) => (
+                {results.map((r) => (
                   <li key={r.id}>
                     <button
                       type="button"
@@ -168,7 +187,8 @@ export function RecipeSearchBar({
       </div>
       {activeQuery ? (
         <p className="mt-2 text-xs font-bold text-muted">
-          Showing results for &ldquo;{activeQuery}&rdquo; &mdash; pick a category to browse instead
+          Showing results for &ldquo;{activeQuery}&rdquo; &mdash; pick a
+          category to browse instead
         </p>
       ) : null}
     </form>

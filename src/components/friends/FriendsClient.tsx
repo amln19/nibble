@@ -60,7 +60,7 @@ function formatDate(iso: string) {
 
 export function FriendsClient() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => createClient() !== null);
   const [tab, setTab] = useState<Tab>("leaderboard");
 
   // Friend management
@@ -68,7 +68,9 @@ export function FriendsClient() {
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
-  const [searchResults, setSearchResults] = useState<{ id: string; username: string }[]>([]);
+  const [searchResults, setSearchResults] = useState<
+    { id: string; username: string }[]
+  >([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -85,14 +87,17 @@ export function FriendsClient() {
 
   useEffect(() => {
     const supabase = createClient();
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    if (!supabase) return;
+    let active = true;
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!active) return;
       setLoggedIn(!!user);
       setLoading(false);
     });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   // ── Load data ─────────────────────────────────────────────────────────────
@@ -108,16 +113,8 @@ export function FriendsClient() {
   const loadRequests = useCallback(async () => {
     const res = await fetch("/api/friends/requests");
     if (res.ok) {
-      const data = await res.json();
-      setRequests(
-        (data.requests ?? []).map((r: any) => ({
-          id: r.id,
-          from_user: r.from_user,
-          from_username: r.from_username,
-          status: r.status,
-          created_at: r.created_at,
-        }))
-      );
+      const data = (await res.json()) as { requests?: FriendRequest[] };
+      setRequests(data.requests ?? []);
     }
   }, []);
 
@@ -143,14 +140,20 @@ export function FriendsClient() {
 
   useEffect(() => {
     if (!loggedIn) return;
-    void loadFriends();
-    void loadRequests();
-    void loadLeaderboard();
+    const timer = window.setTimeout(() => {
+      void loadFriends();
+      void loadRequests();
+      void loadLeaderboard();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [loggedIn, loadFriends, loadRequests, loadLeaderboard]);
 
   useEffect(() => {
     if (!loggedIn || tab !== "posts") return;
-    void loadPosts();
+    const timer = window.setTimeout(() => {
+      void loadPosts();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [loggedIn, tab, loadPosts]);
 
   // ── Debounced user search ─────────────────────────────────────────────────
@@ -158,18 +161,19 @@ export function FriendsClient() {
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
     const q = searchQuery.trim();
-    if (q.length < 1) {
-      setSearchResults([]);
-      return;
-    }
+    if (q.length < 1) return;
     searchTimer.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/friends/search?q=${encodeURIComponent(q)}`);
+        const res = await fetch(
+          `/api/friends/search?q=${encodeURIComponent(q)}`,
+        );
         if (res.ok) {
           const data = await res.json();
           setSearchResults(data.users ?? []);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }, 250);
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -178,65 +182,109 @@ export function FriendsClient() {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  const sendRequest = useCallback(async (username: string) => {
-    if (!username.trim()) return;
-    setSearchStatus(null);
-    const res = await fetch("/api/friends", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: username.trim() }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      if (data.status === "accepted") {
-        setSearchStatus(`Now friends with ${data.friend?.username ?? username}!`);
-        void loadFriends();
-        void loadLeaderboard();
-      } else {
-        setSearchStatus("Friend request sent!");
+  const sendRequest = useCallback(
+    async (username: string) => {
+      if (!username.trim()) return;
+      setSearchStatus(null);
+      try {
+        const res = await fetch("/api/friends", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: username.trim() }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          status?: string;
+          error?: string;
+          friend?: { username?: string };
+        };
+
+        if (res.ok) {
+          if (data.status === "accepted") {
+            setSearchStatus(
+              `Now friends with ${data.friend?.username ?? username}!`,
+            );
+            void loadFriends();
+            void loadLeaderboard();
+          } else {
+            setSearchStatus("Friend request sent!");
+          }
+          setSearchQuery("");
+          setSearchResults([]);
+        } else {
+          setSearchStatus(data.error ?? "Something went wrong");
+        }
+      } catch {
+        setSearchStatus("Could not send request. Please try again.");
       }
-      setSearchQuery("");
-      setSearchResults([]);
-    } else {
-      setSearchStatus(data.error ?? "Something went wrong");
-    }
-  }, [loadFriends, loadLeaderboard]);
+    },
+    [loadFriends, loadLeaderboard],
+  );
 
   const handleAccept = useCallback(
     async (requestId: string) => {
-      await fetch("/api/friends/requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId, action: "accept" }),
-      });
-      setRequests((prev) => prev.filter((r) => r.id !== requestId));
-      void loadFriends();
-      void loadLeaderboard();
+      try {
+        const res = await fetch("/api/friends/requests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ requestId, action: "accept" }),
+        });
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setSearchStatus(data.error ?? "Failed to accept request.");
+          return;
+        }
+
+        setRequests((prev) => prev.filter((r) => r.id !== requestId));
+        void loadFriends();
+        void loadLeaderboard();
+      } catch {
+        setSearchStatus("Failed to accept request.");
+      }
     },
-    [loadFriends, loadLeaderboard]
+    [loadFriends, loadLeaderboard],
   );
 
   const handleReject = useCallback(async (requestId: string) => {
-    await fetch("/api/friends/requests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId, action: "reject" }),
-    });
-    setRequests((prev) => prev.filter((r) => r.id !== requestId));
+    try {
+      const res = await fetch("/api/friends/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId, action: "reject" }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setSearchStatus(data.error ?? "Failed to reject request.");
+        return;
+      }
+
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+    } catch {
+      setSearchStatus("Failed to reject request.");
+    }
   }, []);
 
   const handleRemove = useCallback(
     async (friendId: string) => {
       setRemovingId(null);
-      await fetch("/api/friends/remove", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ friendId }),
-      });
-      setFriends((prev) => prev.filter((f) => f.id !== friendId));
-      void loadLeaderboard();
+      try {
+        const res = await fetch("/api/friends/remove", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ friendId }),
+        });
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setSearchStatus(data.error ?? "Failed to remove friend.");
+          return;
+        }
+
+        setFriends((prev) => prev.filter((f) => f.id !== friendId));
+        void loadLeaderboard();
+      } catch {
+        setSearchStatus("Failed to remove friend.");
+      }
     },
-    [loadLeaderboard]
+    [loadLeaderboard],
   );
 
   // ── Loading state ─────────────────────────────────────────────────────────
@@ -327,7 +375,9 @@ export function FriendsClient() {
           {leaderboardLoading ? (
             <div className="flex flex-col items-center gap-4 py-16">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-surface border-t-primary" />
-              <p className="text-sm font-extrabold text-muted">Loading leaderboard…</p>
+              <p className="text-sm font-extrabold text-muted">
+                Loading leaderboard…
+              </p>
             </div>
           ) : (
             <Leaderboard entries={leaderboard} />
@@ -352,11 +402,17 @@ export function FriendsClient() {
                   <input
                     value={searchQuery}
                     onChange={(e) => {
-                      setSearchQuery(e.target.value);
+                      const next = e.target.value;
+                      setSearchQuery(next);
                       setSearchStatus(null);
+                      if (next.trim().length < 1) {
+                        setSearchResults([]);
+                      }
                     }}
                     onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                    onBlur={() =>
+                      setTimeout(() => setSearchFocused(false), 200)
+                    }
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -530,7 +586,9 @@ export function FriendsClient() {
           {postsLoading ? (
             <div className="flex flex-col items-center gap-4 py-16">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-surface border-t-primary" />
-              <p className="text-sm font-extrabold text-muted">Loading posts…</p>
+              <p className="text-sm font-extrabold text-muted">
+                Loading posts…
+              </p>
             </div>
           ) : posts.length === 0 ? (
             <div className="rounded-3xl border-2 border-dashed border-edge bg-surface py-12 text-center shadow-[0_3px_0_var(--edge)]">

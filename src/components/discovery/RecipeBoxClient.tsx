@@ -133,7 +133,7 @@ export function RecipeBoxClient() {
 
       {!recipeBoxReady ? (
         <p className="mb-6 text-center text-sm font-bold text-muted">
-          Loading your recipe box\u2026
+          Loading your recipe box…
         </p>
       ) : null}
 
@@ -273,10 +273,10 @@ export function RecipeBoxClient() {
                   </span>
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col p-2.5">
-                  <p className="line-clamp-2 break-words text-sm font-extrabold leading-snug text-foreground">
+                  <p className="line-clamp-2 wrap-break-word text-sm font-extrabold leading-snug text-foreground">
                     {r.title}
                   </p>
-                  <p className="mt-1 line-clamp-2 break-words text-[11px] leading-snug text-muted">
+                  <p className="mt-1 line-clamp-2 wrap-break-word text-[11px] leading-snug text-muted">
                     {r.category}{r.area ? ` · ${r.area}` : ""}
                   </p>
                   <button

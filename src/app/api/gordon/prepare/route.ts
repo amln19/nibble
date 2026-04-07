@@ -1,14 +1,15 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { COOKING_ACTIONS, type GordonGuide, type CookingAction } from "@/lib/gordon/types";
+import { type GenerateContentResponse, VertexAI } from "@google-cloud/vertexai";
+import {
+  COOKING_ACTIONS,
+  type GordonGuide,
+  type CookingAction,
+} from "@/lib/gordon/types";
+import { getGordonModelOrder } from "@/lib/gordon/model-selection";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-const MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-1.5-flash",
-];
+export const runtime = "nodejs";
 
 const SYSTEM_PROMPT = `You are Gordon the Goose — a lovable, slightly smug goose who happens to be a world-class chef. You guide home cooks through recipes with warmth, wit, and genuine culinary expertise.
 
@@ -45,6 +46,16 @@ Respond ONLY with valid JSON matching this exact schema:
   "completion": "string"
 }`;
 
+function extractText(response: GenerateContentResponse): string {
+  const parts = response.candidates?.[0]?.content?.parts ?? [];
+  return parts
+    .map((part) =>
+      "text" in part && typeof part.text === "string" ? part.text : "",
+    )
+    .join("")
+    .trim();
+}
+
 function detectAction(text: string): CookingAction {
   const t = text.toLowerCase();
   if (/\b(chop|dice|mince|cut|slice|julienne|trim)\b/.test(t)) return "chop";
@@ -52,7 +63,8 @@ function detectAction(text: string): CookingAction {
   if (/\b(simmer|low heat|gentle heat)\b/.test(t)) return "simmer";
   if (/\b(bake|oven|roast|broil|grill)\b/.test(t)) return "bake";
   if (/\b(pour|drizzle|deglaze)\b/.test(t)) return "pour";
-  if (/\b(season|salt|pepper|spice|sprinkle|garnish)\b/.test(t)) return "season";
+  if (/\b(season|salt|pepper|spice|sprinkle|garnish)\b/.test(t))
+    return "season";
   if (/\b(whisk|beat|whip)\b/.test(t)) return "whisk";
   if (/\b(rest|cool|set aside|let stand|wait|chill)\b/.test(t)) return "rest";
   if (/\b(mix|blend|combine|incorporate|fold)\b/.test(t)) return "mix";
@@ -61,10 +73,7 @@ function detectAction(text: string): CookingAction {
   return "plate";
 }
 
-function buildFallbackGuide(
-  title: string,
-  instructions: string,
-): GordonGuide {
+function buildFallbackGuide(title: string, instructions: string): GordonGuide {
   const rawSteps = instructions
     .split(/(?:\r?\n)+/)
     .map((s) => s.replace(/^(?:step\s*)?\d+[.):\s]*/i, "").trim())
@@ -95,24 +104,25 @@ function buildFallbackGuide(
   };
 }
 
-async function tryGemini(
-  apiKey: string,
+async function tryVertexGemini(
+  vertexAI: VertexAI,
+  modelNames: string[],
   prompt: string,
 ): Promise<{ guide: GordonGuide; model: string }> {
-  const genAI = new GoogleGenerativeAI(apiKey);
-
-  for (const modelName of MODELS) {
+  for (const modelName of modelNames) {
     try {
-      const model = genAI.getGenerativeModel({
+      const model = vertexAI.preview.getGenerativeModel({
         model: modelName,
+        systemInstruction: SYSTEM_PROMPT,
         generationConfig: {
           responseMimeType: "application/json",
-          temperature: 0.9,
+          temperature: 0.75,
+          maxOutputTokens: 2400,
         },
       });
 
       const result = await model.generateContent(prompt);
-      const text = result.response.text();
+      const text = extractText(result.response);
       const guide = JSON.parse(text) as GordonGuide;
 
       if (!guide.intro || !Array.isArray(guide.steps) || !guide.completion) {
@@ -122,7 +132,9 @@ async function tryGemini(
       const validActions = new Set<string>(COOKING_ACTIONS);
       guide.steps = guide.steps.map((s) => ({
         ...s,
-        action: validActions.has(s.action) ? s.action : detectAction(s.instruction),
+        action: validActions.has(s.action)
+          ? s.action
+          : detectAction(s.instruction),
         accentColor: s.accentColor || null,
       }));
 
@@ -130,15 +142,43 @@ async function tryGemini(
       return { guide, model: modelName };
     } catch (e) {
       const msg = String((e as { message?: string }).message ?? e);
-      console.warn(`Gordon: ${modelName} failed, trying next...`, msg.slice(0, 200));
+      console.warn(
+        `Gordon: ${modelName} failed, trying next...`,
+        msg.slice(0, 200),
+      );
       continue;
     }
   }
 
-  throw new Error("All Gemini models failed or were unavailable");
+  throw new Error("All Vertex Gemini models failed or were unavailable");
 }
 
 export async function POST(req: Request) {
+  const supabase = await createClient();
+  if (!supabase) return NextResponse.json({ error: "No DB" }, { status: 500 });
+
+  const {
+    data: { user },
+    error: userErr,
+  } = await supabase.auth.getUser();
+  if (userErr || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rate = checkRateLimit(`gordon:prepare:${user.id}`, {
+    limit: 8,
+    windowMs: 60_000,
+  });
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Too many guide requests. Please slow down." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSeconds) },
+      },
+    );
+  }
+
   let title = "";
   let instructions = "";
   let ingredients: string[] = [];
@@ -160,20 +200,34 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+    if (title.length > 200 || instructions.length > 12_000) {
+      return NextResponse.json(
+        { error: "Recipe payload is too large" },
+        { status: 400 },
+      );
+    }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    const project = process.env.GOOGLE_CLOUD_PROJECT;
+    const location = process.env.GOOGLE_CLOUD_LOCATION ?? "us-central1";
+    if (!project) {
       return NextResponse.json({
         guide: buildFallbackGuide(title, instructions),
         source: "fallback",
       });
     }
 
-    const prompt = `${SYSTEM_PROMPT}\n\nRecipe: ${title}\n\nIngredients:\n${ingredients.map((ing) => `- ${ing}`).join("\n")}\n\nInstructions:\n${instructions}\n\nCreate Gordon the Goose's cooking guide for this recipe.`;
+    const prompt = `Recipe: ${title}\n\nIngredients:\n${ingredients.map((ing) => `- ${ing}`).join("\n")}\n\nInstructions:\n${instructions}\n\nCreate Gordon the Goose's cooking guide for this recipe.`;
 
-    const { guide, model } = await tryGemini(apiKey, prompt);
+    const vertexAI = new VertexAI({ project, location });
+    const modelNames = getGordonModelOrder("prepare");
 
-    return NextResponse.json({ guide, source: "gemini", model });
+    const { guide, model } = await tryVertexGemini(
+      vertexAI,
+      modelNames,
+      prompt,
+    );
+
+    return NextResponse.json({ guide, source: "vertex", model });
   } catch (e) {
     console.error("Gordon prepare error:", e);
 

@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import type { TemperatureStep, StepResult } from "@/lib/gordon/simulation-types";
+import { useRef, useState } from "react";
+import type {
+  TemperatureStep,
+  StepResult,
+} from "@/lib/gordon/simulation-types";
 
 type Props = {
   step: TemperatureStep;
@@ -38,12 +41,12 @@ export function OvenGame({ step, onComplete }: Props) {
   const tolerancePct = (tolerance / range) * 100;
   const inZone = Math.abs(temp - target) <= tolerance;
 
-  const updateTemp = useCallback((clientX: number) => {
+  function updateTemp(clientX: number) {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
     const p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     setTemp(Math.round(MIN_TEMP + p * range));
-  }, [range]);
+  }
 
   function onPointerDown(e: React.PointerEvent) {
     if (locked) return;
@@ -59,7 +62,11 @@ export function OvenGame({ step, onComplete }: Props) {
 
   function onPointerUp(e: React.PointerEvent) {
     setDragging(false);
-    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* */ }
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      /* */
+    }
   }
 
   function handleSet() {
@@ -88,13 +95,25 @@ export function OvenGame({ step, onComplete }: Props) {
     <div className="flex flex-col items-center gap-5">
       {/* Oven display */}
       <div className="flex flex-col items-center gap-2 rounded-3xl border-2 border-edge bg-surface px-8 py-5 shadow-[0_4px_0_var(--edge)]">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-muted">Oven Temperature</span>
-        <span className={`font-mono text-4xl font-black tabular-nums ${
-          locked ? (inZone ? "text-emerald-600" : "text-red-500") : "text-foreground"
-        }`}>
-          {temp}{step.unit}
+        <span className="text-xs font-extrabold uppercase tracking-widest text-muted">
+          Oven Temperature
         </span>
-        <span className="text-xs font-bold text-primary-dark">Target: {target}{step.unit}</span>
+        <span
+          className={`font-mono text-4xl font-black tabular-nums ${
+            locked
+              ? inZone
+                ? "text-emerald-600"
+                : "text-red-500"
+              : "text-foreground"
+          }`}
+        >
+          {temp}
+          {step.unit}
+        </span>
+        <span className="text-xs font-bold text-primary-dark">
+          Target: {target}
+          {step.unit}
+        </span>
       </div>
 
       {/* Temperature slider */}
@@ -109,31 +128,49 @@ export function OvenGame({ step, onComplete }: Props) {
         >
           {/* Track */}
           <div className="absolute top-1/2 h-3 w-full -translate-y-1/2 overflow-hidden rounded-full border-2 border-edge bg-card">
-            <div className="absolute inset-0 opacity-25" style={{
-              background: "linear-gradient(to right, #93c5fd, #fbbf24 40%, #fbbf24 60%, #ef4444)",
-            }} />
+            <div
+              className="absolute inset-0 opacity-25"
+              style={{
+                background:
+                  "linear-gradient(to right, #93c5fd, #fbbf24 40%, #fbbf24 60%, #ef4444)",
+              }}
+            />
           </div>
 
           {/* Target zone */}
           <div
             className="absolute top-1/2 h-7 -translate-y-1/2 rounded-lg border-2 border-dashed border-emerald-500"
-            style={{ left: `${targetPct - tolerancePct}%`, width: `${tolerancePct * 2}%`, backgroundColor: "rgba(16,185,129,0.1)" }}
+            style={{
+              left: `${targetPct - tolerancePct}%`,
+              width: `${tolerancePct * 2}%`,
+              backgroundColor: "rgba(16,185,129,0.1)",
+            }}
           />
 
           {/* Thumb */}
           <div
             className={`absolute top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 shadow-lg transition-colors ${
               locked
-                ? inZone ? "border-emerald-500 bg-emerald-400" : "border-red-400 bg-red-300"
-                : inZone ? "border-emerald-500 bg-emerald-300" : "border-edge bg-card"
+                ? inZone
+                  ? "border-emerald-500 bg-emerald-400"
+                  : "border-red-400 bg-red-300"
+                : inZone
+                  ? "border-emerald-500 bg-emerald-300"
+                  : "border-edge bg-card"
             }`}
             style={{ left: `${pct}%` }}
           />
         </div>
 
         <div className="mt-1 flex justify-between text-[10px] font-extrabold text-muted">
-          <span>{MIN_TEMP}{step.unit}</span>
-          <span>{MAX_TEMP}{step.unit}</span>
+          <span>
+            {MIN_TEMP}
+            {step.unit}
+          </span>
+          <span>
+            {MAX_TEMP}
+            {step.unit}
+          </span>
         </div>
       </div>
 

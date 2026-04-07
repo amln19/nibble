@@ -7,6 +7,7 @@ create table if not exists public.creations (
   details text,
   image_url text not null,
   author_label text,
+  is_public boolean not null default true,
   created_at timestamptz not null default now()
 );
 
@@ -14,18 +15,21 @@ create index if not exists creations_created_at_idx on public.creations (created
 
 alter table public.creations enable row level security;
 
--- Public feed: anyone (including anon) can read
+-- Public feed is readable by anyone; private posts are owner-only.
+drop policy if exists creations_select_public on public.creations;
 create policy "creations_select_public"
   on public.creations
   for select
-  using (true);
+  using (is_public = true or auth.uid() = user_id);
 
+drop policy if exists creations_insert_own on public.creations;
 create policy "creations_insert_own"
   on public.creations
   for insert
   to authenticated
   with check (auth.uid() = user_id);
 
+drop policy if exists creations_delete_own on public.creations;
 create policy "creations_delete_own"
   on public.creations
   for delete
@@ -38,12 +42,14 @@ values ('creation-photos', 'creation-photos', true)
 on conflict (id) do update set public = excluded.public;
 
 -- Anyone can view images
+drop policy if exists creation_photos_select_public on storage.objects;
 create policy "creation_photos_select_public"
   on storage.objects
   for select
   using (bucket_id = 'creation-photos');
 
 -- Upload only into folder named with your user id: {uuid}/filename
+drop policy if exists creation_photos_insert_own on storage.objects;
 create policy "creation_photos_insert_own"
   on storage.objects
   for insert
@@ -53,6 +59,7 @@ create policy "creation_photos_insert_own"
     and split_part(name, '/', 1) = auth.uid()::text
   );
 
+drop policy if exists creation_photos_delete_own on storage.objects;
 create policy "creation_photos_delete_own"
   on storage.objects
   for delete

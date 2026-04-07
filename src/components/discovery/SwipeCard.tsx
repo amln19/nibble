@@ -185,7 +185,7 @@ export const SwipeCard = forwardRef<SwipeCardHandle, Props>(
               transform: `scale(${0.9 + saveProgress * 0.15})`,
             }}
           >
-            {saveProgress >= 0.85 ? "✓ Saved!" : "Save ❤️"}
+            ✓ Save!
           </div>
 
           {/* Info button */}

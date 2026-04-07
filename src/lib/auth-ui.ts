@@ -1,0 +1,3 @@
+/** Shared outlined primary control — Sign in / Sign out in nav & account. */
+export const outlinedAuthButtonClass =
+  "rounded-xl border-2 border-primary bg-transparent px-4 py-1.5 text-sm font-bold text-primary-dark shadow-none transition duration-200 ease-out hover:scale-105 hover:border-primary hover:font-extrabold hover:text-primary hover:shadow-[0_0_22px_color-mix(in_srgb,var(--primary)_38%,transparent)] active:scale-[0.98] dark:text-primary dark:hover:bg-primary/12 dark:hover:text-primary dark:hover:shadow-[0_0_26px_color-mix(in_srgb,var(--primary)_45%,transparent)] motion-reduce:transition-none motion-reduce:hover:scale-100";

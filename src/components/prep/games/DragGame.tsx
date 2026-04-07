@@ -11,36 +11,50 @@ type Props = {
 export function DragGame({ step, onComplete }: Props) {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const [overTarget, setOverTarget] = useState(false);
   const [done, setDone] = useState(false);
   const origin = useRef({ x: 0, y: 0 });
-  const latest = useRef({ x: 0, y: 0 });
   const targetRef = useRef<HTMLDivElement>(null);
   const completedRef = useRef(false);
 
   function isOverTarget(clientX: number, clientY: number) {
     if (!targetRef.current) return false;
     const r = targetRef.current.getBoundingClientRect();
-    return clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
+    return (
+      clientX >= r.left &&
+      clientX <= r.right &&
+      clientY >= r.top &&
+      clientY <= r.bottom
+    );
   }
 
   function onPointerDown(e: React.PointerEvent) {
     if (done) return;
     setDragging(true);
+    setOverTarget(false);
     origin.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }
 
   function onPointerMove(e: React.PointerEvent) {
     if (!dragging) return;
-    const next = { x: e.clientX - origin.current.x, y: e.clientY - origin.current.y };
-    latest.current = next;
+    const next = {
+      x: e.clientX - origin.current.x,
+      y: e.clientY - origin.current.y,
+    };
     setOffset(next);
+    setOverTarget(isOverTarget(e.clientX, e.clientY));
   }
 
   function onPointerUp(e: React.PointerEvent) {
     if (!dragging || completedRef.current) return;
     setDragging(false);
-    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* */ }
+    setOverTarget(false);
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      /* */
+    }
 
     if (isOverTarget(e.clientX, e.clientY)) {
       completedRef.current = true;
@@ -52,15 +66,6 @@ export function DragGame({ step, onComplete }: Props) {
       setOffset({ x: 0, y: 0 });
     }
   }
-
-  const overTarget = dragging && targetRef.current && (() => {
-    const r = targetRef.current!.getBoundingClientRect();
-    const itemX = r.left + r.width / 2;
-    const itemY = r.top + r.height / 2;
-    const dx = Math.abs(latest.current.x);
-    const dy = Math.abs(latest.current.y);
-    return dx < r.width && dy < r.height;
-  })();
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -78,10 +83,14 @@ export function DragGame({ step, onComplete }: Props) {
         {done ? (
           <div className="flex flex-col items-center gap-1 prep-success-pop">
             <span className="text-4xl">{step.itemEmoji}</span>
-            <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">Placed! ✓</span>
+            <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
+              Placed! ✓
+            </span>
           </div>
         ) : (
-          <span className="text-sm font-extrabold text-muted">{step.targetLabel}</span>
+          <span className="text-sm font-extrabold text-muted">
+            {step.targetLabel}
+          </span>
         )}
       </div>
 
@@ -94,11 +103,15 @@ export function DragGame({ step, onComplete }: Props) {
       {!done && (
         <div
           className={`flex h-24 w-24 cursor-grab touch-none select-none items-center justify-center rounded-3xl border-2 border-edge bg-card shadow-[0_4px_0_var(--edge)] transition-shadow sm:h-28 sm:w-28 ${
-            dragging ? "cursor-grabbing shadow-[0_8px_16px_rgba(0,0,0,0.15)]" : ""
+            dragging
+              ? "cursor-grabbing shadow-[0_8px_16px_rgba(0,0,0,0.15)]"
+              : ""
           }`}
           style={{
             transform: `translate(${offset.x}px, ${offset.y}px)`,
-            transition: dragging ? "none" : "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            transition: dragging
+              ? "none"
+              : "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
             touchAction: "none",
             zIndex: dragging ? 50 : 1,
           }}

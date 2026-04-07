@@ -8,6 +8,22 @@ import { useState } from "react";
 
 const S = { strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 
+/* ─── ALL (every category) ─────────────────────────────────────────────── */
+function AllIcon() {
+  return (
+    <svg viewBox="0 0 72 72" fill="none">
+      <circle cx="36" cy="36" r="22" fill="var(--primary-light)" stroke="var(--primary)" strokeWidth="2.5" {...S} />
+      <ellipse cx="36" cy="36" rx="22" ry="9" stroke="var(--primary-dark)" strokeWidth="1.5" fill="none" opacity="0.5" />
+      <path d="M14 36h44" stroke="var(--primary-dark)" strokeWidth="1.5" opacity="0.45" />
+      <ellipse cx="36" cy="36" rx="9" ry="22" stroke="var(--primary-dark)" strokeWidth="1.5" fill="none" opacity="0.5" />
+      <circle cx="28" cy="30" r="5" fill="#ffb74d" stroke="#e65100" strokeWidth="1.5" />
+      <circle cx="46" cy="28" r="4.5" fill="#81c784" stroke="#2e7d32" strokeWidth="1.5" />
+      <circle cx="42" cy="46" r="5" fill="#f48fb1" stroke="#c2185b" strokeWidth="1.5" />
+      <circle cx="24" cy="44" r="3.5" fill="#90caf9" stroke="#1565c0" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 /* ─── BEEF ─────────────────────────────────────────────────────────────── */
 function BeefIcon() {
   return (
@@ -347,6 +363,7 @@ function VegetarianIcon() {
 
 /* ─── REGISTRY ──────────────────────────────────────────────────────────── */
 const ICONS: Record<string, () => ReactElement> = {
+  All:           AllIcon,
   Beef:          BeefIcon,
   Breakfast:     BreakfastIcon,
   Chicken:       ChickenIcon,

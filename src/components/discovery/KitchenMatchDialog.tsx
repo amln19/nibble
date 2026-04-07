@@ -43,7 +43,8 @@ export function KitchenMatchDialog({
     if (!open) return;
     const d = dialogRef.current;
     if (!d) return;
-    d.showModal();
+    // show() keeps dialog in normal stacking so custom cursor (high z-index) stays visible
+    d.show();
     return () => {
       if (d.open) d.close();
     };
@@ -53,19 +54,12 @@ export function KitchenMatchDialog({
     onCloseRef.current();
   }
 
-  function handleDialogClick(e: React.MouseEvent<HTMLDialogElement>) {
-    const t = e.target as HTMLElement;
-    if (t.closest("[data-kitchen-sheet]")) return;
-    requestClose();
-  }
-
   if (!open) return null;
 
   const sheet = (
     <dialog
       ref={dialogRef}
-      className="kitchen-match-dialog fixed inset-0 z-9998 m-0 flex max-h-none min-h-full w-full max-w-none min-w-full flex-col items-stretch justify-end bg-transparent p-0 sm:items-center sm:justify-center sm:p-4"
-      onClick={handleDialogClick}
+      className="kitchen-match-dialog fixed inset-0 z-9998 m-0 flex max-h-none min-h-full w-full max-w-none min-w-full flex-col items-stretch justify-end border-0 bg-transparent p-0 sm:items-center sm:justify-center sm:p-4"
       onCancel={(e) => {
         e.preventDefault();
         requestClose();
@@ -74,8 +68,13 @@ export function KitchenMatchDialog({
       aria-modal="true"
     >
       <div
+        className="absolute inset-0 z-0 bg-black/45 backdrop-blur-sm dark:bg-black/70"
+        aria-hidden
+        onClick={requestClose}
+      />
+      <div
         data-kitchen-sheet
-        className="flex max-h-[min(88vh,760px)] w-full max-w-lg flex-col rounded-t-3xl border-2 border-edge bg-card shadow-xl sm:max-h-[min(92vh,820px)] sm:rounded-3xl"
+        className="relative z-10 flex max-h-[min(88vh,760px)] w-full max-w-lg flex-col rounded-t-3xl border-2 border-edge bg-card shadow-xl sm:max-h-[min(92vh,820px)] sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

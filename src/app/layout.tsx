@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Nunito, Geist_Mono } from "next/font/google";
 import { Nav } from "@/components/Nav";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#f2f1ed",
 };
 
 const ANTI_FLASH_SCRIPT = `
@@ -57,10 +58,12 @@ export default function RootLayout({
       className={`${nunito.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: ANTI_FLASH_SCRIPT }} />
-      </head>
       <body className="flex min-h-dvh flex-col bg-background text-foreground transition-colors selection:bg-primary/20 selection:text-foreground">
+        <Script
+          id="nibble-theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: ANTI_FLASH_SCRIPT }}
+        />
         <ThemeProvider>
           <Nav />
           <div className="flex min-h-0 flex-1 flex-col">{children}</div>

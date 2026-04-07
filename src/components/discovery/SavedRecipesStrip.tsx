@@ -14,27 +14,15 @@ export function SavedRecipesStrip({ recipes, onRemove }: Props) {
 
   return (
     <section className="mt-12 mb-6 lg:mt-16">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="min-w-0 space-y-1.5">
-          <h2 className="text-lg font-extrabold text-foreground">
-            In your recipe box
-          </h2>
-          <p className="max-w-md text-xs leading-relaxed text-muted">
-            Saved on this device. Manage anytime in{" "}
-            <Link
-              href="/box"
-              className="font-semibold text-primary underline decoration-primary/30 underline-offset-2 transition hover:decoration-primary"
-            >
-              Recipe box
-            </Link>
-            .
-          </p>
-        </div>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <h2 className="min-w-0 text-lg font-extrabold text-foreground">
+          In your recipe box
+        </h2>
         <Link
           href="/box"
-          className="shrink-0 rounded-full border-2 border-edge bg-card px-3 py-1.5 text-xs font-extrabold text-muted shadow-sm transition hover:border-primary hover:text-foreground active:scale-95"
+          className="tap-3d inline-flex shrink-0 items-center justify-center rounded-2xl border-2 border-primary bg-primary-light px-4 py-2.5 text-xs font-extrabold text-primary-dark shadow-[0_3px_0_var(--primary)] transition hover:brightness-[1.03] active:translate-y-0.5 active:shadow-none"
         >
-          View all
+          Go to Recipe Box
         </Link>
       </div>
       <div className="flex gap-3.5 overflow-x-auto pb-2">
@@ -60,8 +48,8 @@ export function SavedRecipesStrip({ recipes, onRemove }: Props) {
                     </div>
                   )}
                 </div>
-                <div className="flex min-h-[2.75rem] min-w-0 flex-1 items-start px-2 py-2">
-                  <p className="line-clamp-2 w-full break-words text-[11px] font-semibold leading-snug text-foreground">
+                <div className="flex min-h-11 min-w-0 flex-1 items-start px-2 py-2">
+                  <p className="line-clamp-2 w-full break-anywhere text-[11px] font-semibold leading-snug text-foreground">
                     {r.title}
                   </p>
                 </div>

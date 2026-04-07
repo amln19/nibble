@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { normalizeForTts } from "@/lib/gordon/tts-format";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { createClient } from "@/lib/supabase/server";
 
 let cachedVoiceId: string | null = null;
 
@@ -34,36 +37,61 @@ async function resolveVoiceId(apiKey: string): Promise<string | null> {
 async function synthesize(
   apiKey: string,
   voiceId: string,
-  text: string,
+  speechText: string,
 ): Promise<Response> {
-  return fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-    {
-      method: "POST",
-      headers: {
-        "xi-api-key": apiKey,
-        "Content-Type": "application/json",
-        Accept: "audio/mpeg",
-      },
-      body: JSON.stringify({
-        text: text.slice(0, 1000),
-        model_id: "eleven_turbo_v2_5",
-        voice_settings: {
-          stability: 0.4,
-          similarity_boost: 0.8,
-          style: 0.35,
-          use_speaker_boost: true,
-        },
-      }),
+  return fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: "POST",
+    headers: {
+      "xi-api-key": apiKey,
+      "Content-Type": "application/json",
+      Accept: "audio/mpeg",
     },
-  );
+    body: JSON.stringify({
+      text: speechText,
+      model_id: "eleven_turbo_v2_5",
+      voice_settings: {
+        stability: 0.4,
+        similarity_boost: 0.8,
+        style: 0.35,
+        use_speaker_boost: true,
+      },
+    }),
+  });
 }
 
 export async function POST(req: Request) {
+  const supabase = await createClient();
+  if (!supabase) return NextResponse.json({ error: "No DB" }, { status: 500 });
+
+  const {
+    data: { user },
+    error: userErr,
+  } = await supabase.auth.getUser();
+  if (userErr || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rate = checkRateLimit(`gordon:speak:${user.id}`, {
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Too many TTS requests. Please slow down." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSeconds) },
+      },
+    );
+  }
+
   try {
     const { text } = (await req.json()) as { text?: string };
     if (!text?.trim()) {
       return NextResponse.json({ error: "Missing text" }, { status: 400 });
+    }
+    if (text.trim().length > 1_000) {
+      return NextResponse.json({ error: "Text is too long" }, { status: 400 });
     }
 
     const apiKey = process.env.ELEVENLABS_API_KEY;
@@ -77,19 +105,25 @@ export async function POST(req: Request) {
     const voiceId = await resolveVoiceId(apiKey);
     if (!voiceId) {
       return NextResponse.json(
-        { error: "No voices available — add a voice in your ElevenLabs dashboard" },
+        {
+          error:
+            "No voices available — add a voice in your ElevenLabs dashboard",
+        },
         { status: 503 },
       );
     }
 
-    let res = await synthesize(apiKey, voiceId, text);
+    const speechText = normalizeForTts(text).slice(0, 1000);
+    let res = await synthesize(apiKey, voiceId, speechText);
 
     if (res.status === 402 || res.status === 403) {
-      console.warn(`ElevenLabs: voice ${voiceId} rejected (${res.status}), clearing cache and retrying...`);
+      console.warn(
+        `ElevenLabs: voice ${voiceId} rejected (${res.status}), clearing cache and retrying...`,
+      );
       cachedVoiceId = null;
       const fallbackId = await resolveVoiceId(apiKey);
       if (fallbackId && fallbackId !== voiceId) {
-        res = await synthesize(apiKey, fallbackId, text);
+        res = await synthesize(apiKey, fallbackId, speechText);
       }
     }
 
@@ -112,9 +146,6 @@ export async function POST(req: Request) {
     });
   } catch (e) {
     console.error("Gordon speak error:", e);
-    return NextResponse.json(
-      { error: "TTS request failed" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "TTS request failed" }, { status: 500 });
   }
 }

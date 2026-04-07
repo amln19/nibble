@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Recipe } from "@/lib/recipes";
-import { detectPreferences, recommend, type ScoredRecipe } from "@/lib/recommend";
+import {
+  detectPreferences,
+  recommend,
+  type ScoredRecipe,
+} from "@/lib/recommend";
 
 const LIKED_KEY = "recipe-cache-liked";
 const POOL_KEY = "recipe-cache-pool";
@@ -32,13 +36,17 @@ function hydrateFromStorage(): { liked: Recipe[]; pool: Map<string, Recipe> } {
 function persistLiked(liked: Recipe[]) {
   try {
     sessionStorage.setItem(LIKED_KEY, JSON.stringify(liked));
-  } catch { /* quota */ }
+  } catch {
+    /* quota */
+  }
 }
 
 function persistPool(pool: Map<string, Recipe>) {
   try {
     sessionStorage.setItem(POOL_KEY, JSON.stringify(Array.from(pool.values())));
-  } catch { /* quota */ }
+  } catch {
+    /* quota */
+  }
 }
 
 type CacheState = {
@@ -67,7 +75,9 @@ async function fetchIdsByArea(area: string): Promise<string[]> {
 }
 
 async function fetchIdsByCategory(category: string): Promise<string[]> {
-  const r = await fetch(`/api/recipes/filter?c=${encodeURIComponent(category)}`);
+  const r = await fetch(
+    `/api/recipes/filter?c=${encodeURIComponent(category)}`,
+  );
   if (!r.ok) return [];
   const data = (await r.json()) as { meals?: { idMeal: string }[] | null };
   return (data.meals ?? []).map((m) => m.idMeal);
@@ -100,7 +110,10 @@ export function useRecipeCache() {
       }
     }
     cacheRef.current.hydrated = true;
-    setRevision((v) => v + 1);
+    const timer = window.setTimeout(() => {
+      setRevision((v) => v + 1);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   /** Add recipes to the pool */
@@ -181,7 +194,12 @@ export function useRecipeCache() {
 
   /** Get recommendations with optional category boost and offset */
   const getRecommendations = useCallback(
-    (excludeIds: ReadonlySet<string>, limit = 10, activeCategory?: string | null, offset = 0): ScoredRecipe[] => {
+    (
+      excludeIds: ReadonlySet<string>,
+      limit = 10,
+      activeCategory?: string | null,
+      offset = 0,
+    ): ScoredRecipe[] => {
       const cache = cacheRef.current;
       void revision;
       return recommend(
@@ -198,7 +216,11 @@ export function useRecipeCache() {
 
   /** Get all-time recommendations without category boost */
   const getOverallRecommendations = useCallback(
-    (excludeIds: ReadonlySet<string>, limit = 10, offset = 0): ScoredRecipe[] => {
+    (
+      excludeIds: ReadonlySet<string>,
+      limit = 10,
+      offset = 0,
+    ): ScoredRecipe[] => {
       const cache = cacheRef.current;
       void revision;
       return recommend(

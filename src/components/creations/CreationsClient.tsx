@@ -2,7 +2,17 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { CreationRow, CommentRow } from "@/lib/creations";
-import { Camera, ImagePlus, X, Trash2, Globe, Lock, User, Heart, MessageCircle } from "lucide-react";
+import {
+  Camera,
+  ImagePlus,
+  X,
+  Trash2,
+  Globe,
+  Lock,
+  User,
+  Heart,
+  MessageCircle,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -75,7 +85,9 @@ function PostCard({
           {post.is_public === false ? (
             <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 backdrop-blur-sm">
               <Lock size={10} className="text-white/80" />
-              <span className="text-[10px] font-extrabold text-white/80">Private</span>
+              <span className="text-[10px] font-extrabold text-white/80">
+                Private
+              </span>
             </div>
           ) : null}
 
@@ -86,13 +98,17 @@ function PostCard({
                 {likesCount > 0 ? (
                   <div className="flex items-center gap-1">
                     <Heart size={12} className="fill-red-500 text-red-500" />
-                    <span className="text-[11px] font-extrabold text-white">{likesCount}</span>
+                    <span className="text-[11px] font-extrabold text-white">
+                      {likesCount}
+                    </span>
                   </div>
                 ) : null}
                 {commentsCount > 0 ? (
                   <div className="flex items-center gap-1">
                     <MessageCircle size={12} className="text-white" />
-                    <span className="text-[11px] font-extrabold text-white">{commentsCount}</span>
+                    <span className="text-[11px] font-extrabold text-white">
+                      {commentsCount}
+                    </span>
                   </div>
                 ) : null}
               </div>
@@ -112,7 +128,10 @@ function PostCard({
           className="absolute top-2 left-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 hover:bg-red-600/80"
           aria-label={hasLiked ? "Unlike post" : "Like post"}
         >
-          <Heart size={14} className={hasLiked ? "fill-red-500 text-red-500" : ""} />
+          <Heart
+            size={14}
+            className={hasLiked ? "fill-red-500 text-red-500" : ""}
+          />
         </button>
       ) : null}
 
@@ -171,7 +190,11 @@ function PostDetailModal({
     const loadComments = async () => {
       try {
         const supabase = createClient();
-        if (!supabase) { setComments([]); setLoadingComments(false); return; }
+        if (!supabase) {
+          setComments([]);
+          setLoadingComments(false);
+          return;
+        }
         const { data, error } = await supabase
           .from("creation_comments")
           .select("*")
@@ -265,7 +288,10 @@ function PostDetailModal({
                 {isMine && onDelete ? (
                   <button
                     type="button"
-                    onClick={() => { onDelete(post.id); onClose(); }}
+                    onClick={() => {
+                      onDelete(post.id);
+                      onClose();
+                    }}
                     className="flex items-center gap-1.5 rounded-xl border-2 border-edge px-2.5 py-1.5 text-xs font-extrabold text-muted transition hover:border-red-300 hover:text-red-600"
                   >
                     <Trash2 size={12} />
@@ -293,7 +319,10 @@ function PostDetailModal({
             {post.recipe_id ? (
               <div className="mt-2 rounded-xl border-2 border-secondary/40 bg-secondary/5 p-3">
                 <p className="mb-2 text-xs font-extrabold text-muted">
-                  📖 Recipe used: <span className="text-foreground">{post.recipe_title || `Recipe #${post.recipe_id}`}</span>
+                  📖 Recipe used:{" "}
+                  <span className="text-foreground">
+                    {post.recipe_title || `Recipe #${post.recipe_id}`}
+                  </span>
                 </p>
                 <Link
                   href={`/cook?id=${encodeURIComponent(post.recipe_id)}`}
@@ -316,7 +345,10 @@ function PostDetailModal({
                       : "border-edge bg-surface text-muted hover:border-edge-hover"
                   }`}
                 >
-                  <Heart size={13} className={hasLiked ? "fill-red-500 text-red-500" : ""} />
+                  <Heart
+                    size={13}
+                    className={hasLiked ? "fill-red-500 text-red-500" : ""}
+                  />
                   {likesCount > 0 ? likesCount : "Like"}
                 </button>
               ) : likesCount > 0 ? (
@@ -345,15 +377,21 @@ function PostDetailModal({
                 ))}
               </div>
             ) : comments.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted">No comments yet. Be the first!</p>
+              <p className="py-8 text-center text-sm text-muted">
+                No comments yet. Be the first!
+              </p>
             ) : (
               <ul className="space-y-2.5">
                 {comments.map((comment) => (
-                  <li key={comment.id} className="rounded-2xl border-2 border-edge bg-surface p-3">
+                  <li
+                    key={comment.id}
+                    className="rounded-2xl border-2 border-edge bg-surface p-3"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-extrabold text-muted">
-                          {comment.author_label ?? "Chef"} · {formatDate(comment.created_at)}
+                          {comment.author_label ?? "Chef"} ·{" "}
+                          {formatDate(comment.created_at)}
                         </p>
                         <p className="mt-1 text-sm text-foreground whitespace-pre-wrap break-words">
                           {comment.comment_text}
@@ -405,7 +443,10 @@ function PostDetailModal({
               </div>
             ) : (
               <p className="text-center text-sm text-muted">
-                <Link href="/login" className="font-extrabold text-primary-dark hover:underline">
+                <Link
+                  href="/login"
+                  className="font-extrabold text-primary-dark hover:underline"
+                >
                   Sign in
                 </Link>{" "}
                 to leave a comment
@@ -439,7 +480,9 @@ function NewPostModal({
   const [recipeId, setRecipeId] = useState("");
   const [recipeTitle, setRecipeTitle] = useState("");
   const [recipeSearch, setRecipeSearch] = useState("");
-  const [recipeResults, setRecipeResults] = useState<Array<{id: string; title: string}>>([]);
+  const [recipeResults, setRecipeResults] = useState<
+    Array<{ id: string; title: string }>
+  >([]);
   const [searchingRecipes, setSearchingRecipes] = useState(false);
   const [showRecipeDropdown, setShowRecipeDropdown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -459,7 +502,10 @@ function NewPostModal({
   // Close recipe dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (recipeSearchRef.current && !recipeSearchRef.current.contains(e.target as Node)) {
+      if (
+        recipeSearchRef.current &&
+        !recipeSearchRef.current.contains(e.target as Node)
+      ) {
         setShowRecipeDropdown(false);
       }
     };
@@ -480,12 +526,18 @@ function NewPostModal({
     const timeoutId = setTimeout(async () => {
       setSearchingRecipes(true);
       try {
-        const res = await fetch(`/api/recipes/search?s=${encodeURIComponent(q)}`);
+        const res = await fetch(
+          `/api/recipes/search?s=${encodeURIComponent(q)}`,
+        );
         if (!res.ok || cancelled) return;
-        const data = await res.json() as { meals?: Array<{ idMeal: string; strMeal: string }> | null };
+        const data = (await res.json()) as {
+          meals?: Array<{ idMeal: string; strMeal: string }> | null;
+        };
         if (cancelled) return;
         const meals = data.meals || [];
-        setRecipeResults(meals.slice(0, 8).map(m => ({ id: m.idMeal, title: m.strMeal })));
+        setRecipeResults(
+          meals.slice(0, 8).map((m) => ({ id: m.idMeal, title: m.strMeal })),
+        );
         setShowRecipeDropdown(meals.length > 0);
       } catch {
         // silently fail
@@ -501,7 +553,10 @@ function NewPostModal({
   }, [recipeSearch]);
 
   useEffect(() => {
-    if (!file) { setPreviewUrl(null); return; }
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
@@ -509,8 +564,14 @@ function NewPostModal({
 
   function pickFile(f: File | undefined | null) {
     if (!f) return;
-    if (!f.type.startsWith("image/")) { setError("File must be an image."); return; }
-    if (f.size > MAX_BYTES) { setError("Image must be 5 MB or smaller."); return; }
+    if (!f.type.startsWith("image/")) {
+      setError("File must be an image.");
+      return;
+    }
+    if (f.size > MAX_BYTES) {
+      setError("Image must be 5 MB or smaller.");
+      return;
+    }
     setError(null);
     setFile(f);
   }
@@ -519,61 +580,88 @@ function NewPostModal({
     e.preventDefault();
     setDragging(false);
     pickFile(e.dataTransfer.files[0]);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  const onSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const t = title.trim();
-    if (!t) { setError("Add a title for your dish."); return; }
-    if (!file) { setError("Choose a photo."); return; }
-    setSubmitting(true);
-    try {
-      const supabase = createClient();
-      if (!supabase) { setError("Not connected"); setSubmitting(false); return; }
-      const ext = file.name.split(".").pop()?.slice(0, 8) || "jpg";
-      const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
-      if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      const author_label = userEmail?.split("@")[0]?.slice(0, 40) ?? "Chef";
-      const recipe_id = recipeId.trim() || null;
-
-      const { data: row, error: insErr } = await supabase
-        .from("creations")
-        .insert({
-          user_id: userId,
-          title: t,
-          details: details.trim() || null,
-          image_url: publicUrl,
-          author_label,
-          is_public: isPublic,
-        })
-        .select("id, user_id, title, details, image_url, author_label, created_at, is_public")
-        .single();
-      if (insErr) {
-        console.error("Insert error:", insErr);
-        throw insErr;
+  const onSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      const t = title.trim();
+      if (!t) {
+        setError("Add a title for your dish.");
+        return;
       }
-
-      // Store recipe info locally for this session (not in DB)
-      if (row && recipe_id) {
-        (row as CreationRow).recipe_id = recipe_id;
-        if (recipeTitle) {
-          (row as CreationRow).recipe_title = recipeTitle;
+      if (!file) {
+        setError("Choose a photo.");
+        return;
+      }
+      setSubmitting(true);
+      try {
+        const supabase = createClient();
+        if (!supabase) {
+          setError("Not connected");
+          setSubmitting(false);
+          return;
         }
+        const ext = file.name.split(".").pop()?.slice(0, 8) || "jpg";
+        const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from(BUCKET)
+          .upload(path, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type,
+          });
+        if (upErr) throw upErr;
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from(BUCKET).getPublicUrl(path);
+        const author_label = userEmail?.split("@")[0]?.slice(0, 40) ?? "Chef";
+        const recipe_id = recipeId.trim() || null;
+        const recipe_title = recipeTitle.trim() || null;
+
+        const { data: row, error: insErr } = await supabase
+          .from("creations")
+          .insert({
+            user_id: userId,
+            title: t,
+            details: details.trim() || null,
+            image_url: publicUrl,
+            author_label,
+            is_public: isPublic,
+            recipe_id,
+            recipe_title,
+          })
+          .select(
+            "id, user_id, title, details, image_url, author_label, created_at, is_public, recipe_id, recipe_title",
+          )
+          .single();
+        if (insErr) {
+          console.error("Insert error:", insErr);
+          throw insErr;
+        }
+        onPosted(row as CreationRow);
+        onClose();
+      } catch (err) {
+        console.error("Post creation error:", err);
+        setError(err instanceof Error ? err.message : "Something went wrong.");
+      } finally {
+        setSubmitting(false);
       }
-      onPosted(row as CreationRow);
-      onClose();
-    } catch (err) {
-      console.error("Post creation error:", err);
-      setError(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setSubmitting(false);
-    }
-  }, [userId, userEmail, title, details, file, isPublic, recipeId, recipeTitle, onClose, onPosted]);
+    },
+    [
+      userId,
+      userEmail,
+      title,
+      details,
+      file,
+      isPublic,
+      recipeId,
+      recipeTitle,
+      onClose,
+      onPosted,
+    ],
+  );
 
   return (
     <div
@@ -607,7 +695,11 @@ function NewPostModal({
               {previewUrl ? (
                 <div className="relative aspect-square w-full overflow-hidden rounded-2xl border-2 border-edge bg-surface shadow-[0_3px_0_var(--edge)]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={previewUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
                   <button
                     type="button"
                     onClick={() => setFile(null)}
@@ -620,7 +712,10 @@ function NewPostModal({
               ) : (
                 <button
                   type="button"
-                  onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragging(true);
+                  }}
                   onDragLeave={() => setDragging(false)}
                   onDrop={onDrop}
                   onClick={() => fileRef.current?.click()}
@@ -634,10 +729,14 @@ function NewPostModal({
                     size={28}
                     className={dragging ? "text-primary-dark" : "text-muted"}
                   />
-                  <span className={`text-sm font-extrabold ${dragging ? "text-primary-dark" : "text-muted"}`}>
+                  <span
+                    className={`text-sm font-extrabold ${dragging ? "text-primary-dark" : "text-muted"}`}
+                  >
                     {dragging ? "Drop it!" : "Tap to upload or drag a photo"}
                   </span>
-                  <span className="text-xs text-muted/60">JPEG, PNG, WebP, GIF · max 5 MB</span>
+                  <span className="text-xs text-muted/60">
+                    JPEG, PNG, WebP, GIF · max 5 MB
+                  </span>
                 </button>
               )}
               <input
@@ -692,7 +791,8 @@ function NewPostModal({
                 htmlFor="post-recipe"
                 className="block text-xs font-extrabold uppercase tracking-wide text-muted"
               >
-                Recipe used <span className="font-normal text-muted/60">(optional)</span>
+                Recipe used{" "}
+                <span className="font-normal text-muted/60">(optional)</span>
               </label>
               {recipeId ? (
                 <div className="mt-1.5 flex items-center gap-2 rounded-2xl border-2 border-secondary/40 bg-secondary/5 px-3 py-2.5 shadow-[0_2px_0_rgba(255,133,52,0.2)]">
@@ -718,7 +818,9 @@ function NewPostModal({
                     id="post-recipe"
                     value={recipeSearch}
                     onChange={(e) => setRecipeSearch(e.target.value)}
-                    onFocus={() => recipeResults.length > 0 && setShowRecipeDropdown(true)}
+                    onFocus={() =>
+                      recipeResults.length > 0 && setShowRecipeDropdown(true)
+                    }
                     placeholder="Search for a recipe..."
                     className="w-full rounded-2xl border-2 border-edge bg-card px-3 py-2.5 text-sm font-bold text-foreground shadow-[0_2px_0_var(--edge)] placeholder:font-normal placeholder:text-muted transition-all focus:border-primary focus:shadow-[0_2px_0_var(--primary)] focus:outline-none"
                   />
@@ -785,12 +887,16 @@ function NewPostModal({
                 </button>
               </div>
               <p className="mt-1.5 text-xs text-muted">
-                {isPublic ? "Visible to everyone in the community feed." : "Only visible to you."}
+                {isPublic
+                  ? "Visible to everyone in the community feed."
+                  : "Only visible to you."}
               </p>
             </div>
 
             {error ? (
-              <p className="text-sm font-bold text-red-600" role="alert">{error}</p>
+              <p className="text-sm font-bold text-red-600" role="alert">
+                {error}
+              </p>
             ) : null}
           </div>
 
@@ -801,7 +907,11 @@ function NewPostModal({
               disabled={submitting}
               className="w-full rounded-2xl border-2 border-primary-dark bg-primary py-3 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:shadow-none"
             >
-              {submitting ? "Publishing…" : (isPublic ? "Publish to Community" : "Save Privately")}
+              {submitting
+                ? "Publishing…"
+                : isPublic
+                  ? "Publish to Community"
+                  : "Save Privately"}
             </button>
           </div>
         </form>
@@ -840,16 +950,24 @@ export function CreationsClient() {
     setFeedError(null);
     try {
       const supabase = createClient();
-      if (!supabase) { setFeedError("Not connected"); setFeedLoading(false); return; }
+      if (!supabase) {
+        setFeedError("Not connected");
+        setFeedLoading(false);
+        return;
+      }
 
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const currentUserId = user?.id;
 
       // Fetch creations - only select columns that exist in DB
       const { data: creations, error } = await supabase
         .from("creations")
-        .select("id, user_id, title, details, image_url, author_label, created_at, is_public")
+        .select(
+          "id, user_id, title, details, image_url, author_label, created_at, is_public, recipe_id, recipe_title",
+        )
         .order("created_at", { ascending: false })
         .limit(120);
       if (error) {
@@ -875,7 +993,10 @@ export function CreationsClient() {
       const userLikes = new Set<string>();
 
       likesData?.forEach((like) => {
-        likesCounts.set(like.creation_id, (likesCounts.get(like.creation_id) ?? 0) + 1);
+        likesCounts.set(
+          like.creation_id,
+          (likesCounts.get(like.creation_id) ?? 0) + 1,
+        );
         if (like.user_id === currentUserId) {
           userLikes.add(like.creation_id);
         }
@@ -883,7 +1004,10 @@ export function CreationsClient() {
 
       const commentsCounts = new Map<string, number>();
       commentsData?.forEach((comment) => {
-        commentsCounts.set(comment.creation_id, (commentsCounts.get(comment.creation_id) ?? 0) + 1);
+        commentsCounts.set(
+          comment.creation_id,
+          (commentsCounts.get(comment.creation_id) ?? 0) + 1,
+        );
       });
 
       // Enrich posts with counts
@@ -896,16 +1020,16 @@ export function CreationsClient() {
 
       setPosts(enrichedPosts);
     } catch (e) {
-      setFeedError(
-        e instanceof Error ? e.message : "Could not load posts.",
-      );
+      setFeedError(e instanceof Error ? e.message : "Could not load posts.");
       setPosts([]);
     } finally {
       setFeedLoading(false);
     }
   }, []);
 
-  useEffect(() => { void loadFeed(); }, [loadFeed]);
+  useEffect(() => {
+    void loadFeed();
+  }, [loadFeed]);
 
   // Auth
   useEffect(() => {
@@ -915,7 +1039,9 @@ export function CreationsClient() {
       setUserId(user?.id ?? null);
       setUserEmail(user?.email ?? null);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, session) => {
       setUserId(session?.user.id ?? null);
       setUserEmail(session?.user.email ?? null);
     });
@@ -937,85 +1063,98 @@ export function CreationsClient() {
     setPosts((prev) => [row, ...prev]);
   }, []);
 
-  const handleLike = useCallback(async (creationId: string) => {
-    if (!userId) return;
+  const handleLike = useCallback(
+    async (creationId: string) => {
+      if (!userId) return;
 
-    const supabase = createClient();
-    if (!supabase) return;
-    const post = posts.find((p) => p.id === creationId);
-    if (!post) return;
+      const supabase = createClient();
+      if (!supabase) return;
+      const post = posts.find((p) => p.id === creationId);
+      if (!post) return;
 
-    const hasLiked = post.user_has_liked ?? false;
+      const hasLiked = post.user_has_liked ?? false;
 
-    // Optimistic update
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === creationId
-          ? {
-              ...p,
-              likes_count: hasLiked ? (p.likes_count ?? 1) - 1 : (p.likes_count ?? 0) + 1,
-              user_has_liked: !hasLiked,
-            }
-          : p
-      )
-    );
-
-    // Update expanded post if it's open
-    if (expandedPost?.id === creationId) {
-      setExpandedPost((prev) =>
-        prev
-          ? {
-              ...prev,
-              likes_count: hasLiked ? (prev.likes_count ?? 1) - 1 : (prev.likes_count ?? 0) + 1,
-              user_has_liked: !hasLiked,
-            }
-          : null
-      );
-    }
-
-    try {
-      if (hasLiked) {
-        // Unlike
-        await supabase
-          .from("creation_likes")
-          .delete()
-          .eq("creation_id", creationId)
-          .eq("user_id", userId);
-      } else {
-        // Like
-        await supabase
-          .from("creation_likes")
-          .insert({ creation_id: creationId, user_id: userId });
-      }
-    } catch (err) {
-      console.error("Failed to toggle like:", err);
-      // Revert optimistic update on error
+      // Optimistic update
       setPosts((prev) =>
         prev.map((p) =>
           p.id === creationId
             ? {
                 ...p,
-                likes_count: hasLiked ? (p.likes_count ?? 0) + 1 : (p.likes_count ?? 1) - 1,
-                user_has_liked: hasLiked,
+                likes_count: hasLiked
+                  ? (p.likes_count ?? 1) - 1
+                  : (p.likes_count ?? 0) + 1,
+                user_has_liked: !hasLiked,
               }
-            : p
-        )
+            : p,
+        ),
       );
+
+      // Update expanded post if it's open
       if (expandedPost?.id === creationId) {
         setExpandedPost((prev) =>
           prev
             ? {
                 ...prev,
-                likes_count: hasLiked ? (prev.likes_count ?? 0) + 1 : (prev.likes_count ?? 1) - 1,
-                user_has_liked: hasLiked,
+                likes_count: hasLiked
+                  ? (prev.likes_count ?? 1) - 1
+                  : (prev.likes_count ?? 0) + 1,
+                user_has_liked: !hasLiked,
               }
-            : null
+            : null,
         );
       }
-    }
-  }, [userId, posts, expandedPost]);
 
-  const myPosts = posts.filter((p) => p.user_id === userId && p.is_public === false);
+      try {
+        if (hasLiked) {
+          // Unlike
+          await supabase
+            .from("creation_likes")
+            .delete()
+            .eq("creation_id", creationId)
+            .eq("user_id", userId);
+        } else {
+          // Like
+          await supabase
+            .from("creation_likes")
+            .insert({ creation_id: creationId, user_id: userId });
+        }
+      } catch (err) {
+        console.error("Failed to toggle like:", err);
+        // Revert optimistic update on error
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === creationId
+              ? {
+                  ...p,
+                  likes_count: hasLiked
+                    ? (p.likes_count ?? 0) + 1
+                    : (p.likes_count ?? 1) - 1,
+                  user_has_liked: hasLiked,
+                }
+              : p,
+          ),
+        );
+        if (expandedPost?.id === creationId) {
+          setExpandedPost((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  likes_count: hasLiked
+                    ? (prev.likes_count ?? 0) + 1
+                    : (prev.likes_count ?? 1) - 1,
+                  user_has_liked: hasLiked,
+                }
+              : null,
+          );
+        }
+      }
+    },
+    [userId, posts, expandedPost],
+  );
+
+  const myPosts = posts.filter(
+    (p) => p.user_id === userId && p.is_public === false,
+  );
   const communityPosts = posts.filter((p) => p.is_public !== false);
 
   return (
@@ -1065,7 +1204,10 @@ export function CreationsClient() {
 
       {/* ── Your posts ── */}
       {userId ? (
-        <section className="mb-10 rounded-3xl border-2 border-edge bg-card/50 p-5 shadow-[0_3px_0_var(--edge)]" aria-labelledby="my-posts-heading">
+        <section
+          className="mb-10 rounded-3xl border-2 border-edge bg-card/50 p-5 shadow-[0_3px_0_var(--edge)]"
+          aria-labelledby="my-posts-heading"
+        >
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <User size={15} className="text-muted" />
@@ -1086,7 +1228,10 @@ export function CreationsClient() {
           {feedLoading ? (
             <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:gap-5">
               {Array.from({ length: 4 }).map((_, i) => (
-                <li key={i} className="aspect-square animate-pulse rounded-2xl bg-surface" />
+                <li
+                  key={i}
+                  className="aspect-square animate-pulse rounded-2xl bg-surface"
+                />
               ))}
             </ul>
           ) : myPosts.length === 0 ? (
@@ -1095,8 +1240,12 @@ export function CreationsClient() {
                 <Camera size={24} className="text-primary-dark" />
               </div>
               <div>
-                <p className="font-extrabold text-foreground">No private posts</p>
-                <p className="mt-0.5 text-sm text-muted">Posts saved privately will appear here.</p>
+                <p className="font-extrabold text-foreground">
+                  No private posts
+                </p>
+                <p className="mt-0.5 text-sm text-muted">
+                  Posts saved privately will appear here.
+                </p>
               </div>
               <button
                 type="button"
@@ -1127,8 +1276,12 @@ export function CreationsClient() {
             <Camera size={24} className="text-primary-dark" />
           </div>
           <div>
-            <p className="font-extrabold text-foreground">Share your creations</p>
-            <p className="mt-0.5 text-sm text-muted">Sign in to post photos of your cooking.</p>
+            <p className="font-extrabold text-foreground">
+              Share your creations
+            </p>
+            <p className="mt-0.5 text-sm text-muted">
+              Sign in to post photos of your cooking.
+            </p>
           </div>
           <Link
             href="/login"
@@ -1140,7 +1293,10 @@ export function CreationsClient() {
       )}
 
       {/* ── Community feed ── */}
-      <section className="rounded-3xl border-2 border-edge bg-card/50 p-5 shadow-[0_3px_0_var(--edge)]" aria-labelledby="community-heading">
+      <section
+        className="rounded-3xl border-2 border-edge bg-card/50 p-5 shadow-[0_3px_0_var(--edge)]"
+        aria-labelledby="community-heading"
+      >
         <div className="mb-4 flex items-center gap-2">
           <Globe size={15} className="text-muted" />
           <h2
@@ -1154,7 +1310,10 @@ export function CreationsClient() {
         {feedLoading ? (
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
-              <li key={i} className="aspect-square animate-pulse rounded-2xl bg-surface" />
+              <li
+                key={i}
+                className="aspect-square animate-pulse rounded-2xl bg-surface"
+              />
             ))}
           </ul>
         ) : feedError ? (

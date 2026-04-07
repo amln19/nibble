@@ -6,19 +6,53 @@ import { incrementCookSessions } from "@/lib/achievements";
 import { ActionAnimation } from "./ActionAnimations";
 import { GordonAvatar } from "./GordonAvatar";
 import { TimerRing } from "./TimerRing";
-import { Volume2, VolumeX, ChevronLeft, ChevronRight, RotateCcw, Mic, MicOff, ChefHat, X, HelpCircle } from "lucide-react";
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+  Volume2,
+  VolumeX,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Mic,
+  MicOff,
+  ChefHat,
+  X,
+  HelpCircle,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 type Phase = "loading" | "intro" | "cooking" | "complete" | "error";
+
+type SpeechRecognitionAlternativeLike = {
+  transcript?: string;
+};
+
+type SpeechRecognitionResultLike = {
+  0?: SpeechRecognitionAlternativeLike;
+};
+
+type SpeechRecognitionEventLike = {
+  results: SpeechRecognitionResultLike[];
+};
+
+type BrowserSpeechRecognition = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionCtor = new () => BrowserSpeechRecognition;
+type WindowWithSpeechRecognition = Window & {
+  SpeechRecognition?: SpeechRecognitionCtor;
+  webkitSpeechRecognition?: SpeechRecognitionCtor;
+};
 
 function useWideCookLayout() {
   const [wide, setWide] = useState(false);
@@ -48,7 +82,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   const [showIngredientsPanel, setShowIngredientsPanel] = useState(false);
   const [showHelpPanel, setShowHelpPanel] = useState(false);
   const [showAskModal, setShowAskModal] = useState(false);
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
+    new Set(),
+  );
   const wideCookLayout = useWideCookLayout();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -69,9 +105,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   const [transcript, setTranscript] = useState<string | null>(null);
   const [gordonAnswer, setGordonAnswer] = useState<string | null>(null);
   const [isAnswering, setIsAnswering] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
-  const sttSupported = typeof window !== "undefined" &&
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const sttSupported =
+    typeof window !== "undefined" &&
     ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
   // Keep screen on while cooking
@@ -86,9 +122,13 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
       try {
         lock = await navigator.wakeLock.request("screen");
         wakeLockRef.current = lock;
-      } catch { /* unsupported */ }
+      } catch {
+        /* unsupported */
+      }
     })();
-    return () => { lock?.release(); };
+    return () => {
+      lock?.release();
+    };
   }, [phase]);
 
   // Load recipe + Gordon guide
@@ -101,86 +141,119 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
     let cancelled = false;
     (async () => {
       try {
-        const detailRes = await fetch(`/api/recipes/details?ids=${encodeURIComponent(recipeId)}`);
+        const detailRes = await fetch(
+          `/api/recipes/details?ids=${encodeURIComponent(recipeId)}`,
+        );
         if (!detailRes.ok) throw new Error("Failed to load recipe");
         const detailData = (await detailRes.json()) as { recipes?: Recipe[] };
         const r = detailData.recipes?.[0];
-        if (!r || cancelled) { if (!cancelled) throw new Error("Recipe not found"); return; }
+        if (!r || cancelled) {
+          if (!cancelled) throw new Error("Recipe not found");
+          return;
+        }
         setRecipe(r);
-        if (!r.instructions) throw new Error("This recipe has no instructions.");
+        if (!r.instructions)
+          throw new Error("This recipe has no instructions.");
         const prepRes = await fetch("/api/gordon/prepare", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: r.title, instructions: r.instructions, ingredients: r.ingredients }),
+          body: JSON.stringify({
+            title: r.title,
+            instructions: r.instructions,
+            ingredients: r.ingredients,
+          }),
         });
-        if (!prepRes.ok) throw new Error("Gordon couldn't prepare the guide");
-        const prepData = (await prepRes.json()) as { guide: GordonGuide };
+        if (!prepRes.ok) {
+          if (prepRes.status === 401) {
+            throw new Error("Sign in to cook with Gordon.");
+          }
+          throw new Error("Gordon couldn't prepare the guide");
+        }
+        const prepData = (await prepRes.json()) as {
+          guide: GordonGuide;
+          source?: string;
+          model?: string | null;
+        };
         if (cancelled) return;
+        if (prepData.source || prepData.model) {
+          console.info("Gordon prepare:", {
+            source: prepData.source,
+            model: prepData.model,
+          });
+        }
         setGuide(prepData.guide);
         setPhase("intro");
       } catch (e) {
-        if (!cancelled) { setErrorMsg(e instanceof Error ? e.message : "Something went wrong"); setPhase("error"); }
+        if (!cancelled) {
+          setErrorMsg(e instanceof Error ? e.message : "Something went wrong");
+          setPhase("error");
+        }
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [recipeId]);
 
   // ── Audio ──────────────────────────────────────────────────────────────────
   // speak() must be called directly from a user-gesture handler (click/tap),
   // NOT from a useEffect — browsers block autoplay outside gesture context.
-  const speak = useCallback(async (text: string) => {
-    if (mutedRef.current) return;
-    cancelPendingSpeak();
-    const gen = speakGenerationRef.current;
-    const ac = new AbortController();
-    speakFetchAbortRef.current = ac;
-    setIsSpeaking(true);
-    try {
-      const res = await fetch("/api/gordon/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-        signal: ac.signal,
-      });
-      if (gen !== speakGenerationRef.current) {
-        setIsSpeaking(false);
-        return;
-      }
-      if (!res.ok) {
-        setIsSpeaking(false);
-        return;
-      }
-      const blob = await res.blob();
-      if (gen !== speakGenerationRef.current) {
-        setIsSpeaking(false);
-        return;
-      }
-      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
-      const url = URL.createObjectURL(blob);
-      audioUrlRef.current = url;
-      if (!audioRef.current) audioRef.current = new Audio();
-      audioRef.current.src = url;
-      audioRef.current.onended = () => setIsSpeaking(false);
-      audioRef.current.onerror = () => setIsSpeaking(false);
-      await audioRef.current.play();
-      if (gen !== speakGenerationRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeAttribute("src");
-        audioRef.current.load();
-        if (audioUrlRef.current) {
-          URL.revokeObjectURL(audioUrlRef.current);
-          audioUrlRef.current = null;
+  const speak = useCallback(
+    async (text: string) => {
+      if (mutedRef.current) return;
+      cancelPendingSpeak();
+      const gen = speakGenerationRef.current;
+      const ac = new AbortController();
+      speakFetchAbortRef.current = ac;
+      setIsSpeaking(true);
+      try {
+        const res = await fetch("/api/gordon/speak", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+          signal: ac.signal,
+        });
+        if (gen !== speakGenerationRef.current) {
+          setIsSpeaking(false);
+          return;
+        }
+        if (!res.ok) {
+          setIsSpeaking(false);
+          return;
+        }
+        const blob = await res.blob();
+        if (gen !== speakGenerationRef.current) {
+          setIsSpeaking(false);
+          return;
+        }
+        if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+        const url = URL.createObjectURL(blob);
+        audioUrlRef.current = url;
+        if (!audioRef.current) audioRef.current = new Audio();
+        audioRef.current.src = url;
+        audioRef.current.onended = () => setIsSpeaking(false);
+        audioRef.current.onerror = () => setIsSpeaking(false);
+        await audioRef.current.play();
+        if (gen !== speakGenerationRef.current) {
+          audioRef.current.pause();
+          audioRef.current.removeAttribute("src");
+          audioRef.current.load();
+          if (audioUrlRef.current) {
+            URL.revokeObjectURL(audioUrlRef.current);
+            audioUrlRef.current = null;
+          }
+          setIsSpeaking(false);
+        }
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") {
+          setIsSpeaking(false);
+          return;
         }
         setIsSpeaking(false);
       }
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "AbortError") {
-        setIsSpeaking(false);
-        return;
-      }
-      setIsSpeaking(false);
-    }
-  }, [cancelPendingSpeak]);
+    },
+    [cancelPendingSpeak],
+  );
 
   const stopAudio = useCallback(() => {
     cancelPendingSpeak();
@@ -228,62 +301,95 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   }, [pathname, stopAudio]);
 
   // ── STT callbacks (declared after speak/stopAudio) ──────────────────────────
-  const askGordon = useCallback(async (
-    question: string,
-    context: { recipeTitle: string; currentStep: string; stepNumber: number; totalSteps: number },
-  ) => {
-    setIsAnswering(true);
-    setGordonAnswer(null);
-    try {
-      const res = await fetch("/api/gordon/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, ...context }),
-      });
-      const data = (await res.json()) as { answer?: string };
-      const answer = data.answer ?? "Honk! Something went wrong, chef.";
-      setGordonAnswer(answer);
-      void speak(answer);
-    } catch {
-      const fallback = "Honk! Something went wrong, chef. Try again!";
-      setGordonAnswer(fallback);
-      void speak(fallback);
-    } finally {
-      setIsAnswering(false);
-    }
-  }, [speak]);
+  const askGordon = useCallback(
+    async (
+      question: string,
+      context: {
+        recipeTitle: string;
+        currentStep: string;
+        stepNumber: number;
+        totalSteps: number;
+      },
+    ) => {
+      setIsAnswering(true);
+      setGordonAnswer(null);
+      try {
+        const res = await fetch("/api/gordon/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, ...context }),
+        });
+        const data = (await res.json()) as {
+          answer?: string;
+          error?: string;
+          source?: string;
+          model?: string | null;
+        };
+        if (!res.ok) {
+          if (res.status === 401) {
+            const msg = "Sign in to ask Gordon questions.";
+            setGordonAnswer(msg);
+            return;
+          }
+          throw new Error(data.error ?? "Ask failed");
+        }
+        const answer = data.answer ?? "Honk! Something went wrong, chef.";
+        if (data.source || data.model) {
+          console.info("Gordon ask:", {
+            source: data.source,
+            model: data.model,
+          });
+        }
+        setGordonAnswer(answer);
+        void speak(answer);
+      } catch {
+        const fallback = "Honk! Something went wrong, chef. Try again!";
+        setGordonAnswer(fallback);
+        void speak(fallback);
+      } finally {
+        setIsAnswering(false);
+      }
+    },
+    [speak],
+  );
 
   const openAskModal = useCallback(() => {
     stopAudio();
     setShowAskModal(true);
   }, [stopAudio]);
 
-  const startListening = useCallback((
-    context: { recipeTitle: string; currentStep: string; stepNumber: number; totalSteps: number },
-  ) => {
-    if (!sttSupported) return;
-    stopAudio();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SR = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rec: any = new SR();
-    rec.lang = "en-US";
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rec.onresult = (e: any) => {
-      const text: string = e.results[0]?.[0]?.transcript ?? "";
-      setTranscript(text);
-      if (text) void askGordon(text, context);
-    };
-    rec.onerror = () => setIsListening(false);
-    rec.onend = () => setIsListening(false);
-    recognitionRef.current = rec;
-    rec.start();
-    setIsListening(true);
-    setTranscript(null);
-    setGordonAnswer(null);
-  }, [sttSupported, askGordon, stopAudio]);
+  const startListening = useCallback(
+    (context: {
+      recipeTitle: string;
+      currentStep: string;
+      stepNumber: number;
+      totalSteps: number;
+    }) => {
+      if (!sttSupported) return;
+      stopAudio();
+      const speechWindow = window as WindowWithSpeechRecognition;
+      const SR =
+        speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+      if (!SR) return;
+      const rec = new SR();
+      rec.lang = "en-US";
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onresult = (e: SpeechRecognitionEventLike) => {
+        const text: string = e.results[0]?.[0]?.transcript ?? "";
+        setTranscript(text);
+        if (text) void askGordon(text, context);
+      };
+      rec.onerror = () => setIsListening(false);
+      rec.onend = () => setIsListening(false);
+      recognitionRef.current = rec;
+      rec.start();
+      setIsListening(true);
+      setTranscript(null);
+      setGordonAnswer(null);
+    },
+    [sttSupported, askGordon, stopAudio],
+  );
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
@@ -355,7 +461,10 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   }
 
   function toggleMute() {
-    setMuted((m) => { if (!m) stopAudio(); return !m; });
+    setMuted((m) => {
+      if (!m) stopAudio();
+      return !m;
+    });
   }
 
   const elapsed = useMemo(() => {
@@ -364,9 +473,12 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
   }, [phase, startTime]);
 
   const gordonMood =
-    phase === "loading" || phase === "error" ? "thinking"
-      : phase === "complete" ? "celebrating"
-        : isSpeaking ? "speaking"
+    phase === "loading" || phase === "error"
+      ? "thinking"
+      : phase === "complete"
+        ? "celebrating"
+        : isSpeaking
+          ? "speaking"
           : "idle";
 
   function toggleIngredient(index: number) {
@@ -408,22 +520,24 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
           {backLabel}
         </Link>
         {center ?? <span />}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {showIngredientsButton && (
             <button
               onClick={() => {
                 setShowIngredientsPanel(!showIngredientsPanel);
                 if (!showIngredientsPanel) setShowHelpPanel(false);
               }}
-              className={`inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-extrabold shadow-[0_2px_0_var(--edge)] transition-all active:translate-y-0.5 active:shadow-none ${
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border-2 px-3 py-1.5 text-xs font-extrabold shadow-[0_2px_0_var(--edge)] transition-all active:translate-y-0.5 active:shadow-none ${
                 showIngredientsPanel
                   ? "border-primary bg-primary-light text-primary-dark shadow-[0_2px_0_var(--primary)]"
                   : "border-edge bg-card text-muted"
               }`}
-              aria-label={showIngredientsPanel ? "Hide ingredients" : "Show ingredients"}
+              aria-label={
+                showIngredientsPanel ? "Hide ingredients" : "Show ingredients"
+              }
             >
               <ChefHat size={13} />
-              {showIngredientsPanel ? "Hide" : "List"}
+              {showIngredientsPanel ? "Hide ingredients" : "Show ingredients"}
             </button>
           )}
           {showHelpButton && sttSupported && (
@@ -454,7 +568,7 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
             aria-label={muted ? "Unmute Gordon" : "Mute Gordon"}
           >
             {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
-            {muted ? "Muted" : "Voice"}
+            {muted ? "Muted" : "Sound"}
           </button>
         </div>
       </div>
@@ -496,7 +610,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
         <div className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6">
           <GordonAvatar mood="idle" size={90} />
           <div className="text-center">
-            <h2 className="text-xl font-extrabold text-foreground">Honk! Something went wrong</h2>
+            <h2 className="text-xl font-extrabold text-foreground">
+              Honk! Something went wrong
+            </h2>
             <p className="mt-2 max-w-sm text-sm text-muted">{errorMsg}</p>
           </div>
           <Link
@@ -522,20 +638,33 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
             {/* Recipe image */}
             {recipe.imageUrl && (
               <div className="relative h-36 w-36 overflow-hidden rounded-3xl border-2 border-edge shadow-[0_6px_0_var(--edge)] sm:h-44 sm:w-44">
-                <Image src={recipe.imageUrl} alt={recipe.title} fill className="object-cover" sizes="176px" />
+                <Image
+                  src={recipe.imageUrl}
+                  alt={recipe.title}
+                  fill
+                  className="object-cover"
+                  sizes="176px"
+                />
               </div>
             )}
 
             <div className="text-center">
-              <h1 className="text-2xl font-black text-foreground sm:text-3xl">{recipe.title}</h1>
+              <h1 className="text-2xl font-black text-foreground sm:text-3xl">
+                {recipe.title}
+              </h1>
               <p className="mt-1 text-sm text-muted">
-                {totalSteps} steps{recipe.timeMinutes ? ` · ~${recipe.timeMinutes} min` : ""}
+                {totalSteps} steps
+                {recipe.timeMinutes ? ` · ~${recipe.timeMinutes} min` : ""}
               </p>
             </div>
 
             {/* Gordon's intro bubble */}
             <div className="flex w-full max-w-md items-start gap-3">
-              <GordonAvatar mood={gordonMood} size={52} className="mt-1 shrink-0" />
+              <GordonAvatar
+                mood={gordonMood}
+                size={52}
+                className="mt-1 shrink-0"
+              />
               <div className="gordon-bubble flex-1 rounded-3xl rounded-tl-md border-2 border-edge bg-card px-4 py-3 text-sm leading-relaxed text-foreground shadow-[0_3px_0_var(--edge)]">
                 {guide.intro}
               </div>
@@ -546,14 +675,19 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               onClick={() => setShowIngredients(!showIngredients)}
               className="text-xs font-extrabold text-primary-dark underline underline-offset-2 transition-colors hover:text-primary"
             >
-              {showIngredients ? "Hide ingredients" : `Check ingredients (${recipe.ingredients.length})`}
+              {showIngredients
+                ? "Hide ingredients"
+                : `Check ingredients (${recipe.ingredients.length})`}
             </button>
 
             {showIngredients && (
               <div className="w-full max-w-md rounded-3xl border-2 border-edge bg-card p-4 shadow-[0_3px_0_var(--edge)]">
                 <ul className="space-y-1.5">
                   {recipe.ingredients.map((ing, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-foreground">
+                    <li
+                      key={i}
+                      className="flex items-center gap-2 text-sm text-foreground"
+                    >
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                       {ing}
                     </li>
@@ -631,12 +765,14 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
           ) : (
             <button
               type="button"
-              onClick={() => startListening({
-                recipeTitle: recipe?.title ?? "this recipe",
-                currentStep: step.instruction ?? "",
-                stepNumber: currentStep + 1,
-                totalSteps,
-              })}
+              onClick={() =>
+                startListening({
+                  recipeTitle: recipe?.title ?? "this recipe",
+                  currentStep: step.instruction ?? "",
+                  stepNumber: currentStep + 1,
+                  totalSteps,
+                })
+              }
               disabled={isAnswering}
               className="flex items-center gap-2 rounded-2xl border-2 border-primary bg-primary-light px-4 py-2.5 text-sm font-extrabold text-primary-dark shadow-[0_3px_0_var(--primary)] transition-all hover:bg-primary hover:text-white active:translate-y-0.5 active:shadow-none disabled:opacity-50"
             >
@@ -647,13 +783,21 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
         </div>
         {transcript && (
           <div className="rounded-2xl border-2 border-edge bg-surface px-4 py-3 shadow-[0_2px_0_var(--edge)]">
-            <p className="mb-1 text-[10px] font-extrabold uppercase tracking-widest text-muted">You asked</p>
-            <p className="text-sm leading-relaxed text-foreground">{transcript}</p>
+            <p className="mb-1 text-[10px] font-extrabold uppercase tracking-widest text-muted">
+              You asked
+            </p>
+            <p className="text-sm leading-relaxed text-foreground">
+              {transcript}
+            </p>
           </div>
         )}
         {isAnswering && (
           <div className="flex items-start gap-3 rounded-2xl border-2 border-primary bg-primary-light px-4 py-3 shadow-[0_2px_0_var(--primary)]">
-            <GordonAvatar mood="thinking" size={32} className="mt-0.5 shrink-0" />
+            <GordonAvatar
+              mood="thinking"
+              size={32}
+              className="mt-0.5 shrink-0"
+            />
             <div className="flex items-center gap-2">
               {[0, 1, 2].map((i) => (
                 <div
@@ -662,16 +806,26 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
                   style={{ animationDelay: `${i * 0.15}s` }}
                 />
               ))}
-              <span className="text-xs font-extrabold text-primary-dark">Gordon is thinking…</span>
+              <span className="text-xs font-extrabold text-primary-dark">
+                Gordon is thinking…
+              </span>
             </div>
           </div>
         )}
         {gordonAnswer && !isAnswering && (
           <div className="flex items-start gap-3 rounded-2xl border-2 border-primary bg-primary-light px-4 py-3 shadow-[0_2px_0_var(--primary)]">
-            <GordonAvatar mood={isSpeaking ? "speaking" : "idle"} size={32} className="mt-0.5 shrink-0" />
+            <GordonAvatar
+              mood={isSpeaking ? "speaking" : "idle"}
+              size={32}
+              className="mt-0.5 shrink-0"
+            />
             <div className="min-w-0 flex-1">
-              <p className="mb-1 text-[10px] font-extrabold uppercase tracking-widest text-primary-dark/60">Gordon</p>
-              <p className="text-sm leading-relaxed text-primary-dark">{gordonAnswer}</p>
+              <p className="mb-1 text-[10px] font-extrabold uppercase tracking-widest text-primary-dark/60">
+                Gordon
+              </p>
+              <p className="text-sm leading-relaxed text-primary-dark">
+                {gordonAnswer}
+              </p>
             </div>
           </div>
         )}
@@ -695,7 +849,10 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
         ) : (
           <button
             type="button"
-            onClick={() => { stopAudio(); void speak(stepText(step)); }}
+            onClick={() => {
+              stopAudio();
+              void speak(stepText(step));
+            }}
             className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-edge bg-surface px-3 py-2 text-xs font-extrabold text-foreground shadow-[0_2px_0_var(--edge)] transition-all hover:border-primary active:translate-y-0.5 active:shadow-none"
           >
             <RotateCcw size={12} />
@@ -704,7 +861,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
         )}
       </div>
     ) : (
-      <p className="text-xs text-muted">Unmute to replay Gordon&apos;s voice.</p>
+      <p className="text-xs text-muted">
+        Unmute to hear Gordon again.
+      </p>
     );
 
     return (
@@ -728,7 +887,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               <div className="flex items-center justify-between border-b-2 border-edge bg-primary-light px-4 py-3">
                 <div className="flex items-center gap-2">
                   <ChefHat size={16} className="text-primary-dark" />
-                  <h3 className="text-sm font-extrabold text-primary-dark">Ingredients</h3>
+                  <h3 className="text-sm font-extrabold text-primary-dark">
+                    Ingredients
+                  </h3>
                 </div>
                 <button
                   onClick={() => setShowIngredientsPanel(false)}
@@ -738,7 +899,10 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
                   <X size={12} />
                 </button>
               </div>
-              <div className="overflow-y-auto overscroll-contain p-4" style={{ maxHeight: "calc(60vh - 60px)" }}>
+              <div
+                className="overflow-y-auto overscroll-contain p-4"
+                style={{ maxHeight: "calc(60vh - 60px)" }}
+              >
                 <ul className="space-y-2">
                   {recipe.ingredients.map((ing, i) => (
                     <li key={i} className="flex items-start gap-2.5">
@@ -751,16 +915,28 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
                         }`}
                       >
                         {checkedIngredients.has(i) && (
-                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={3}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                         )}
                       </button>
-                      <span className={`text-sm leading-snug transition-all ${
-                        checkedIngredients.has(i)
-                          ? "text-muted line-through"
-                          : "text-foreground"
-                      }`}>
+                      <span
+                        className={`text-sm leading-snug transition-all ${
+                          checkedIngredients.has(i)
+                            ? "text-muted line-through"
+                            : "text-foreground"
+                        }`}
+                      >
                         {ing}
                       </span>
                     </li>
@@ -793,9 +969,15 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               <div className="relative flex items-center justify-center">
                 <div
                   className="absolute inset-0 scale-150 rounded-full blur-2xl opacity-10"
-                  style={{ backgroundColor: step.accentColor || "var(--primary)" }}
+                  style={{
+                    backgroundColor: step.accentColor || "var(--primary)",
+                  }}
                 />
-                <ActionAnimation action={step.action ?? "plate"} accentColor={step.accentColor} size={96} />
+                <ActionAnimation
+                  action={step.action ?? "plate"}
+                  accentColor={step.accentColor}
+                  size={96}
+                />
               </div>
 
               <p className="max-w-lg text-center text-xl font-bold leading-relaxed text-foreground sm:text-2xl">
@@ -805,7 +987,11 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               {!wideCookLayout && timerBlock}
 
               <div className="flex w-full max-w-md items-start gap-3">
-                <GordonAvatar mood={gordonMood} size={40} className="mt-0.5 shrink-0" />
+                <GordonAvatar
+                  mood={gordonMood}
+                  size={40}
+                  className="mt-0.5 shrink-0"
+                />
                 <div className="gordon-bubble flex-1 rounded-3xl rounded-tl-md border-2 border-edge bg-card px-4 py-3 text-sm leading-relaxed text-muted shadow-[0_3px_0_var(--edge)]">
                   {step.tip}
                 </div>
@@ -819,7 +1005,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               {hasTimer && (
                 <div className="rounded-2xl border-2 border-edge bg-card p-4 shadow-[0_3px_0_var(--edge)]">
                   <div className="mb-3 flex items-center gap-2">
-                    <span className="text-xs font-extrabold uppercase tracking-widest text-muted">Timer</span>
+                    <span className="text-xs font-extrabold uppercase tracking-widest text-muted">
+                      Timer
+                    </span>
                   </div>
                   {timerBlock}
                 </div>
@@ -827,7 +1015,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               <div className="rounded-2xl border-2 border-edge bg-card p-4 shadow-[0_3px_0_var(--edge)]">
                 <div className="mb-3 flex items-center gap-2">
                   <HelpCircle size={18} className="text-primary-dark" />
-                  <h3 className="text-sm font-extrabold text-foreground">Help</h3>
+                  <h3 className="text-sm font-extrabold text-foreground">
+                    Help
+                  </h3>
                 </div>
                 {helpVoiceRow}
               </div>
@@ -847,7 +1037,7 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
           {/* Mobile / tablet: Help sheet (voice + opens ask modal) */}
           {!wideCookLayout && showHelpPanel && sttSupported && (
             <div
-              className="fixed inset-0 z-[55] flex items-end justify-center bg-black/50 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-55 flex items-end justify-center bg-black/50 backdrop-blur-sm lg:hidden"
               onClick={() => setShowHelpPanel(false)}
               role="presentation"
             >
@@ -860,7 +1050,10 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
                 <div className="flex items-center justify-between border-b-2 border-edge bg-primary-light px-5 py-4">
                   <div className="flex items-center gap-2">
                     <HelpCircle size={18} className="text-primary-dark" />
-                    <h2 id="help-sheet-title" className="text-sm font-extrabold text-primary-dark">
+                    <h2
+                      id="help-sheet-title"
+                      className="text-sm font-extrabold text-primary-dark"
+                    >
                       Help
                     </h2>
                   </div>
@@ -875,7 +1068,8 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
                 </div>
                 <div className="space-y-4 overflow-y-auto overscroll-contain p-5 pb-8">
                   <p className="text-sm text-muted">
-                    Voice replay for this step is on the screen above. Tap below to ask Gordon a question.
+                    Replay for this step is on the screen above. Tap below to ask
+                    Gordon a question.
                   </p>
                   <button
                     type="button"
@@ -896,7 +1090,7 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
           {/* Ask Gordon — modal */}
           {showAskModal && sttSupported && (
             <div
-              className="fixed inset-0 z-[60] flex items-end justify-center bg-black/55 backdrop-blur-sm sm:items-center sm:p-4"
+              className="fixed inset-0 z-60 flex items-end justify-center bg-black/55 backdrop-blur-sm sm:items-center sm:p-4"
               onClick={() => setShowAskModal(false)}
               role="presentation"
             >
@@ -909,7 +1103,10 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
                 <div className="flex shrink-0 items-center justify-between border-b-2 border-edge bg-primary-light px-5 py-4">
                   <div className="flex items-center gap-2">
                     <Mic size={18} className="text-primary-dark" />
-                    <h2 id="ask-modal-title" className="text-sm font-extrabold text-primary-dark">
+                    <h2
+                      id="ask-modal-title"
+                      className="text-sm font-extrabold text-primary-dark"
+                    >
                       Ask Gordon
                     </h2>
                   </div>
@@ -922,7 +1119,9 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
                     <X size={16} />
                   </button>
                 </div>
-                <div className="overflow-y-auto overscroll-contain p-5">{askModalMicSection}</div>
+                <div className="overflow-y-auto overscroll-contain p-5">
+                  {askModalMicSection}
+                </div>
               </div>
             </div>
           )}
@@ -934,12 +1133,13 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
               {guide.steps.map((_, i) => (
                 <div
                   key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStep
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === currentStep
                       ? "w-6 bg-primary"
                       : i < currentStep
                         ? "w-1.5 bg-primary/40"
                         : "w-1.5 bg-edge"
-                    }`}
+                  }`}
                 />
               ))}
             </div>
@@ -956,7 +1156,13 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
                 onClick={nextStep}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border-2 border-primary-dark bg-primary py-3.5 text-sm font-extrabold text-white shadow-[0_4px_0_var(--primary-dark)] transition-all hover:brightness-105 active:translate-y-1 active:shadow-none"
               >
-                {currentStep === totalSteps - 1 ? "Finish 🎉" : <>Next <ChevronRight size={16} /></>}
+                {currentStep === totalSteps - 1 ? (
+                  "Finish 🎉"
+                ) : (
+                  <>
+                    Next <ChevronRight size={16} />
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -982,12 +1188,18 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
             <h1 className="text-3xl font-black text-foreground sm:text-4xl">
               Masterpiece Complete! 🎉
             </h1>
-            <p className="mt-2 text-lg font-bold text-primary-dark">{recipe.title}</p>
+            <p className="mt-2 text-lg font-bold text-primary-dark">
+              {recipe.title}
+            </p>
           </div>
 
           {/* Gordon's outro */}
           <div className="flex w-full max-w-md items-start gap-3">
-            <GordonAvatar mood="celebrating" size={44} className="mt-1 shrink-0" />
+            <GordonAvatar
+              mood="celebrating"
+              size={44}
+              className="mt-1 shrink-0"
+            />
             <div className="gordon-bubble flex-1 rounded-3xl rounded-tl-md border-2 border-edge bg-card px-4 py-3 text-sm leading-relaxed text-foreground shadow-[0_3px_0_var(--edge)]">
               {guide.completion}
             </div>
@@ -996,12 +1208,15 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
           {/* Stats */}
           <div className="flex gap-4">
             <div className="flex flex-col items-center gap-1 rounded-3xl border-2 border-edge bg-card px-6 py-4 shadow-[0_4px_0_var(--edge)]">
-              <span className="text-2xl font-black text-primary-dark">{totalSteps}</span>
+              <span className="text-2xl font-black text-primary-dark">
+                {totalSteps}
+              </span>
               <span className="text-xs font-extrabold text-muted">Steps</span>
             </div>
             <div className="flex flex-col items-center gap-1 rounded-3xl border-2 border-edge bg-card px-6 py-4 shadow-[0_4px_0_var(--edge)]">
               <span className="text-2xl font-black text-primary-dark">
-                {elapsedMin > 0 ? `${elapsedMin}m ` : ""}{elapsedSec}s
+                {elapsedMin > 0 ? `${elapsedMin}m ` : ""}
+                {elapsedSec}s
               </span>
               <span className="text-xs font-extrabold text-muted">Time</span>
             </div>
@@ -1010,7 +1225,10 @@ export function CompanionMode({ recipeId }: { recipeId: string | null }) {
           {/* Actions */}
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
-              onClick={() => { setCurrentStep(0); setPhase("intro"); }}
+              onClick={() => {
+                setCurrentStep(0);
+                setPhase("intro");
+              }}
               className="rounded-2xl border-2 border-edge bg-surface px-6 py-3 text-sm font-extrabold text-foreground shadow-[0_3px_0_var(--edge)] transition-all hover:border-edge-hover active:translate-y-0.5 active:shadow-none"
             >
               <RotateCcw size={14} className="mr-1.5 inline" />

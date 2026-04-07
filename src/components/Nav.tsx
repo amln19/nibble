@@ -22,14 +22,26 @@ export function Nav() {
     <>
       {/* ── Desktop top bar ── */}
       <header className="hidden border-b-2 border-edge bg-background md:block">
-        <nav className="mx-auto flex max-w-8xl items-center justify-between gap-6 px-6 py-3 lg:px-8">
+        <nav className="mx-auto flex max-w-8xl items-center justify-between gap-6 px-6 py-3.5 lg:px-8">
           <Link
             href="/"
-            className="flex items-center gap-2.5 font-extrabold tracking-tight text-foreground transition-transform hover:scale-[1.02]"
+            className="group flex items-center gap-3.5 rounded-2xl py-1.5 pl-1 pr-2.5 -ml-1 transition-[transform,filter] hover:scale-[1.02] hover:brightness-110"
+            aria-label="Nibble home"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/goose-happy.png" alt="" width={36} height={36} className="h-9 w-9 object-contain drop-shadow-sm" draggable={false} />
-            <span className="text-lg">Nibble</span>
+            <img
+              src="/goose-happy.png"
+              alt=""
+              width={44}
+              height={44}
+              className="h-10 w-10 object-contain drop-shadow-md transition-transform duration-200 group-hover:scale-105 lg:h-11 lg:w-11"
+              draggable={false}
+            />
+            <span className="font-black tracking-tight text-[1.65rem] leading-none sm:text-3xl lg:text-[2rem] lg:leading-none">
+              <span className="bg-linear-to-r from-foreground via-primary to-secondary bg-clip-text text-transparent">
+                Nibble
+              </span>
+            </span>
           </Link>
 
           <ul className="flex items-center gap-1">

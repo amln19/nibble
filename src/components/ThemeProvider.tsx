@@ -5,6 +5,8 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -26,16 +28,6 @@ export function useTheme() {
 
 const STORAGE_KEY = "nibble-theme";
 
-function getStoredTheme(): Theme | null {
-  try {
-    const v = localStorage.getItem(STORAGE_KEY);
-    if (v === "dark" || v === "light") return v;
-  } catch {
-    /* ssr / incognito */
-  }
-  return null;
-}
-
 function applyTheme(t: Theme) {
   document.documentElement.classList.toggle("dark", t === "dark");
   try {
@@ -45,26 +37,30 @@ function applyTheme(t: Theme) {
   }
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+function readThemeFromDocument(): Theme {
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
 
-  useEffect(() => {
-    const stored = getStoredTheme();
-    const preferred =
-      stored ??
-      (window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light");
-    setTheme(preferred);
-    applyTheme(preferred);
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>(() => "light");
+  const syncedRef = useRef(false);
+
+  useLayoutEffect(() => {
+    const t = readThemeFromDocument();
+    syncedRef.current = true;
+    /* Sync to <html class> from inline script before paint; deferring breaks applyTheme on first effect run */
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional DOM→state hydration
+    setTheme(t);
   }, []);
 
+  useEffect(() => {
+    if (!syncedRef.current) return;
+    applyTheme(theme);
+  }, [theme]);
+
   const toggle = useCallback(() => {
-    setTheme((prev) => {
-      const next = prev === "light" ? "dark" : "light";
-      applyTheme(next);
-      return next;
-    });
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   }, []);
 
   return (

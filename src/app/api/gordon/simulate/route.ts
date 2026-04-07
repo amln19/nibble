@@ -7,17 +7,28 @@ const CURATED: Record<string, unknown> = {
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as { title?: string };
+    let body: { title?: string };
+    try {
+      body = (await req.json()) as { title?: string };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const title = body.title ?? "";
 
     if (!title) {
-      return NextResponse.json({ error: "Missing recipe title" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing recipe title" },
+        { status: 400 },
+      );
     }
 
     const sim = CURATED[title.toLowerCase().trim()];
     if (!sim) {
       return NextResponse.json(
-        { error: "No curated simulation for this recipe — use the client-side parser instead" },
+        {
+          error:
+            "No curated simulation for this recipe — use the client-side parser instead",
+        },
         { status: 404 },
       );
     }
@@ -25,6 +36,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ simulation: sim });
   } catch (e) {
     console.error("Simulate route error:", e);
-    return NextResponse.json({ error: "Failed to load simulation" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to load simulation" },
+      { status: 500 },
+    );
   }
 }

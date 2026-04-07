@@ -72,17 +72,30 @@ export function CursorHalo() {
     };
   }, [visible]);
 
+  const [gi, gm] = clicking ? ([82, 44] as const) : hovering ? ([78, 38] as const) : ([72, 34] as const);
+  const gradient = `radial-gradient(
+            circle,
+            color-mix(in srgb, var(--primary) ${gi}%, transparent) 0%,
+            color-mix(in srgb, var(--primary) ${gm}%, transparent) 40%,
+            transparent 70%
+          )`;
+
+  /** Foreground + background rings: contrast on primary-pink buttons without mix-blend. */
+  const haloRim = `0 0 0 1px color-mix(in srgb, var(--foreground) 50%, transparent), 0 0 0 2px color-mix(in srgb, var(--background) 65%, transparent), 0 0 26px color-mix(in srgb, var(--primary) 32%, transparent)`;
+
   return (
     <>
-      {/* Halo — trails the cursor with lerp */}
+      {/* Pink halo + theme rim so it stays readable on pink CTAs */}
       <div
         ref={haloRef}
-        className="pointer-events-none fixed top-0 left-0 z-9999 rounded-full"
+        className="pointer-events-none fixed top-0 left-0 z-110000 rounded-full"
+        aria-hidden
         style={{
-          width: hovering ? 56 : 36,
-          height: hovering ? 56 : 36,
-          background: `radial-gradient(circle, var(--primary) 0%, transparent 70%)`,
-          opacity: visible ? (clicking ? 0.55 : hovering ? 0.45 : 0.35) : 0,
+          width: hovering ? 60 : 40,
+          height: hovering ? 60 : 40,
+          background: gradient,
+          boxShadow: haloRim,
+          opacity: visible ? (clicking ? 0.66 : hovering ? 0.56 : 0.46) : 0,
           transition: "width 0.3s ease-out, height 0.3s ease-out, opacity 0.3s ease-out",
           willChange: "transform",
         }}

@@ -1,115 +1,56 @@
 # Nibble
 
-Nibble is a social cooking companion built on Next.js. You can discover meals, save favorites, run guided cook sessions with Gordon the Goose, post your creations, and compete on points with friends.
+Recipe discovery and a cooking companion: swipe and save meals, practice in a mini-game **prep** flow, cook with **Gordon** (steps + voice), share **creations**, and hang out with **friends** and **points**.
 
-## What it does
+**Live:** [nibble-gold.vercel.app](https://nibble-gold.vercel.app/)
 
-- Recipe discovery with search, ingredient/category filters, and swipe-style browsing
-- Personal recipe box for saved meals
-- Guided cook mode with step flow, timers, and Gordon assistant endpoints
-- Social layer for posts, friends, requests, and leaderboard
-- Points and achievement tracking
+## Prerequisites
 
-## Tech stack
+- **Node.js** 20 or later (matches the toolchain used in this repo)
+- **npm** (or any compatible client that respects `package.json` scripts)
 
-- Next.js (App Router), React 19, TypeScript
-- Tailwind CSS 4
-- Supabase (Auth + Postgres + storage)
-- Google Cloud Vertex AI (Gemini) for Gordon guidance
-- ElevenLabs for Gordon voice output
-- TheMealDB as the upstream recipe catalog
+## Stack
 
-## Local development
+Next.js, React, TypeScript, Tailwind · Supabase (auth + DB) · Vertex AI (Gemini) + ElevenLabs (Gordon) · [TheMealDB](https://www.themealdb.com/) for recipe data
+
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-App runs at http://localhost:3000.
+Open [http://localhost:3000](http://localhost:3000). Also: `npm run lint`, `npm run build`, `npm run start`.
 
-Other scripts:
+## Environment
 
-```bash
-npm run lint
-npm run build
-npm run start
-```
+Copy `.env.example` → `.env.local` and fill in values.
 
-## Environment variables
+For **Gordon’s Vertex AI** calls from your machine: enable the **Vertex AI API** on `GOOGLE_CLOUD_PROJECT` and use Application Default Credentials (for example `gcloud auth application-default login` with a user that can use that project). Without a project or credentials, Gordon answers and prep guides fall back to built-in text paths; voice still needs `ELEVENLABS_API_KEY` when you want TTS.
 
-Create `.env.local` in the project root:
+| Needs | Variables |
+| ----- | --------- |
+| **App + auth** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| **Gordon (guide + Q&A)** | `GOOGLE_CLOUD_PROJECT` (+ optional `GOOGLE_CLOUD_LOCATION`, `GORDON_GEMINI_*` model overrides in `.env.example`) |
+| **Gordon voice** | `ELEVENLABS_API_KEY` (optional `ELEVENLABS_VOICE_ID`) |
 
-| Variable                          | Required         | Notes                                                     |
-| --------------------------------- | ---------------- | --------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`        | Yes              | Supabase project URL                                      |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`   | Yes              | Supabase anon/public key                                  |
-| `GOOGLE_CLOUD_PROJECT`            | Yes (for Gordon) | Vertex AI project ID                                      |
-| `GOOGLE_CLOUD_LOCATION`           | Optional         | Defaults to `us-central1`                                 |
-| `GORDON_GEMINI_ASK_MODEL`         | Optional         | Primary model for `/api/gordon/ask`                       |
-| `GORDON_GEMINI_ASK_FALLBACKS`     | Optional         | Comma-separated fallback models for `/api/gordon/ask`     |
-| `GORDON_GEMINI_PREPARE_MODEL`     | Optional         | Primary model for `/api/gordon/prepare`                   |
-| `GORDON_GEMINI_PREPARE_FALLBACKS` | Optional         | Comma-separated fallback models for `/api/gordon/prepare` |
-| `GORDON_GEMINI_MODEL`             | Optional         | Global primary model if route-specific vars are unset     |
-| `GORDON_GEMINI_FALLBACKS`         | Optional         | Global comma-separated fallback list                      |
-| `ELEVENLABS_API_KEY`              | Yes (for voice)  | Used by `/api/gordon/speak`                               |
-| `ELEVENLABS_VOICE_ID`             | Optional         | Override default Gordon voice                             |
+Model fallbacks and TTS behavior: see comments in `.env.example` and `src/app/api/gordon/*`.
 
-Default model strategy (if no custom model env vars are set):
+## Database
 
-- Ask endpoint: `gemini-2.5-flash-lite` -> `gemini-2.5-flash` -> `gemini-2.0-flash-lite`
-- Prepare endpoint: `gemini-2.5-flash` -> `gemini-2.5-flash-lite` -> `gemini-2.0-flash`
+SQL is in `supabase/migrations/`. Rough application order: `001_saved_recipes` → `002_creations` → `003_friends` → `creations2` → `004_creations_visibility` → `005_creations_recipe_links` → `006_social_visibility_rls` (adjust if your Supabase already has partial history). Add a public bucket for creation photos (e.g. `creation-photos`) and RLS to match.
 
-Notes:
+## Useful routes
 
-- Gordon tries models in order and stops at first success.
-- `/api/gordon/speak` normalizes text before sending to ElevenLabs (for example, `150F` becomes `150 degrees Fahrenheit`) so voice output can stay natural while screen text stays concise.
+| Path | What |
+| ---- | ---- |
+| `/` | Discover |
+| `/box` | Saved recipes |
+| `/prep?id=…` | Practice / simulation |
+| `/cook?id=…` | Live cook + Gordon |
+| `/creations`, `/friends`, `/points` | Social + gamification |
+| `/login`, `/account` | Auth |
 
-## Database and Supabase setup
+## Deploy
 
-Migrations are in `supabase/migrations/`.
-
-Recommended order:
-
-1. `001_saved_recipes.sql`
-2. `002_creations.sql`
-3. `003_friends.sql`
-4. `creations2.sql`
-5. `004_creations_visibility.sql`
-6. `005_creations_recipe_links.sql`
-7. `006_social_visibility_rls.sql`
-
-The old root-level script `supabase_friends_migration.sql` is superseded by `supabase/migrations/003_friends.sql`.
-
-Also set up a public storage bucket for creation photos (for example, `creation-photos`) and apply matching RLS policies.
-
-## Main routes
-
-| Route                | Purpose                                  |
-| -------------------- | ---------------------------------------- |
-| `/`                  | Discover recipes                         |
-| `/box`               | Saved recipe box                         |
-| `/prep`              | Prep mini-games flow                     |
-| `/cook?id=...`       | Guided cook session                      |
-| `/creations`         | Posts and community feed                 |
-| `/friends`           | Friend search, requests, and leaderboard |
-| `/points`            | Points and achievements                  |
-| `/login`, `/account` | Authentication and profile               |
-
-## API surface (high level)
-
-- `src/app/api/recipes/*`: search, details, categories, ingredients, filters
-- `src/app/api/gordon/*`: prepare, ask, speak, simulate
-- `src/app/api/friends/*`: requests, posts feed, leaderboard, search, remove
-
-## Project structure
-
-- `src/app/`: pages, layouts, and route handlers
-- `src/components/`: UI components grouped by domain
-- `src/hooks/`: reusable client hooks
-- `src/lib/`: recipes, achievements, security helpers, Supabase clients, Gordon logic
-- `public/`: static assets and animations
-
-## Deployment
-
-Deploy to any Next.js-compatible host (Vercel is the simplest path). Mirror `.env.local` values in your host environment and update Supabase auth redirect URLs for your production domain.
+Hosted on **Vercel**. Set the same env vars in the project settings, and add your production URL (and preview if needed) to Supabase **Auth → URL configuration** redirects.
